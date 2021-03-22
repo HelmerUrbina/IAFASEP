@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context path="/IAFAS">
+  <Resource auth="Container" 
+            driverClassName="com.mysql.jdbc.Driver" 
+            maxActive="20" maxIdle="10" 
+            maxWait="-1" name="IAFAS_MySQL" 
+            password="iafasEP$2021" 
+            password2="root" 
+            type="javax.sql.DataSource" 
+            url="jdbc:mysql://10.66.21.41:3306/IAFASEP?zeroDateTimeBehavior=CONVERT_TO_NULL" 
+            url2="jdbc:mysql://SERVER2012:3307/IAFAS?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true" 
+            username2="root"
+            username="iafasep"/>
+</Context>

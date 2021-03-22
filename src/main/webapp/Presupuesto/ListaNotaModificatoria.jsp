@@ -1,0 +1,1428 @@
+<%-- 
+    Document   : ListaNotaModificatoria
+    Created on : 01/08/2017, 10:04:12 AM
+    Author     : H-URBINA-M
+--%>
+
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<script type="text/javascript">
+    var autorizacion = '${autorizacion}';
+    var periodo = $("#cbo_Periodo").val();
+    var mes = $("#cbo_Mes").val();
+    var codigo = null;
+    var estado = null;
+    var mode = null;
+    var indiceDetalle = -1;
+    var modeDetalle = null;
+    var msg = null;
+    var archivo = '';
+    var lista = new Array();
+    <c:forEach var="c" items="${objNotaModificatoria}">
+    var result = {codigo: '${c.codigo}', tipo: '${c.tipo}', credito: '${c.importeCredito}',
+        anulacion: '${c.importeAnulacion}', justificacion: '${c.justificacion}', fecha: '${c.fecha}', estado: '${c.estado}',
+        usuarioCierre: '${c.usuarioCierre}', fechaCierre: '${c.fechaCierre}', usuarioVerifica: '${c.usuarioVerifica}', fechaVerifica: '${c.fechaVerifica}',
+        usuarioAprueba: '${c.usuarioAprobacion}', fechaAprueba: '${c.fechaAprobacion}', usuarioRechazo: '${c.usuarioRechazo}',
+        fechaRechazo: '${c.fechaRechazo}', justificaRechazo: '${c.dependencia}', SIAF: '${c.SIAF}', consolidado: '${c.consolidado}', archivo: '${c.archivo}'};
+    lista.push(result);
+    </c:forEach>
+    var listaDet = new Array();
+    <c:forEach var="d" items="${objNotaModificatoriaDetalle}">
+    var result = {codigo: '${d.codigo}', detalle: '${d.detalle}',
+        presupuesto: '${d.presupuesto}', tarea: '${d.tarea}', cadenaGasto: '${d.cadenaGasto}',
+        anulacion: '${d.importeAnulacion}', credito: '${d.importeCredito}', justificacion: '${d.justificacion}'};
+    listaDet.push(result);
+    </c:forEach>
+    $(document).ready(function () {
+        var sourceNuevo = {
+            datafields:
+                    [
+                        {name: "codigo", type: "string"},
+                        {name: "tipo", type: "string"},
+                        {name: "presupuesto", type: "string"},
+                        {name: "tarea", type: "string"},
+                        {name: "cadenaGasto", type: "string"},
+                        {name: "anulacion", type: "number"},
+                        {name: "credito", type: "number"},
+                        {name: "justificacion", type: "string"}
+                    ],
+            pager: function (pagenum, pagesize, oldpagenum) {
+                // callback called when a page or page size is changed.
+            }
+        };
+        var dataNuevo = new $.jqx.dataAdapter(sourceNuevo);
+        //PARA LA GRILLA DE LA CABECERA
+        var sourceCab = {
+            localdata: lista,
+            datatype: "array",
+            datafields:
+                    [
+                        {name: "codigo", type: "string"},
+                        {name: "tipo", type: "string"},
+                        {name: "credito", type: "number"},
+                        {name: "anulacion", type: "number"},
+                        {name: "justificacion", type: "string"},
+                        {name: "fecha", type: "string"},
+                        {name: "estado", type: "string"},
+                        {name: "usuarioCierre", type: "string"},
+                        {name: "fechaCierre", type: "string"},
+                        {name: "usuarioVerifica", type: "string"},
+                        {name: "fechaVerifica", type: "string"},
+                        {name: "usuarioAprueba", type: "string"},
+                        {name: "fechaAprueba", type: "string"},
+                        {name: "usuarioRechazo", type: "string"},
+                        {name: "fechaRechazo", type: "string"},
+                        {name: "justificaRechazo", type: "string"},
+                        {name: "SIAF", type: "string"},
+                        {name: "consolidado", type: "string"},
+                        {name: "archivo", type: "string"}
+                    ],
+            root: "NotaModificatoria",
+            record: "NotaModificatoria",
+            id: 'codigo'
+        };
+        //PARA LA GRILLA DEL DETALLE 
+        var sourceDet = {
+            localdata: listaDet,
+            datatype: "array",
+            datafields:
+                    [
+                        {name: "codigo", type: "string"},
+                        {name: "detalle", type: "number"},
+                        {name: "presupuesto", type: "string"},
+                        {name: "tarea", type: "string"},
+                        {name: "cadenaGasto", type: "string"},
+                        {name: "anulacion", type: "number"},
+                        {name: "credito", type: "number"},
+                        {name: "justificacion", type: "string"}
+                    ],
+            root: "NotaModificatoriaDetalle",
+            record: "Detalle",
+            id: 'codigo',
+            async: false
+        };
+        var dataAdapter = new $.jqx.dataAdapter(sourceDet, {autoBind: true});
+        nested = dataAdapter.records;
+        var nestedGrids = new Array();
+        // create nested grid.
+        var initRowDetails = function (index, parentElement, gridElement, record) {
+            var id = record.uid.toString();
+            var grid = $($(parentElement).children()[0]);
+            nestedGrids[index] = grid;
+            var filtergroup = new $.jqx.filter();
+            var filterValue = id;
+            var filterCondition = 'equal';
+            var filter = filtergroup.createfilter('stringfilter', filterValue, filterCondition);
+            // fill the orders depending on the id.
+            var ordersbyid = [];
+            for (var m = 0; m < nested.length; m++) {
+                var result = filter.evaluate(nested[m]["codigo"]);
+                if (result)
+                    ordersbyid.push(nested[m]);
+            }
+            var sourceNested = {
+                datafields: [
+                    {name: "codigo", type: "string"},
+                    {name: "detalle", type: "number"},
+                    {name: "presupuesto", type: "string"},
+                    {name: "tarea", type: "string"},
+                    {name: "cadenaGasto", type: "string"},
+                    {name: "anulacion", type: "number"},
+                    {name: "credito", type: "number"},
+                    {name: "justificacion", type: "string"}
+                ],
+                id: 'codigo',
+                localdata: ordersbyid
+            };
+            var nestedGridAdapter = new $.jqx.dataAdapter(sourceNested);
+            if (grid !== null) {
+                grid.jqxGrid({
+                    source: nestedGridAdapter,
+                    width: '97%',
+                    height: 320,
+                    pageable: true,
+                    filterable: true,
+                    autoshowfiltericon: true,
+                    columnsresize: true,
+                    showaggregates: true,
+                    showfilterrow: true,
+                    showstatusbar: true,
+                    statusbarheight: 20,
+                    columns: [
+                        {text: 'NRO', datafield: 'detalle', filterable: false, width: '2%', align: 'center', cellsAlign: 'center'},
+                        {text: 'PPTO', datafield: 'presupuesto', filtertype: 'list', width: '15%', align: 'center', cellsAlign: 'center'},
+                        {text: 'TAREA', datafield: 'tarea', filtertype: 'checkedlist', width: '23%', align: 'center'},
+                        {text: 'CADENA', datafield: 'cadenaGasto', filtertype: 'checkedlist', width: '20%', align: 'center', aggregates: [{'<b>Totales : </b>':
+                                            function () {
+                                                return  "";
+                                            }}]},
+                        {text: 'ANULACION', dataField: 'anulacion', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                        {text: 'CREDITO', dataField: 'credito', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                        {text: 'JUSTIFICACIÓN', datafield: 'justificacion', width: '20%', align: 'center'}
+                    ]
+                });
+            }
+        };
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (rowdata['estado'] === "ANULADO") {
+                return "RowAnulado";
+            }
+            if (datafield === "codigo" || datafield === "consolidado" || datafield === "usuarioCierre" || datafield === "variacion") {
+                return "RowBold";
+            }
+            if (datafield === "SIAF") {
+                return "RowGreen";
+            }
+            if (datafield === "credito" || datafield === "programado") {
+                return "RowBlue";
+            }
+            if (datafield === "anulacion" || datafield === "nuevo") {
+                return "RowBrown";
+            }
+            if (datafield === "usuarioAprueba") {
+                return "RowPurple";
+            }
+            if (datafield === "usuarioRechazo") {
+                return "RowRed";
+            }
+        };
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 60),
+            source: sourceCab,
+            rowdetails: true,
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            showtoolbar: true,
+            rendertoolbar: function (toolbar) {
+                // appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var addCabeceraButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='../Imagenes/Botones/nuevo42.gif' width=18 height=18 /><span style='margin-left: 4px; position: relative; top: -3px;'></span></div>");
+                var exportButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='../Imagenes/Botones/pauf42.gif' width=18 height=18/><span style='margin-left: 4px; position: relative; top: -3px;'></span></div>");
+                var reporteButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='../Imagenes/Botones/printer42.gif' width=18 height=18/><span style='margin-left: 4px; position: relative; top: -3px;'> </span></div>");
+                container.append(addCabeceraButton);
+                container.append(exportButton);
+                container.append(reporteButton);
+                toolbar.append(container);
+                addCabeceraButton.jqxButton({width: 30, height: 22});
+                addCabeceraButton.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                exportButton.jqxButton({width: 30, height: 22});
+                exportButton.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                reporteButton.jqxButton({width: 30, height: 22});
+                reporteButton.jqxTooltip({position: 'bottom', content: "Reporte"});
+                // Adicionar un Nuevo Registro en la Cabecera.
+                addCabeceraButton.click(function (event) {
+                    mode = 'I';
+                    $("#cbo_TipoNotaModificatoria").jqxDropDownList('setContent', 'Seleccione');
+                    $('#div_GrillaRegistro').jqxGrid('clear');
+                    $('#txt_Motivo').val('');
+                    $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.9});
+                    $('#div_VentanaPrincipal').jqxWindow('open');
+                });
+                //export to excel
+                exportButton.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xls', 'NotasModificatorias');
+                });
+                reporteButton.click(function (event) {
+                    $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.9});
+                    $('#div_Reporte').jqxWindow('open');
+                });
+            },
+            initRowDetails: initRowDetails,
+            rowDetailsTemplate: {rowdetails: "<div id='grid' style='margin: 3px;'></div>", rowdetailsheight: 350, rowdetailshidden: true},
+            columns: [
+                {text: 'CODIGO', dataField: 'codigo', width: '3%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'JUSTIFICACIÓN', dataField: 'justificacion', width: '40%', align: 'center', cellclassname: cellclass},
+                {text: 'TIPO', dataField: 'tipo', filtertype: 'checkedlist', width: '20%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+               /* {text: 'ANULACION', dataField: 'anulacion', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                {text: 'CREDITO', dataField: 'credito', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                */{text: 'CONSOL.', dataField: 'consolidado', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FECHA', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'CERRADO POR : ', dataField: 'usuarioCierre', width: '15%', align: 'center', cellclassname: cellclass},
+                {text: 'FECHA CIERRE', dataField: 'fechaCierre', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'APROBADO POR : ', dataField: 'usuarioAprueba', width: '15%', align: 'center', cellclassname: cellclass},
+                {text: 'FECHA APRO.', dataField: 'fechaAprueba', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'RECHAZADO POR : ', dataField: 'usuarioRechazo', width: '15%', align: 'center', cellclassname: cellclass},
+                {text: 'FECHA RECHA.', dataField: 'fechaRechazo', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'MOTIVO', dataField: 'justificaRechazo', width: '15%', align: 'center', cellclassname: cellclass}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL 
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 215, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        // handle context menu clicks.
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (codigo === null || codigo === '') {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            } else if (estado !== 'ANULADO') {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    mode = 'U';
+                    fn_EditarCab();
+                } else if ($.trim($(opcion).text()) === "Anular") {
+                    $.confirm({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: '¿Desea Anular este Registro?',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'D';
+                                    fn_GrabarDatosEstados('');
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Cerrar") {
+                    $('#txt_Fichero').val("");
+                    $('#div_VentanaCerrar').jqxWindow({isModal: true});
+                    $('#div_VentanaCerrar').jqxWindow('open');
+                } else if ($.trim($(opcion).text()) === "Ver Anexo") {
+                    if (archivo !== '') {
+                        document.location.target = "_blank";
+                        document.location.href = "../Descarga?opcion=NotaModificatoria&periodo=" + periodo + "&codigo=" + codigo + "&documento=" + archivo;
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'No existe Archivo a Vizualizar!!!',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                } else if ($.trim($(opcion).text()) === "Rechazar") {
+                    if (autorizacion === 'true') {
+                        $.confirm({
+                            theme: 'material',
+                            title: 'RECHAZAR NOTA',
+                            content: '' +
+                                    '<form action="" class="formName">' +
+                                    '<div class="form-group">' +
+                                    '<label>Motivo : </label>' +
+                                    '<input type="text" placeholder="Ingrese Motivo de Rechazo" class="motivo form-control" required />' +
+                                    '</div>' +
+                                    '</form>',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'blue',
+                            typeAnimated: true,
+                            buttons: {
+                                aceptar: {
+                                    text: 'Aceptar',
+                                    btnClass: 'btn-primary',
+                                    keys: ['enter', 'shift'],
+                                    action: function () {
+                                        var motivo = this.$content.find('.motivo').val();
+                                        if (!motivo) {
+                                            $.alert('Ingrese el Motivo del Rechazo');
+                                            return false;
+                                        }
+                                        mode = 'R';
+                                        fn_GrabarDatosEstados(motivo);
+                                    }
+                                },
+                                cancelar: function () {
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                } else if ($.trim($(opcion).text()) === "Verificar") {
+                    if (autorizacion === 'true') {
+                        $.confirm({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: '¿Desea Verificar esta Nota Modificatoria?',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'blue',
+                            typeAnimated: true,
+                            buttons: {
+                                aceptar: {
+                                    text: 'Aceptar',
+                                    btnClass: 'btn-primary',
+                                    keys: ['enter', 'shift'],
+                                    action: function () {
+                                        mode = 'V';
+                                        fn_GrabarDatosEstados('');
+                                    }
+                                },
+                                cancelar: function () {
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'No puede realizar este Tipo de Operación, Registro Anulado',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'red',
+                    typeAnimated: true
+                });
+            }
+        });
+        //Seleccionar un Registro de la Cabecera
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['codigo'];
+            estado = row['estado'];
+            archivo = row['archivo'];
+        });
+        $("#div_GrillaRegistro").jqxGrid({
+            width: '100%',
+            height: 395,
+            source: dataNuevo,
+            pageable: true,
+            columnsresize: true,
+            showstatusbar: true,
+            autoheight: false,
+            autorowheight: false,
+            showtoolbar: true,
+            altrows: true,
+            editable: false,
+            sortable: true,
+            showaggregates: true,
+            statusbarheight: 20,
+            rendertoolbar: function (toolbar) {
+                // appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var addButtonDet = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='../Imagenes/Botones/nuevo42.gif' width=18 height=18 /><span style='margin-left: 4px; position: relative; top: -3px;'></span></div>");
+                var editButtonDet = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='../Imagenes/Botones/update42.gif' width=18 height=18 /><span style='margin-left: 4px; position: relative; top: -3px;'></span></div>");
+                var deleteButtonDet = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='../Imagenes/Botones/delete42.gif' width=18 height=18/><span style='margin-left: 4px; position: relative; top: -3px;'></span></div>");
+                container.append(addButtonDet);
+                container.append(editButtonDet);
+                container.append(deleteButtonDet);
+                toolbar.append(container);
+                addButtonDet.jqxButton({width: 30, height: 22});
+                addButtonDet.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                editButtonDet.jqxButton({width: 30, height: 22});
+                editButtonDet.jqxTooltip({position: 'bottom', content: "Editar Registro"});
+                deleteButtonDet.jqxButton({width: 30, height: 22});
+                deleteButtonDet.jqxTooltip({position: 'bottom', content: "Anular Registro"});
+                // add new row.
+                addButtonDet.click(function (event) {
+                    msg = '';
+                    modeDetalle = 'I';
+                    var tipoNota = $("#cbo_TipoNotaModificatoria").val();
+                    if (tipoNota === '0')
+                        msg += "Seleccione el Tipo de Modificación a realizar";
+                    if (msg === '') {
+                        if (tipoNota === '001') {
+                            $("#cbo_Tipo").jqxDropDownList('selectItem', 'A');
+                            $("#cbo_Tipo").jqxDropDownList({disabled: true});
+                            fn_cargarComboAjax("#cbo_Unidad", {mode: 'unidadNotaModificatoria', tipoNota: tipoNota, tipo: 'A'});
+                        } else if (tipoNota === '002' || tipoNota === '005') {
+                            $("#cbo_Tipo").jqxDropDownList('selectItem', 'C');
+                            $("#cbo_Tipo").jqxDropDownList({disabled: true});
+                            fn_cargarComboAjax("#cbo_Unidad", {mode: 'unidadNotaModificatoria', tipoNota: tipoNota, tipo: 'C'});
+                        } else {
+                            $("#cbo_Tipo").jqxDropDownList('selectItem', 0);
+                            $("#cbo_Tipo").jqxDropDownList({disabled: false});
+                        }
+                        $("#cbo_Presupuesto").jqxDropDownList('clear');
+                        $("#cbo_Resolucion").jqxDropDownList('clear');
+                        $("#cbo_Tarea").jqxDropDownList('clear');
+                        $("#cbo_CadenaGasto").jqxDropDownList('clear');
+                        $('#div_Importe').val(0);
+                        $('#txt_Justificacion').val('');
+                        $("#cbo_Presupuesto").jqxDropDownList({disabled: false});
+                        $("#cbo_Resolucion").jqxDropDownList({disabled: false});
+                        $("#cbo_Tarea").jqxDropDownList({disabled: false});
+                        $("#cbo_CadenaGasto").jqxDropDownList({disabled: false});
+                        $('#div_VentanaDetalle').jqxWindow({isModal: true, modalOpacity: 0.5});
+                        $('#div_VentanaDetalle').jqxWindow('open');
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'orange',
+                            typeAnimated: true
+                        });
+                    }
+                });
+                editButtonDet.click(function (event) {
+                    modeDetalle = 'U';
+                    if (indiceDetalle >= 0) {
+                        var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                        $("#cbo_Tipo").jqxDropDownList('setContent', dataRecord.tipo);
+                        $("#cbo_Tipo").jqxDropDownList({disabled: true});
+                        $("#cbo_Presupuesto").jqxDropDownList('clear');
+                        $("#cbo_Presupuesto").jqxDropDownList({disabled: true});
+                        $("#cbo_Presupuesto").jqxDropDownList('setContent', dataRecord.presupuesto);
+                        $("#cbo_Resolucion").jqxDropDownList('clear');
+                        $("#cbo_Resolucion").jqxDropDownList({disabled: true});
+                        $("#cbo_Resolucion").jqxDropDownList('setContent', dataRecord.resolucion);
+                        $("#cbo_Tarea").jqxDropDownList('clear');
+                        $("#cbo_Tarea").jqxDropDownList('setContent', dataRecord.tarea);
+                        $("#cbo_Tarea").jqxDropDownList({disabled: true});
+                        $("#cbo_CadenaGasto").jqxDropDownList('selectItem', fn_extraerDatos(dataRecord.cadenaGasto, ':'));
+                        $("#cbo_CadenaGasto").jqxDropDownList({disabled: true});
+                        $('#div_Importe').val(dataRecord.anulacion + dataRecord.credito);
+                        $('#txt_Justificacion').val(dataRecord.justificacion);
+                        $('#div_VentanaDetalle').jqxWindow({isModal: true, modalOpacity: 0.9});
+                        $('#div_VentanaDetalle').jqxWindow('open');
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'SELECCIONE UN REGISTRO',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                });
+                // delete selected row.
+                deleteButtonDet.click(function (event) {
+                    modeDetalle = 'D';
+                    if (indiceDetalle >= 0) {
+                        var rowid = $("#div_GrillaRegistro").jqxGrid('getrowid', indiceDetalle);
+                        $("#div_GrillaRegistro").jqxGrid('deleterow', rowid);
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'SELECCIONE UN REGISTRO',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                });
+            },
+            columns: [
+                {text: 'PPTO', datafield: 'presupuesto', width: '13%', align: 'center', cellsAlign: 'center'},
+                {text: 'TAREA', datafield: 'tarea', width: '25%', align: 'center'},
+                {text: 'CADENA', datafield: 'cadenaGasto', width: '25%', align: 'center'},
+                {text: 'ANULACION', dataField: 'anulacion', width: '12%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                {text: 'CREDITO', dataField: 'credito', width: '12%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                {text: 'JUSTIFICACIÓN', datafield: 'justificacion', width: '20%', align: 'center'},
+                {text: 'RESOLUCION', datafield: 'resolucion', width: '15%', align: 'center'},
+                {text: 'TIPO', datafield: 'tipo', width: '8%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        $("#div_GrillaRegistro").on('rowselect', function (event) {
+            indiceDetalle = event.args.rowindex;
+            var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+            fn_cargarComboAjax("#cbo_CadenaGasto", {mode: 'cadenaGastoNotaModificatoria', periodo: periodo,
+                tipoNota: $("#cbo_TipoNotaModificatoria").val(), tipo: dataRecord.tipo.substring(0, 1), presupuesto: fn_extraerDatos(dataRecord.presupuesto, ':'), resolucion: fn_extraerDatos(dataRecord.resolucion, ':'),
+                tarea: fn_extraerDatos(dataRecord.tarea, ':')});
+        });
+    });
+    //Funcion de Refrescar o Actulizar los datos de la Grilla.
+    function fn_EditarCab() {
+        if (estado !== 'ANULADA') {
+            mode = 'U';
+            $.ajax({
+                type: "GET",
+                url: "../NotaModificatoria",
+                data: {mode: mode, periodo: periodo, codigo: codigo},
+                success: function (data) {
+                    var dato = data.split("+++");
+                    if (dato.length === 3) {
+                        $("#cbo_TipoNotaModificatoria").jqxDropDownList('selectItem', dato[0]);
+                        $('#txt_Motivo').val(dato[1]);
+                        var d = new Date(dato[2]);
+                        d.setDate(d.getDate() + 1);
+                        $('#txt_Fecha ').jqxDateTimeInput('setDate', d);
+                        $('#div_GrillaRegistro').jqxGrid('clear');
+                        $("#cbo_TipoNotaModificatoria").jqxDropDownList({disabled: true});
+                        $.ajax({
+                            type: "GET",
+                            url: "../NotaModificatoria",
+                            data: {mode: 'B', periodo: periodo, codigo: codigo},
+                            success: function (data) {
+                                data = data.replace("[", "");
+                                var indice=7;
+                                var fila = data.split("[");
+                                var rows = new Array();
+                                for (i = 1; i < fila.length; i++) {
+                                    var columna = fila[i];
+                                    var datos = columna.split("+++");
+                                    while (datos[indice].indexOf(']') > 0) {
+                                        datos[indice] = datos[indice].replace("]", "");
+                                    }
+                                    while (datos[indice].indexOf(',') > 0) {
+                                        datos[indice] = datos[indice].replace(",", "");
+                                    }
+                                    var row = {tipo: datos[0], presupuesto: datos[1],
+                                        tarea: datos[3], cadenaGasto: datos[4], anulacion: parseFloat(datos[5]), credito: parseFloat(datos[6]),
+                                        justificacion: datos[7], resolucion: datos[2]};
+                                    rows.push(row);
+                                }
+                                if (rows.length > 0)
+                                    $("#div_GrillaRegistro").jqxGrid('addrow', null, rows);
+                            }
+                        });
+                    }
+                }
+            });
+            $('#div_VentanaPrincipal').jqxWindow({isModal: true});
+            $('#div_VentanaPrincipal').jqxWindow('open');
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: 'No se puede realizar la Operacion, \nRegistro ANULADO!!',
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA ACTUALIZAR LOS DATOS DE LA NOTA MODIFICATORIA
+    function fn_Refrescar() {
+        $("#div_GrillaPrincipal").remove();
+        $("#div_VentanaPrincipal").remove();
+        $("#div_GrillaRegistro").remove();
+        $("#div_VentanaCerrar").remove();
+        $("#div_VentanaDetalle").remove();
+        $("#div_Reporte").remove();
+        $("#div_ContextMenu").remove();
+        var $contenidoAjax = $('#div_Detalle').html('<img src="../Imagenes/Fondos/cargando.gif">');
+        $.ajax({
+            type: "POST",
+            url: "../NotaModificatoria",
+            data: {mode: 'G', periodo: periodo, mes: mes},
+            success: function (data) {
+                $contenidoAjax.html(data);
+            }
+        });
+    }
+    //Crea los Elementos de las Ventanas
+    var customButtonsDemo = (function () {
+        function _createElements() {
+            //Inicia los Valores de Ventana de la Cabecera
+            var posicionX, posicionY;
+            var ancho = 850;
+            var alto = 700;
+            posicionX = ($(window).width() / 2) - (ancho / 2);
+            posicionY = ($(window).height() / 2) - (alto / 2);
+            $('#div_VentanaPrincipal').jqxWindow({
+                position: {x: posicionX, y: posicionY},
+                width: ancho, height: alto, resizable: false,
+                cancelButton: $('#btn_Cancelar'),
+                initContent: function () {
+                    $("#cbo_TipoNotaModificatoria").jqxDropDownList({animationType: 'fade', width: 650, height: 20});
+                    $('#cbo_TipoNotaModificatoria').on('change', function () {
+                        if ($("#cbo_TipoNotaModificatoria").val() === '5' || autorizacion === 'true') {
+                            $("#div_Importe").jqxNumberInput({decimalDigits: 2});
+                        } else {
+                            $("#div_Importe").jqxNumberInput({decimalDigits: 0});
+                        }
+                    });
+                    $("#txt_Fecha").jqxDateTimeInput({culture: 'es-PE', animationType: 'fade', width: 150, height: 20, disabled: true});
+                    $("#txt_Motivo").jqxInput({placeHolder: "MOTIVO", width: 650, height: 80, minLength: 1});
+                    $('#btn_Cancelar').jqxButton({width: '65px', height: 25});
+                    $('#btn_Guardar').jqxButton({width: '65px', height: 25});
+                    $('#btn_Guardar').on('click', function (event) {
+                        $('#frm_NotaModificatoria').jqxValidator('validate');
+                    });
+                    $('#frm_NotaModificatoria').jqxValidator({
+                        rules: [
+                            {input: '#txt_Motivo', message: 'Ingrese Motivo de la Modificación!', action: 'keyup, blur', rule: 'required'}
+                        ]
+                    });
+                    $('#frm_NotaModificatoria').jqxValidator({
+                        onSuccess: function () {
+                            fn_GrabarDatos();
+                        }
+                    });
+                }
+            });
+            //Inicia los Valores de Ventana del Detalle
+            ancho = 750;
+            alto = 265;
+            posicionX = ($(window).width() / 2) - (ancho / 2);
+            posicionY = ($(window).height() / 2) - (alto / 2);
+            $('#div_VentanaDetalle').jqxWindow({
+                position: {x: posicionX, y: posicionY},
+                width: ancho, height: alto, resizable: false,
+                cancelButton: $('#btn_CancelarDetalle'),
+                initContent: function () {
+                    $("#cbo_Tipo").jqxDropDownList({animationType: 'fade', width: 150, height: 20});
+                    $('#cbo_Tipo').on('change', function () {
+                        $("#cbo_Presupuesto").jqxDropDownList('clear');
+                        $("#cbo_Resolucion").jqxDropDownList('clear');
+                        $("#cbo_Tarea").jqxDropDownList('clear');
+                        $("#cbo_CadenaGasto").jqxDropDownList('clear');
+                        fn_cargarComboAjax("#cbo_Presupuesto", {mode: 'presupuestoNotaModificatoria', periodo: periodo,
+                            tipoNota: $("#cbo_TipoNotaModificatoria").val(), tipo: $("#cbo_Tipo").val()});
+                    });
+                    $("#cbo_Presupuesto").jqxDropDownList({animationType: 'fade', width: 200, dropDownWidth: 350, height: 20});
+                    $('#cbo_Presupuesto').on('change', function () {
+                        $("#cbo_Resolucion").jqxDropDownList('clear');
+                        $("#cbo_Tarea").jqxDropDownList('clear');
+                        $("#cbo_CadenaGasto").jqxDropDownList('clear');
+                        fn_cargarComboAjax("#cbo_Resolucion", {mode: 'resolucionNotaModificatoria', periodo: periodo,
+                            tipoNota: $("#cbo_TipoNotaModificatoria").val(), presupuesto: $("#cbo_Presupuesto").val(), tipo: $("#cbo_Tipo").val()});
+                    });
+                    $("#cbo_Resolucion").jqxDropDownList({animationType: 'fade', width: 630, dropDownWidth: 750, height: 20});
+                    $('#cbo_Resolucion').on('change', function () {
+                        $("#cbo_Tarea").jqxDropDownList('clear');
+                        $("#cbo_CadenaGasto").jqxDropDownList('clear');
+                        fn_cargarComboAjax("#cbo_Tarea", {mode: 'tareaNotaModificatoria', periodo: periodo,
+                            tipoNota: $("#cbo_TipoNotaModificatoria").val(), tipo: $("#cbo_Tipo").val(), presupuesto: $("#cbo_Presupuesto").val(), resolucion: $("#cbo_Resolucion").val()});
+                    });
+                    $("#cbo_Tarea").jqxDropDownList({animationType: 'fade', width: 630, dropDownWidth: 750, height: 20});
+                    $('#cbo_Tarea').on('change', function () {
+                        $("#cbo_CadenaGasto").jqxDropDownList('clear');
+                        fn_cargarComboAjax("#cbo_CadenaGasto", {mode: 'cadenaGastoNotaModificatoria', periodo: periodo,
+                            tipoNota: $("#cbo_TipoNotaModificatoria").val(), tipo: $("#cbo_Tipo").val(), presupuesto: $("#cbo_Presupuesto").val(), resolucion: $("#cbo_Resolucion").val(),
+                            tarea: $("#cbo_Tarea").val()});
+                    });
+                    $("#cbo_CadenaGasto").jqxDropDownList({animationType: 'fade', width: 630, dropDownWidth: 750, height: 20});
+                    $("#div_Importe").jqxNumberInput({width: 150, height: 20, max: 999999999, digits: 9, decimalDigits: 0});
+                    $("#txt_Justificacion").jqxInput({placeHolder: "JUSTIFICACION", width: 630, height: 50, minLength: 10});
+                    $('#btn_CancelarDetalle').jqxButton({width: '65px', height: 25});
+                    $('#btn_GuardarDetalle').jqxButton({width: '65px', height: 25});
+                    $('#btn_GuardarDetalle').on('click', function () {
+                        var tipo = $("#cbo_Tipo").val();
+                        var presupuesto = $("#cbo_Presupuesto").jqxDropDownList('getSelectedItem');
+                        var resolucion = $("#cbo_Resolucion").jqxDropDownList('getSelectedItem');
+                        var tarea = $("#cbo_Tarea").jqxDropDownList('getSelectedItem');
+                        var cadenaGasto = $("#cbo_CadenaGasto").jqxDropDownList('getSelectedItem');
+                        var anulacion = 0.0;
+                        var credito = 0.0;
+                        var result = "";
+                        if (modeDetalle === 'I') {
+                            if (tipo === null)
+                                result += "Debe Seleccionar el Tipo de Operación.<br>";
+                            if (presupuesto === null)
+                                result += "Debe Seleccionar la Fuente de Financiamiento.<br>";
+                            if (resolucion === null)
+                                result += "Debe Seleccionar la Resolución.<br>";
+                            if (tarea === null)
+                                result += "Debe Seleccionar la Tarea Presupuestal.<br>";
+                            if (cadenaGasto === null)
+                                result += "Debe Seleccionar la Cadena de Gasto.<br>";
+                        }
+                        if ($("#txt_Justificacion").val().length <= 10)
+                            result += "Debe Ingresar una Justificación concisa.<br>";
+                        if (parseFloat($("#div_Importe").jqxNumberInput('decimal')) <= 0.0)
+                            result += "Ingrese un Importe valido.<br>";
+                        if (result === "")
+                            result += fn_validaSaldo();
+                        if (result === "") {
+                            if (modeDetalle === 'I') {
+                                if (tipo === 'A') {
+                                    tipo = 'Anulación';
+                                    anulacion = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+                                    presupuesto = presupuesto.label;
+                                    resolucion = fn_extraerDatos(resolucion.label, 'S/.');
+                                    tarea = fn_extraerDatos(tarea.label, 'S/.');
+                                    cadenaGasto = fn_extraerDatos(cadenaGasto.label, 'S/.');
+                                }
+                                if (tipo === 'C') {
+                                    tipo = 'Crédito';
+                                    credito = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+                                    presupuesto = presupuesto.label;
+                                    resolucion = resolucion.label;
+                                    if ($("#cbo_TipoNotaModificatoria").val() === '5') {
+                                        resolucion = fn_extraerDatos(resolucion, 'S/.');
+                                    }
+                                    tarea = tarea.label;
+                                    cadenaGasto = cadenaGasto.label;
+                                }
+                            }
+                        }
+                        if (result === "" && modeDetalle === 'I') {
+                            result += fn_ValidaSaldoAnulacion(credito, 0);
+                            result += fn_validaDetalle(tipo, presupuesto, resolucion, tarea, cadenaGasto);
+                        }
+                        if (result === "" && modeDetalle === 'U') {
+                            var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                            result += fn_ValidaSaldoAnulacion(credito, dataRecord.credito);
+                            result += fn_validaDetalle(dataRecord.tipo, dataRecord.presupuesto, dataRecord.resolucion, dataRecord.tarea, dataRecord.cadenaGasto);
+                        }
+                        if (result === "" && $("#cbo_TipoNotaModificatoria").val() === '5') {
+                            var unidadAnulacion = $("#cbo_UnidadOperativa").jqxComboBox('getSelectedItem');
+                            unidadAnulacion = unidadAnulacion.label;
+                            result += fn_registraAnulaciones('Anulacion', unidadAnulacion, presupuesto, resolucion, tarea, cadenaGasto, credito);
+                        }
+                        if (result === "") {
+                            if (modeDetalle === 'I') {
+                                var row = {codigo: $("#cbo_Presupuesto").val() + "---" + $("#cbo_Resolucion").val() + "---" + $("#cbo_Tarea").val() + "---" + $("#cbo_CadenaGasto").val(),
+                                    tipo: tipo, presupuesto: presupuesto, resolucion: resolucion,
+                                    tarea: tarea, cadenaGasto: cadenaGasto,
+                                    anulacion: anulacion, credito: credito, justificacion: $("#txt_Justificacion").val().toUpperCase()};
+                                $("#div_GrillaRegistro").jqxGrid('addrow', null, row);
+                            }
+                            if (modeDetalle === 'U') {
+                                var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                                if (dataRecord.tipo === 'Anulación')
+                                    anulacion = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+                                if (dataRecord.tipo === 'Crédito')
+                                    credito = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+                                var row = {codigo: dataRecord.codigo, tipo: dataRecord.tipo, presupuesto: dataRecord.presupuesto, resolucion: dataRecord.resolucion,
+                                    tarea: dataRecord.tarea, cadenaGasto: dataRecord.cadenaGasto, anulacion: anulacion, credito: credito, justificacion: $("#txt_Justificacion").val().toUpperCase()};
+                                var rowID = $('#div_GrillaRegistro').jqxGrid('getrowid', indiceDetalle);
+                                $('#div_GrillaRegistro').jqxGrid('updaterow', rowID, row);
+                            }
+                            $("#cbo_TipoNotaModificatoria").jqxDropDownList({disabled: true});
+                            modeDetalle = null;
+                            $("#div_VentanaDetalle").jqxWindow('hide');
+                        } else {
+                            $.alert({
+                                theme: 'material',
+                                title: 'AVISO DEL SISTEMA',
+                                content: result,
+                                animation: 'zoom',
+                                closeAnimation: 'zoom',
+                                type: 'red',
+                                typeAnimated: true
+                            });
+                        }
+                    });
+                }
+            });
+            ancho = 400;
+            alto = 105;
+            posicionX = ($(window).width() / 2) - (ancho / 2);
+            posicionY = ($(window).height() / 2) - (alto / 2);
+            $('#div_Reporte').jqxWindow({
+                position: {x: posicionX, y: posicionY},
+                width: ancho, height: alto, resizable: false,
+                cancelButton: $('#btn_CerrarImprimir'),
+                initContent: function () {
+                    $("#div_EJE0022").jqxRadioButton({width: 200, height: 20});
+                    $('#div_EJE0022').on('checked', function (event) {
+                        reporte = 'EJE0022';
+                    });
+                    $('#btn_CerrarImprimir').jqxButton({width: '65px', height: 25});
+                    $('#btn_Imprimir').jqxButton({width: '65px', height: 25});
+                    $('#btn_Imprimir').on('click', function (event) {
+                        var msg = "";
+                        switch (reporte) {
+                            case "EJE0022":
+                                if (codigo === null)
+                                    msg += "Seleccione la Nota Modificatoria.<br>";
+                                break;
+                            case "EJE0023":
+                                if (codigo === null)
+                                    msg += "Seleccione la Nota Modificatoria.<br>";
+                                break;
+                            default:
+                                msg += "Debe selecciona una opción.<br>";
+                                break;
+                        }
+                        if (msg === "") {
+                            var url = '../Reportes?reporte=' + reporte + '&periodo=' + periodo + "&codigo=" + codigo;
+                            window.open(url, '_blank');
+                        } else {
+                            $.alert({
+                                theme: 'material',
+                                title: 'AVISO DEL SISTEMA',
+                                content: msg,
+                                animation: 'zoom',
+                                closeAnimation: 'zoom',
+                                type: 'red',
+                                typeAnimated: true
+                            });
+                        }
+                    });
+                }
+            });
+            ancho = 500;
+            alto = 100;
+            posicionX = ($(window).width() / 2) - (ancho / 2);
+            posicionY = ($(window).height() / 2) - (alto / 2);
+            //ventana cerrar declaracion jurada
+            $('#div_VentanaCerrar').jqxWindow({
+                position: {x: posicionX, y: posicionY},
+                width: ancho, height: alto, resizable: false,
+                cancelButton: $('#btn_CancelarCerrar'),
+                initContent: function () {
+                    $("#txt_Fichero").jqxInput({placeHolder: "Seleccione el Documento", width: 400, height: 20, minLength: 1});
+                    $('#btn_CancelarCerrar').jqxButton({width: '65px', height: 25});
+                    $('#btn_GuardarCerrar').jqxButton({width: '65px', height: 25});
+                    $('#btn_GuardarCerrar').on('click', function (event) {
+                        fn_GuardarCerrar();
+                    });
+                }
+            });
+        }
+        return {
+            init: function () {
+                _createElements();
+            }
+        };
+    }());
+    $(document).ready(function () {
+        customButtonsDemo.init();
+        fn_cargarComboAjax("#cbo_TipoNotaModificatoria", {mode: 'tipoNotaModificatoria'});
+    });
+    //FUNCION PARA GRABAR LOS DATOS DE LA NOTA MODIFICATORIA
+    function fn_GrabarDatos() {
+        var msg = "";
+        var tipo = $("#cbo_TipoNotaModificatoria").val();
+        var fecha = $('#txt_Fecha').val();
+        var motivo = $("#txt_Motivo").val();
+        var lista = new Array();
+        var result;
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            result = row.uid + "---" + row.tipo.substring(0, 1) + "---" + row.codigo +
+                    "---" + parseFloat(row.anulacion + row.credito) + "---" + row.justificacion;
+            alert(result);
+            lista.push(result);
+        }
+        if (lista.length === 0)
+            msg += "Ingrese el Detalle de la Nota Modificatoria.<br>";
+        if (msg === "") {
+            msg += fn_DetalleNotaModificatoria();
+        }
+        if (msg === "") {
+            $.ajax({
+                type: "POST",
+                url: "../IduNotaModificatoria",
+                data: {mode: mode, periodo: periodo, mes: mes, codigo: codigo,
+                    tipo: tipo, fecha: fecha, motivo: motivo, lista: JSON.stringify(lista)},
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        $('#div_VentanaPrincipal').jqxWindow('close');
+                                        fn_Refrescar();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA GRABAR LOS DATOS ESTADOS DE LA NOTA MODIFICATORIA
+    function fn_GrabarDatosEstados(motivo) {
+        $.ajax({
+            type: "POST",
+            url: "../IduNotaModificatoria",
+            data: {mode: mode, periodo: periodo, codigo: codigo, motivo: motivo},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    fn_Refrescar();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    //FUNCION PARA GRABAR LOS ARCHIVOS  
+    function fn_GuardarCerrar() {
+        var fichero = $("#txt_Fichero").val();
+        if (fichero !== '') {
+            var formData = new FormData(document.getElementById("frm_NotaModificatoriaCerrar"));
+            formData.append("mode", "C");
+            formData.append("periodo", periodo);
+            formData.append("codigo", codigo);
+            $.ajax({
+                type: "POST",
+                url: "../IduNotaModificatoria",
+                data: formData,
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $('#div_VentanaCerrar').jqxWindow('close');
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        fn_Refrescar();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Debe seleccionar el archivo con la documentacion sustentatoria\n PROCESO CANCELADO!!!.",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA VALIDAR LOS DATOS DE LA NOTA MODIFICATORIA
+    function fn_DetalleNotaModificatoria() {
+        var totalAnulacion, totalCredito, cantidad, totalUnidad, resolucion, totalResolucion, totalFuente, fuente;
+        var result = "";
+        totalAnulacion = totalCredito = cantidad = totalUnidad = totalResolucion = totalFuente = 0;
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            totalAnulacion = totalAnulacion + parseFloat(row.anulacion);
+            totalCredito = totalCredito + parseFloat(row.credito);
+            cantidad++;
+            if (i === 0) {
+                resolucion = row.resolucion.trim().substring(0, row.resolucion.trim().indexOf(":") + 1);
+                fuente = row.presupuesto.trim();
+            } else {
+                if (resolucion !== row.resolucion.trim().substring(0, row.resolucion.trim().indexOf(":") + 1))
+                    totalResolucion++;
+                if (fuente !== row.presupuesto.trim())
+                    totalFuente++;
+            }
+        }
+        if (cantidad === 0)
+            result = "Ingrese el Detalle de la Nota Modificatoria.<br>";
+        if (totalResolucion > 0)
+            result = "La Nota Modificatoria solo debe contener una Resolucion, Revise.<br>";
+        if (totalFuente > 0)
+            result = "La Nota Modificatoria solo debe contener una Fuente de Financiamiento, Revise.<br>";
+        switch ($("#cbo_TipoNotaModificatoria").val()) {
+            case '1':
+                if (parseFloat(totalCredito) > 0.0)
+                    result += "No debe Ingresar Credito en este Tipo de Nota Modificatoria, Revise.<br>";
+                break;
+            case '2':
+                if (parseFloat(totalAnulacion) > 0.0)
+                    result += "No debe Ingresar Anulalcion en este Tipo de Nota Modificatoria, Revise.<br>";
+                break;
+            case '3':
+                if (parseFloat(totalAnulacion) !== parseFloat(totalCredito))
+                    result += "Los Totales de la Anulación con el Credito deben coincidir, Verifique.<br>";
+                if (totalUnidad > 0)
+                    result += "Revise las Unidades Operativas de la Nota Modificatoria.<br>";
+                break;
+            case '5':
+                if (parseFloat(totalAnulacion) !== parseFloat(totalCredito))
+                    result += "Los Totales de la Anulación con el Credito deben coincidir.<br>";
+                if (totalUnidad === 0)
+                    result += "Revise las Unidades Operativas de la Nota Modificatoria.<br>";
+                break;
+            default:
+                result += "Opción Invalida, por favor revise el Tipo de Nota Modificatoria.<br>";
+                break;
+        }
+        return result;
+    }
+    //FUNCION PARA VALIDAR EL SALDO DE LA NOTA MODIFICATORIA
+    function fn_validaSaldo() {
+        var cadena = $("#cbo_CadenaGasto").val();
+        if (cadena.length !== 0) {
+            if ($("#cbo_Tipo").val() === 'A') {
+                var saldo = $("#cbo_CadenaGasto").jqxDropDownList('getSelectedItem');
+                saldo = saldo.label;
+                var importe = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+                var monto = "";
+                var len = 0;
+                len = saldo.length;
+                var pos = saldo.indexOf('S/.');
+                monto = saldo.substring(pos + 3, len);
+                monto = fn_reemplazarTodo(monto, ',', '');
+                monto = parseFloat(monto);
+                if (modeDetalle === 'U') {
+                    var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                    monto = monto + parseFloat(dataRecord.importe);
+                }
+                if (importe > monto) {
+                    return "No puede ingresar un importe superior a S/. " + monto + ". Revise!!!";
+                } else if (importe === parseFloat('0')) {
+                    return "No puede ingresar un importe Cero. Revise!!!";
+                } else if (importe < 0) {
+                    return "Debe ingresar un importe superior a Cero!!!";
+                }
+            } else {
+                var importe = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+                if (importe === parseFloat('0')) {
+                    return "No puede ingresar un importe Cero. Revise!!!";
+                } else if (importe < 0) {
+                    return "Debe ingresar un importe superior a Cero!!!";
+                }
+            }
+        } else {
+            return "Seleccione la Cadena de Gasto";
+        }
+        return "";
+    }
+    //FUNCION PARA VALIDAR QUE NO SE REPITAN LOS REGISTROS DEL DETALLE
+    function fn_validaDetalle(tipo, presupuesto, resolucion, tarea, cadenaGasto) {
+        var tipoNota = $("#cbo_TipoNotaModificatoria").val();
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        if (modeDetalle === 'I') {
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.tipo.trim() === tipo.trim() && row.presupuesto.trim() === presupuesto.trim() && row.resolucion.trim() === resolucion.trim() &&
+                        row.tarea.trim() === tarea.trim() && row.cadenaGasto.trim() === cadenaGasto.trim()) {
+                    if (tipoNota === '5' && tipo.trim() === 'Crédito')
+                        return "";
+                    else
+                        return "Los Datos que desea registrar ya existen, Revise!!" + tipo.trim();
+                }
+            }
+        }
+        if (modeDetalle === 'U') {
+            if (rows[indiceDetalle].tipo.trim() === tipo.trim() && rows[indiceDetalle].presupuesto.trim() === presupuesto.trim() &&
+                    rows[indiceDetalle].resolucion.trim() === resolucion.trim() &&
+                    rows[indiceDetalle].tarea.trim() === tarea.trim() && rows[indiceDetalle].cadenaGasto.trim() === cadenaGasto.trim()) {
+                return "";
+            } else {
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    if (i !== indiceDetalle && row.tipo.trim() === tipo.trim() && row.presupuesto.trim() === presupuesto.trim() && row.resolucion.trim() === resolucion.trim() &&
+                            row.tarea.trim() === tarea.trim() &&
+                            row.cadenaGasto.trim() === cadenaGasto.trim()) {
+                        return "Los Datos que desea registrar ya existen, Revise!!";
+                    }
+                }
+            }
+        }
+        return "";
+    }
+    function fn_registraAnulaciones(tipo, presupuesto, resolucion, tarea, cadenaGasto, importe) {
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        var anulacion = 0.0;
+        var indice = null;
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.tipo.trim() === tipo.trim() && row.unidad.trim() === unidad.trim() && row.presupuesto.trim() === presupuesto.trim() && row.resolucion.trim() === resolucion.trim() &&
+                    row.tarea.trim() === tarea.trim() && row.cadenaGasto.trim() === cadenaGasto.trim()) {
+                anulacion += parseFloat(row.anulacion);
+                indice = i;
+            }
+        }
+        var saldo = $("#cbo_CadenaGasto").jqxDropDownList('getSelectedItem');
+        saldo = saldo.label;
+        var importe = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+        var len = 0;
+        len = saldo.length;
+        var pos = saldo.indexOf('S/.');
+        saldo = saldo.substring(pos + 3, len);
+        saldo = fn_reemplazarTodo(saldo, ',', '');
+        saldo = parseFloat(saldo);
+        if (parseFloat(importe + anulacion) > saldo) {
+            return "No puede ingresar un importe superior a S/. " + parseFloat(saldo - anulacion) + ". Revise!!!";
+        }
+        var row = {tipo: tipo, presupuesto: presupuesto, resolucion: resolucion,
+            tarea: tarea, cadenaGasto: cadenaGasto, anulacion: parseFloat(importe + anulacion), credito: 0.0, justificacion: $("#txt_Justificacion").val().toUpperCase()};
+        if (indice === null) {
+            $("#div_GrillaRegistro").jqxGrid('addrow', null, row);
+        } else {
+            var rowID = $('#div_GrillaRegistro').jqxGrid('getrowid', indice);
+            $('#div_GrillaRegistro').jqxGrid('updaterow', rowID, row);
+        }
+        return "";
+    }
+    //FUNCION PARA VALIDAR EL TOTAL DE CREDITO Y NO GENERE SALDO NEGATIVO
+    function fn_ValidaSaldoAnulacion(importeNuevo, importeAnterior) {
+        if ($("#cbo_TipoNotaModificatoria").val() === '5' || $("#cbo_TipoNotaModificatoria").val() === '2') {
+            return "";
+        } else {
+            if ($("#cbo_Tipo").val() === 'C') {
+                var totalAnulacion, totalCredito;
+                totalAnulacion = totalCredito = 0;
+                var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    totalAnulacion += parseFloat(row.anulacion);
+                    totalCredito += parseFloat(row.credito);
+                }
+                if (parseFloat(totalAnulacion - (totalCredito + importeNuevo - importeAnterior)) < 0)
+                    return "Saldo Insuficiente para ingresar el detalle. Revise!!";
+            }
+        }
+        return "";
+    }
+</script>
+<div id="div_GrillaPrincipal"></div>
+<div id="div_VentanaPrincipal" style="display: none">
+    <div>
+        <span style="float: left">REGISTRO DE NOTA MODIFICATORIA</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_NotaModificatoria" name="frm_NotaModificatoria" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="inputlabel">Tipo : </td>
+                    <td >
+                        <select id="cbo_TipoNotaModificatoria" name="cbo_TipoNotaModificatoria">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Fecha : </td>
+                    <td ><div id="txt_Fecha"></div></td>
+                </tr> 
+                <tr>
+                    <td class="inputlabel">Motivo : </td>
+                    <td colspan="5"><textarea id="txt_Motivo" name="txt_Motivo" style="text-transform: uppercase;"/></textarea></td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="6">
+                        <div>
+                            <input type="button" id="btn_Guardar"  value="Guardar" style="margin-right: 20px"/>
+                            <input type="button" id="btn_Cancelar" value="Cancelar" style="margin-right: 20px"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div id="div_GrillaRegistro"></div>
+            <div style="display: none" id="div_VentanaDetalle">
+                <div>
+                    <span style="float: left">DETALLE DE LA NOTA MODIFICATORIA</span>
+                </div>
+                <div style="overflow: hidden">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td class="inputlabel">Tipo : </td>
+                            <td colspan="3">
+                                <select id="cbo_Tipo" name="cbo_Tipo">
+                                    <option value="0">Seleccione</option>
+                                    <option value="A">Anulación</option>
+                                    <option value="C">Crédito</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Presupuesto : </td>
+                            <td colspan="3">
+                                <select id="cbo_Presupuesto" name="cbo_Presupuesto">
+                                    <option value="0">Seleccione</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Resoluci&oacute;n : </td>
+                            <td colspan="3">
+                                <select id="cbo_Resolucion" name="cbo_Resolucion">
+                                    <option value="0">Seleccione</option>
+                                    <c:forEach var="a" items="${objResoluciones}">
+                                        <option value="${a.codigo}">${a.descripcion}</option>
+                                    </c:forEach>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Tarea : </td>
+                            <td colspan="3">
+                                <select id="cbo_Tarea" name="cbo_Tarea">
+                                    <option value="0">Seleccione</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Cad. Gasto : </td>
+                            <td colspan="3">
+                                <select id="cbo_CadenaGasto" name="cbo_CadenaGasto">
+                                    <option value="0">Seleccione</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Importe S/. : </td>
+                            <td colspan="3"><div id="div_Importe"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Justificación : </td>
+                            <td colspan="3"><textarea id="txt_Justificacion" name="txt_Justificacion" style="text-transform: uppercase;"/></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="Summit" colspan="4" >
+                                <div>
+                                    <input type="button" id="btn_GuardarDetalle" name="btn_GuardarDetalle" value="Guardar" style="margin-right: 20px"/>
+                                    <input type="button" id="btn_CancelarDetalle" name="btn_CancelarDetalle" value="Cancelar" style="margin-right: 20px"/>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="div_VentanaCerrar" style="display: none">
+    <div>
+        <span style="float: left">CERRAR NOTA MODIFICATORIA</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_NotaModificatoriaCerrar" name="frm_NotaModificatoriaCerrar" enctype="multipart/form-data" action="javascript:fn_GuardarCerrar();" method="post">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="inputlabel">Anexos : </td>
+                    <td>
+                        <input type="file" id="txt_Fichero" name="txt_Fichero" style="text-transform: uppercase;" accept="application/pdf"/>
+                    </td> 
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="2">
+                        <div>
+                            <input type="button" id="btn_GuardarCerrar"  value="Guardar" style="margin-right: 20px"/>
+                            <input type="button" id="btn_CancelarCerrar" value="Cancelar" style="margin-right: 20px"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<div id="div_Reporte" style="display: none">
+    <div>
+        <span style="float: left">LISTADO DE REPORTES</span>
+    </div>
+    <div style="overflow: hidden">
+        <div id='div_EJE0022'>Nota Modificatoria</div>
+        <div class="Summit">
+            <input type="submit" id="btn_Imprimir" name="btn_Imprimir" value="Ver" style="margin-right: 20px"/>
+            <input type="button" id="btn_CerrarImprimir" name="btn_CerrarImprimir" value="Cerrar" style="margin-right: 20px"/>
+        </div>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display: none;'>
+    <ul>
+        <li style="font-weight: bold;">Editar</li>
+        <li style="font-weight: bold;">Anular</li>
+        <li style="font-weight: bold;color: green;">Cerrar</li>
+        <li style="font-weight: bold;">Ver Anexo</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold;color: blue;">Aprobar</li>
+        <li style="font-weight: bold;color: red;">Rechazar</li>
+    </ul>
+</div>
