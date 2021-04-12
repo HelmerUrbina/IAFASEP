@@ -1,19 +1,24 @@
 <%-- 
-    Document   : TareaEspecifica
-    Created on : 01/06/2017, 03:43:45 PM
+    Document   : CalendarioGastos
+    Created on : 05/10/2017, 12:47:20 PM
     Author     : H-URBINA-M
 --%>
 
 <!DOCTYPE html>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <script type="text/javascript">
+    var unidad = '${unidad}';
     $(document).ready(function () {
         var theme = getTheme();
         $("#div_Titulo").jqxExpander({theme: theme, width: '100%'});
         $("#cbo_Periodo").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 100, dropDownWidth: 150, height: 20});
+        $("#cbo_Presupuesto").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 300, dropDownWidth: 400, height: 20});
         var fecha = new Date();
         $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
         $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Presupuesto').on('change', function () {
             fn_CargarBusqueda();
         });
         fn_CargarBusqueda();
@@ -22,27 +27,41 @@
         var msg = "";
         if (msg === "")
             msg = fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        if (msg === "")
+            msg = fn_validaCombos('#cbo_Presupuesto', "Seleccione la Fuente de Financiamiento.");
         if (msg === "") {
             var periodo = $("#cbo_Periodo").val();
+            var presupuesto = $("#cbo_Presupuesto").val();
+            $("#div_ContextMenu").remove();
+            $("#div_Mensualizar").remove();
             $("#div_GrillaPrincipal").remove();
             $("#div_VentanaPrincipal").remove();
-            $("#div_ContextMenu").remove();
+            $("#div_VentanaCNV").remove();
+            $("#div_Reporte").remove();
             var $contenidoAjax = $('#div_Detalle').html('<img src="../Imagenes/Fondos/cargando.gif">');
             $.ajax({
-                type: "POST",
-                url: "../TareaEspecifica",
-                data: {mode: "G", periodo: periodo},
+                type: "GET",
+                url: "../CalendarioGastos",
+                data: {mode: "G", periodo: periodo, presupuesto: presupuesto},
                 success: function (data) {
                     $contenidoAjax.html(data);
                 }
             });
         } else {
-            $.alert({theme: 'material', title: 'Alerta!', content: msg, boxWidth: '50%'});
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'blue',
+                typeAnimated: true
+            });
         }
     }
 </script>
 <div style="border: none;" id='div_Titulo'>
-    <div class="jqx-hideborder">ESPECIFICAS DEL GASTO POR TAREA PRESUPUESTAL</div>
+    <div class="jqx-hideborder">PROGRAMACIÓN DE CALENDARIO DE GASTOS</div>
     <div>
         <div id="div_Cabecera">
             <table class="navy">
@@ -53,6 +72,14 @@
                             <select id="cbo_Periodo" name="cbo_Periodo">
                                 <c:forEach var="a" items="${objPeriodos}">
                                     <option value="${a.codigo}">${a.codigo}</option>
+                                </c:forEach>
+                            </select>
+                        </td>
+                        <td class="Titulo">Fte. Financ. : </td>
+                        <td>
+                            <select id="cbo_Presupuesto" name="cbo_Presupuesto">
+                                <c:forEach var="b" items="${objFuenteFinanciamiento}">
+                                    <option value="${b.codigo}">${b.descripcion}</option>
                                 </c:forEach>
                             </select>
                         </td>

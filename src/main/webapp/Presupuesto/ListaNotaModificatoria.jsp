@@ -231,8 +231,20 @@
                     $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xls', 'NotasModificatorias');
                 });
                 reporteButton.click(function (event) {
-                    $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.9});
-                    $('#div_Reporte').jqxWindow('open');
+                    if (codigo !== null) {
+                        var url = '../Reportes?reporte=EJE0003&periodo=' + periodo + "&codigo=" + codigo;
+                        window.open(url, '_blank');
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Debe Seleccionar un Registro',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
                 });
             },
             initRowDetails: initRowDetails,
@@ -241,9 +253,9 @@
                 {text: 'CODIGO', dataField: 'codigo', width: '3%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'JUSTIFICACIÓN', dataField: 'justificacion', width: '40%', align: 'center', cellclassname: cellclass},
                 {text: 'TIPO', dataField: 'tipo', filtertype: 'checkedlist', width: '20%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-               /* {text: 'ANULACION', dataField: 'anulacion', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
-                {text: 'CREDITO', dataField: 'credito', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
-                */{text: 'CONSOL.', dataField: 'consolidado', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                /* {text: 'ANULACION', dataField: 'anulacion', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                 {text: 'CREDITO', dataField: 'credito', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                 */{text: 'CONSOL.', dataField: 'consolidado', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'FECHA', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
                 {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'CERRADO POR : ', dataField: 'usuarioCierre', width: '15%', align: 'center', cellclassname: cellclass},
@@ -600,7 +612,7 @@
                             data: {mode: 'B', periodo: periodo, codigo: codigo},
                             success: function (data) {
                                 data = data.replace("[", "");
-                                var indice=7;
+                                var indice = 7;
                                 var fila = data.split("[");
                                 var rows = new Array();
                                 for (i = 1; i < fila.length; i++) {
@@ -933,7 +945,6 @@
             var row = rows[i];
             result = row.uid + "---" + row.tipo.substring(0, 1) + "---" + row.codigo +
                     "---" + parseFloat(row.anulacion + row.credito) + "---" + row.justificacion;
-            alert(result);
             lista.push(result);
         }
         if (lista.length === 0)

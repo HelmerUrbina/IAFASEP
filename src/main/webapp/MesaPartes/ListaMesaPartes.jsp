@@ -121,7 +121,9 @@
                     $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xls', 'Listado de Mesa de Partes');
                 });
                 ButtonReporte.click(function (event) {
-                    var url = '../Reportes?reporte=MPA0001&periodo=' + periodo + '&tipo=' + tipo + '&codigo=' + FechaBus + '/' + mes + '/' + periodo;
+                    var str = "5";
+                  //  alert(str.lpad("0", 4));
+                    var url = '../Reportes?reporte=MPA0001&periodo=' + periodo + '&tipo=' + tipo + '&codigo=' +FechaBus + '/' + mes + '/' + periodo;
                     window.open(url, '_blank');
                 });
             },

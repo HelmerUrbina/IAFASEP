@@ -9,6 +9,10 @@ function fn_validaAutorizacion(autorizacion) {
         location.reload();
     }
 }
+//FUNCION PARA FINALIZAR LA SESSION DEL USUARIO
+function fn_FinalizaSession(){
+    window.location = "../FinalizaSesion";
+}
 //FUNCION PARA REGRESAR AL MENU PRINCIPAL
 function fn_MenuPrincipal() {
     location.reload();

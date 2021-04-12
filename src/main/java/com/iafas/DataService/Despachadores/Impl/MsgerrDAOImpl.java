@@ -52,10 +52,10 @@ public class MsgerrDAOImpl implements MsgerrDAO {
                 objBnMsgerr.setUsuario(objResultSet.getString("VUSUARIO_CODIGO"));
                 objBnMsgerr.setTabla(objResultSet.getString("VMENSAJE_ERROR_TABLA"));
                 objBnMsgerr.setTipo(objResultSet.getString("CMENSAJE_ERROR_TIPO"));
-                objBnMsgerr.setDescripcion("<span class=\"inputlabelwrite\">" + objResultSet.getString("VMENSAJE_ERROR_DESCRIPCION") + "</span>");
+                objBnMsgerr.setDescripcion(objResultSet.getString("VMENSAJE_ERROR_DESCRIPCION"));
             }
         } catch (SQLException e) {
-            System.out.println("Error al ejecutar getMsgerr : " + e.toString());
+            System.out.println("Error al ejecutar getMsgerr : " + e.getMessage());
         } finally {
             try {
                 if (objResultSet != null) {
@@ -63,7 +63,7 @@ public class MsgerrDAOImpl implements MsgerrDAO {
                     objResultSet.close();
                 }
             } catch (SQLException e) {
-                System.out.println(e.toString());
+                System.out.println(e.getMessage());
             }
         }
         return objBnMsgerr;
@@ -86,7 +86,7 @@ public class MsgerrDAOImpl implements MsgerrDAO {
             n = cs.executeUpdate();
             cs.close();
         } catch (SQLException e) {
-            System.out.println("Error al ejecutar iduMsgerr : " + e.toString());
+            System.out.println("Error al ejecutar iduMsgerr : " + e.getMessage());
             return 0;
         }
         return n;
@@ -110,7 +110,7 @@ public class MsgerrDAOImpl implements MsgerrDAO {
             n = cs.executeUpdate();
             cs.close();
         } catch (SQLException e) {
-            System.out.println("Error al ejecutar iduLog : " + e.toString());
+            System.out.println("Error al ejecutar iduLog : " + e.getMessage());
             return 0;
         }
         return n;

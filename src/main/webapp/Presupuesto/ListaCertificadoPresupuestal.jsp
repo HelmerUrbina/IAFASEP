@@ -5,7 +5,6 @@
 --%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <script type="text/javascript">
-    var autorizacion = '${autorizacion}';
     var periodo = $("#cbo_Periodo").val();
     var presupuesto = $("#cbo_Presupuesto").val();
     var codigo = null;
@@ -24,7 +23,7 @@
     var sustento = null;
     var lista = new Array();
     <c:forEach var="c" items="${objCertificado}">
-    var result = {certificado: '${c.certificado}', cobertura: '${c.cobertura}',
+    var result = {certificado: '${c.certificado}', anexoCertificado: '${c.anexoCertificado}',
         detalle: "${c.concepto}", documentoReferencia: "${c.documentoReferencia}", fecha: '${c.fecha}', paac: '${c.procesoSeleccion}',
         importe: '${c.importe}', tipoCambio: '${c.tipoCambio}', monedaExtranjera: '${c.monedaExtranjera}', estado: '${c.estado}',
         tipo: '${c.tipo}', nroSolicitud: '${c.cadenaGasto}',
@@ -60,7 +59,7 @@
             datafields: [
                 {name: "solicitud", type: "string"},
                 {name: "certificado", type: "string"},
-                {name: "cobertura", type: "string"},
+                {name: "anexoCertificado", type: "string"},
                 {name: "detalle", type: "string"},
                 {name: "documentoReferencia", type: "string"},
                 {name: "fecha", type: "string"},
@@ -168,7 +167,7 @@
             if (datafield === "codigo" || datafield === "certificado" || datafield === "tipoCambio") {
                 return "RowBold";
             }
-            if (datafield === "cobertura") {
+            if (datafield === "anexoCertificado") {
                 return "RowGreen";
             }
             if (datafield === "importe" && rowdata['importe'] >= 0.0) {
@@ -253,7 +252,7 @@
             ]
         });
         // DEFINIMOS EL MENU CONTEXTUAL
-        var alto = 260;
+        var alto = 180;
         var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: alto, autoOpenPopup: false, mode: 'popup'});
         $("#div_GrillaPrincipal").on('contextmenu', function () {
             return false;
@@ -363,7 +362,7 @@
                         });
                     }
                 } else if ($.trim($(opcion).text()) === "Ampliaciones") {
-                    if (estado === 'ATENDIDO' && tipoCertificado === 'CERTIFICADO') {
+                    if (estado === 'CERRADO' && tipoCertificado === 'CERTIFICADO') {
                         tipoSolicitud = 'AM';
                         mode = 'I';
                         fn_NuevoCab(codigo);
@@ -371,7 +370,7 @@
                         $.alert({
                             theme: 'material',
                             title: 'AVISO DEL SISTEMA',
-                            content: 'Debe seleccionar un registro Atendido y Tipo Certificado.',
+                            content: 'Debe seleccionar un registro Cerrado y Tipo Certificado.',
                             animation: 'zoom',
                             closeAnimation: 'zoom',
                             type: 'red',
@@ -379,238 +378,23 @@
                         });
                     }
                 } else if ($.trim($(opcion).text()) === "Rebajas") {
-                    if (estado === 'ATENDIDO' && tipoCertificado === 'CERTIFICADO') {
+                    if (estado === 'CERRADO' && tipoCertificado === 'CERTIFICADO') {
                         tipoSolicitud = 'RE';
                         mode = 'I';
+                        codigo = '0';
                         fn_NuevoCab(codigo);
                     } else {
                         $.alert({
                             theme: 'material',
                             title: 'AVISO DEL SISTEMA',
-                            content: 'Debe seleccionar un registro Atendido y Tipo Certificado.',
+                            content: 'Debe seleccionar un registro Cerrado y Tipo Certificado.',
                             animation: 'zoom',
                             closeAnimation: 'zoom',
                             type: 'red',
                             typeAnimated: true
                         });
                     }
-                } else if ($.trim($(opcion).text()) === "Priorizar") {
-                    if (autorizacion === 'true') {
-                        $.confirm({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: '¿Desea que se realice la Priorización de esta Solicitud de Crédito Presupuestal?',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'blue',
-                            typeAnimated: true,
-                            buttons: {
-                                aceptar: {
-                                    text: 'Aceptar',
-                                    btnClass: 'btn-primary',
-                                    keys: ['enter', 'shift'],
-                                    action: function () {
-                                        $.confirm({
-                                            theme: 'material',
-                                            title: 'VERIFIQUE EL DETALLE DE LA SOLICITUD DE CREDITO PRESUPUESTAL. UNA VEZ ACEPTADA, NO HABRA MODIFICACIÓN.',
-                                            content: '',
-                                            animation: 'zoom',
-                                            closeAnimation: 'zoom',
-                                            type: 'blue',
-                                            typeAnimated: true,
-                                            buttons: {
-                                                aceptar: {
-                                                    text: 'Aceptar',
-                                                    btnClass: 'btn-primary',
-                                                    keys: ['enter', 'shift'],
-                                                    action: function () {
-                                                        mode = 'P';
-                                                        fn_GrabarCertificado('');
-                                                    }
-                                                },
-                                                cancelar: function () {
-                                                }
-                                            }
-                                        });
-                                    }
-                                },
-                                cancelar: function () {
-                                }
-                            }
-                        });
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
-                } else if ($.trim($(opcion).text()) === "Generar Certificado") {
-                    if (autorizacion === 'true') {
-                        $.confirm({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: '¿Desea Generar la Cobertura de Certificación Anual?',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'blue',
-                            typeAnimated: true,
-                            buttons: {
-                                aceptar: {
-                                    text: 'Aceptar',
-                                    btnClass: 'btn-primary',
-                                    keys: ['enter', 'shift'],
-                                    action: function () {
-                                        mode = 'A';
-                                        fn_GrabarCertificado('');
-                                    }
-                                },
-                                cancelar: function () {
-                                }
-                            }
-                        });
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
-                } else if ($.trim($(opcion).text()) === "Certificado SIAF") {
-                    if (estado === 'ATENDIDO') {
-                        if (autorizacion === 'true') {
-                            $.confirm({
-                                theme: 'material',
-                                title: 'REGISTRO SIAF',
-                                type: 'blue',
-                                content: '' +
-                                        '<form action="" class="formName">' +
-                                        '<div class="form-group">' +
-                                        '<label>Ingrese el Nro. SIAF</label>' +
-                                        '<input type="text" class="txt_nroSIAF form-control" required />' +
-                                        '</div>' +
-                                        '</form>',
-                                buttons: {
-                                    formSubmit: {
-                                        text: 'Guardar',
-                                        btnClass: 'btn-blue',
-                                        action: function () {
-                                            var msg = "";
-                                            var nroSIAF = this.$content.find('.txt_nroSIAF').val();
-                                            if (!nroSIAF)
-                                                msg += "Ingrese un Nro SIAF valido.";
-                                            msg += validarSiNumero(nroSIAF);
-                                            if (msg === "") {
-                                                mode = 'S';
-                                                fn_GrabarCertificado(nroSIAF);
-                                            } else {
-                                                $.alert({
-                                                    theme: 'material',
-                                                    title: 'AVISO DEL SISTEMA',
-                                                    content: msg,
-                                                    animation: 'zoom',
-                                                    closeAnimation: 'zoom',
-                                                    type: 'red',
-                                                    typeAnimated: true
-                                                });
-                                            }
-                                        }
-                                    },
-                                    cancelar: function () {
-                                        //close
-                                    }
-                                },
-                                onContentReady: function () {
-                                    // bind to events
-                                    var jc = this;
-                                    this.$content.find('form').on('submit', function (e) {
-                                        // if the user submits the form by pressing enter in the field.
-                                        e.preventDefault();
-                                        jc.$$formSubmit.trigger('click'); // reference the button and click it
-                                    });
-                                }
-                            });
-                        } else {
-                            $.alert({
-                                theme: 'material',
-                                title: 'AVISO DEL SISTEMA',
-                                content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                                animation: 'zoom',
-                                closeAnimation: 'zoom',
-                                type: 'red',
-                                typeAnimated: true
-                            });
-                        }
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Debe seleccionar un registro Atendido.',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
-                } else if ($.trim($(opcion).text()) === "Rechazar") {
-                    if (autorizacion === 'true') {
-                        $.confirm({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: '¿Desea RECHAZAR la Solicitud de Credito?',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'blue',
-                            typeAnimated: true,
-                            buttons: {
-                                aceptar: {
-                                    text: 'Aceptar',
-                                    btnClass: 'btn-primary',
-                                    keys: ['enter', 'shift'],
-                                    action: function () {
-                                        mode = 'R';
-                                        fn_GrabarCertificado('');
-                                    }
-                                },
-                                cancelar: function () {
-                                }
-                            }
-                        });
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
-                } else if ($.trim($(opcion).text()) === "Modificación de Datos") {
-                    if (autorizacion === 'true') {
-                        mode = 'M';
-                        fn_EditarCab();
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
-                }
+                }   
             } else {
                 $.alert({
                     theme: 'material',
@@ -631,11 +415,11 @@
             estado = row['estado'];
             tipoCertificado = row['tipo'];
             sustento = row['detalle'];
-            cobertura = row['cobertura'];
+            anexoCertificado = row['anexoCertificado'];
             firmaJefe = row['firmaJefe'];
             firmaSubJefe = row['firmaSubJefe'];
             archivo = row['archivo'];
-            tipoSolicitud=tipoCertificado.substring(0,2);
+            tipoSolicitud = tipoCertificado.substring(0, 2);
         });
         $("#div_GrillaRegistro").jqxGrid({
             width: '100%',
@@ -814,7 +598,7 @@
                                 data = data.replace("[", "");
                                 var fila = data.split("[");
                                 var rows = new Array();
-                                var indice=5;
+                                var indice = 5;
                                 for (i = 1; i < fila.length; i++) {
                                     var columna = fila[i];
                                     var datos = columna.split("+++");
@@ -948,7 +732,6 @@
                         var resolucion = $("#cbo_Resolucion").jqxDropDownList('getSelectedItem');
                         var tarea = $("#cbo_Tarea").jqxDropDownList('getSelectedItem');
                         var cadenaGasto = $("#cbo_CadenaGasto").jqxDropDownList('getSelectedItem');
-                        alert(resolucion.value + "---" + tarea.value + "---" + cadenaGasto.value);
                         var msg = "";
                         if (msg === "")
                             msg = fn_validaSaldo();
@@ -1024,30 +807,22 @@
                 initContent: function () {
                     $("#div_EJE0001").jqxRadioButton({width: 200, height: 20});
                     $('#div_EJE0001').on('checked', function (event) {
-                        reporte = 'EJE0001';
+                        reporte = 'EJE0004';
                     });
                     $("#div_EJE0002").jqxRadioButton({width: 200, height: 20});
                     $('#div_EJE0002').on('checked', function (event) {
-                        reporte = 'EJE0002';
+                        reporte = 'EJE0004';
+                    });
+                    $("#div_EJE0003").jqxRadioButton({width: 200, height: 20});
+                    $('#div_EJE0003').on('checked', function (event) {
+                        reporte = 'EJE0005';
                     });
                     $("#div_EJE0004").jqxRadioButton({width: 200, height: 20});
                     $('#div_EJE0004').on('checked', function (event) {
-                        reporte = 'EJE0004';
+                        reporte = 'EJE0007';
                     });
                     $("#div_EJE0005").jqxRadioButton({width: 200, height: 20});
                     $('#div_EJE0005').on('checked', function (event) {
-                        reporte = 'EJE0005';
-                    });
-                    $("#div_EJE0006").jqxRadioButton({width: 200, height: 20});
-                    $('#div_EJE0006').on('checked', function (event) {
-                        reporte = 'EJE0006';
-                    });
-                    $("#div_EJE0007").jqxRadioButton({width: 200, height: 20});
-                    $('#div_EJE0007').on('checked', function (event) {
-                        reporte = 'EJE0007';
-                    });
-                    $("#div_EJE0039").jqxRadioButton({width: 200, height: 20});
-                    $('#div_EJE0039').on('checked', function (event) {
                         reporte = 'EJE0039';
                     });
                     $('#btn_CerrarImprimir').jqxButton({width: '65px', height: 25});
@@ -1205,7 +980,7 @@
             $.ajax({
                 type: "POST",
                 url: "../IduCertificadoPresupuestal",
-                data: {mode: mode, periodo: periodo, presupuesto: presupuesto, certificado: codigo, paac: paac,
+                data: {mode: mode, periodo: periodo, presupuesto: presupuesto, certificado: nroCertificado, paac: paac,
                     tipoSolicitud: tipoSolicitud, solicitudCredito: solicitudCredito, fecha: fecha,
                     documentoReferencia: documentoReferencia, detalle: detalle, observacion: observacion, tipoMoneda: tipoMoneda, tipoCambio: tipoCambio,
                     importe: importe, monedaExtranjera: monedaExtranjera, informeDisponibilidad: informeDisponibilidad, lista: JSON.stringify(lista)},
@@ -1297,7 +1072,7 @@
             formData.append("mode", "C");
             formData.append("periodo", periodo);
             formData.append("presupuesto", presupuesto);
-            formData.append("nroCertificado", codigo);
+            formData.append("certificado", codigo);
             $.ajax({
                 type: "POST",
                 url: "../IduCertificadoPresupuestal",
@@ -1556,7 +1331,7 @@
                 <tr>
                     <td class="inputlabel">Anexos : </td>
                     <td>
-                        <input type="file" id="txt_Fichero" name="txt_Fichero" style="text-transform: uppercase;"/>
+                        <input type="file" id="txt_Fichero" name="txt_Fichero" style="text-transform: uppercase;" accept="application/pdf"/>
                     </td> 
                 </tr>
                 <tr>
@@ -1576,13 +1351,12 @@
         <span style="float: left">LISTADO DE REPORTES</span>
     </div>
     <div style="overflow: hidden">
-        <div id='div_EJE0001'>Solicitud de Credito Presupuestal</div>
+        <div id='div_EJE0001'>Memorando de Certificación</div>
         <div id='div_EJE0002'>Control de Solicitud</div>
-        <div id='div_EJE0004'>Listado de Compromisos Anuales</div>
-        <div id='div_EJE0005'>Certificados vs Compromiso Anual</div>
-        <div id='div_EJE0039'>Avance Presupuestal del Certificado</div>
-        <div id='div_EJE0006'>Anexo a la PCA</div>
-        <div id='div_EJE0007'>Memorando de Certificación</div>
+        <div id='div_EJE0003'>Listado de Compromisos Anuales</div>
+        <div id='div_EJE0004'>Certificados vs Compromiso Anual</div>
+        <div id='div_EJE0005'>Avance Presupuestal del Certificado</div>
+        
         <div class="Summit">
             <input type="submit" id="btn_Imprimir" name="btn_Imprimir" value="Ver" style="margin-right: 20px"/>
             <input type="button" id="btn_CerrarImprimir" name="btn_CerrarImprimir" value="Cerrar" style="margin-right: 20px"/>
@@ -1591,17 +1365,14 @@
 </div>
 <div id='div_ContextMenu' style='display: none;'>
     <ul>
-        <li>Editar</li>
-        <li>Anular</li>
+        <li style="font-weight: bold;">Editar</li>
+        <li style="font-weight: bold;">Anular</li>
+        <li type='separator'></li>
         <li style="color: blue; font-weight: bold;">Cerrar</li>
-        <li>Ver Anexos</li>
         <li type='separator'></li>
         <li style="color: green; font-weight: bold;">Ampliaciones</li>
         <li style="color: green; font-weight: bold;">Rebajas</li>
         <li type='separator'></li>
-        <li style="font-weight: bold; color: blue;">Priorizar</li>
-        <li style="font-weight: bold;">Generar Certificado</li>
-        <li style="font-weight: bold;">Certificado SIAF</li>
-        <li style="font-weight: bold; color: red;">Rechazar</li>
+        <li style="color: maroon;font-weight: bold;">Ver Anexos</li>
     </ul>
 </div>

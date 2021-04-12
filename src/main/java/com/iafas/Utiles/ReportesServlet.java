@@ -120,59 +120,48 @@ public class ReportesServlet extends HttpServlet {
                 break;
             //REPORTES DE EJECUCION PRESUPUESTAL
             case "EJE0001":
-                nombre = "Ejecucion/EJE0001.jasper";
+                nombre = "Presupuesto/EJE0001.jasper";
                 break;
             case "EJE0002":
-                nombre = "Ejecucion/EJE0002.jasper";
+                nombre = "Presupuesto/EJE0002.jasper";
                 break;
             case "EJE0003":
-                nombre = "Ejecucion/EJE0003.jasper";
+                nombre = "Presupuesto/EJE0003.jasper";
                 break;
             case "EJE0004":
-                nombre = "Ejecucion/EJE0004.jasper";
+                nombre = "Presupuesto/EJE0004.jasper";
                 break;
             case "EJE0005":
-                nombre = "Ejecucion/EJE0005.jasper";
+                nombre = "Presupuesto/EJE0005.jasper";
                 break;
             case "EJE0006":
-                nombre = "Ejecucion/EJE0006_1.jasper";
-                if (Integer.valueOf(reporte.getPeriodo()) <= 2014) {
-                    nombre = "Ejecucion/EJE0006_1.jasper";
-                }
+                nombre = "Presupuesto/EJE0006.jasper";
+                
                 break;
             case "EJE0007":
-                nombre = "Ejecucion/EJE0007_1.jasper";
-                if (Integer.valueOf(reporte.getPeriodo()) <= 2014) {
-                    nombre = "Ejecucion/EJE0007_1.jasper";
-                }
+                nombre = "Presupuesto/EJE0007.jasper";
                 break;
             case "EJE0008":
-                nombre = "Ejecucion/EJE0008.jasper";
+                nombre = "Presupuesto/EJE0008.jasper";
                 break;
             case "EJE0009":
-                nombre = "Ejecucion/EJE0009.jasper";
+                nombre = "Presupuesto/EJE0009.jasper";
                 break;
             case "EJE0010":
-                nombre = "Ejecucion/EJE0010.jasper";
+                nombre = "Presupuesto/EJE0010.jasper";
                 break;
             case "EJE0011":
-                nombre = "Ejecucion/EJE0011_1.jasper";
-                if (Integer.valueOf(reporte.getPeriodo()) <= 2014) {
-                    nombre = "Ejecucion/EJE0011_1.jasper";
-                }
+                nombre = "Presupuesto/EJE0011.jasper";
                 break;
             case "EJE0012":
-                nombre = "Ejecucion/EJE0012.jasper";
+                nombre = "Presupuesto/EJE0012.jasper";
                 break;
             case "EJE0013":
-                nombre = "Ejecucion/EJE0013.jasper";
+                nombre = "Presupuesto/EJE0013.jasper";
                 break;
             case "EJE0014":
-                nombre = "Ejecucion/EJE0014_1.jasper";
-                if (Integer.valueOf(reporte.getPeriodo()) <= 2014) {
-                    nombre = "Ejecucion/EJE0014_1.jasper";
-                }
-                break;
+                nombre = "Presupuesto/EJE0014.jasper";
+                break; 
             //REPORTES DE LOGISTICA
             case "LOG0001":
                 nombre = "Logistica/LOG0001.jasper";
@@ -243,7 +232,9 @@ public class ReportesServlet extends HttpServlet {
         parameters.put("CODIGO2", reporte.getCodigo2());
         parameters.put("USUARIO", objUsuario.getUsuario());
         parameters.put("GENERICA", reporte.getGenerica());
-        parameters.put("SUBREPORT_DIR", stream);
+        parameters.put("SUBREPORT_DIR", getServletContext().getRealPath("/Reportes/"));
+        //parameters.put("SUBREPORT_DIR", stream);
+        System.out.println(getServletContext().getRealPath("/Reportes"));
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);

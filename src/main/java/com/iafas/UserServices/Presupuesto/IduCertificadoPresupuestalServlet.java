@@ -38,9 +38,10 @@ import javax.servlet.http.Part;
  * @author H-URBINA-M
  */
 @WebServlet(name = "IduCertificadoPresupuestalServlet", urlPatterns = {"/IduCertificadoPresupuestal"})
-@MultipartConfig(location = "D:/SIPRE/EJECUCION/CertificadoPresupuestal")
+@MultipartConfig(location = "D:/IAFAS/Presupuesto/CertificadoPresupuestal")
+//@MultipartConfig(location = "/IAFASEP/Presupuesto/CertificadoPresupuestal")
 public class IduCertificadoPresupuestalServlet extends HttpServlet {
-    
+
     private ServletConfig config = null;
     private ServletContext context = null;
     private HttpSession session = null;
@@ -84,6 +85,7 @@ public class IduCertificadoPresupuestalServlet extends HttpServlet {
         objBnSolicitud.setPeriodo(request.getParameter("periodo"));
         objBnSolicitud.setPresupuesto(Utiles.checkNum(request.getParameter("presupuesto")));
         objBnSolicitud.setCertificado(request.getParameter("certificado"));
+        objBnSolicitud.setAnexoCertificado(request.getParameter("solicitudCredito"));
         objBnSolicitud.setDocumentoReferencia(request.getParameter("documentoReferencia"));
         objBnSolicitud.setConcepto(request.getParameter("detalle"));
         objBnSolicitud.setObservacion(request.getParameter("observacion"));
@@ -102,37 +104,28 @@ public class IduCertificadoPresupuestalServlet extends HttpServlet {
             case "D":
                 k = objDsSolicitud.iduCertificado(objBnSolicitud, objUsuario.getUsuario());
                 break;
-            case "A":
-                k = ""+objDsSolicitud.iduGenerarSolicitud(objBnSolicitud, objUsuario.getUsuario());
-                break;
             case "C": {
                 response.setContentType("text/html;charset=UTF-8");
                 Collection<Part> parts = request.getParts();
                 for (Part part : parts) {
                     if (null != Utiles.getFileName(part)) {
                         objBnSolicitud.setDocumentoReferencia(Utiles.stripAccents(Utiles.getFileName(part)));
-                        part.write(objBnSolicitud.getPeriodo() + "-" + objBnSolicitud.getUnidadOperativa() + "-" + objBnSolicitud.getPresupuesto() + "-" + objBnSolicitud.getDocumentoReferencia());
+                        part.write(objBnSolicitud.getPeriodo() + "-" + objBnSolicitud.getPresupuesto() +"-" + objBnSolicitud.getCertificado()+ "-" + objBnSolicitud.getDocumentoReferencia());
                     }
                 }
                 k = objDsSolicitud.iduCertificado(objBnSolicitud, objUsuario.getUsuario());
                 break;
             }
-            case "S":
-                k = ""+objDsSolicitud.iduCertificadoSIAF(objBnSolicitud, objUsuario.getUsuario());
-                break;
-            case "R":
-                k = objDsSolicitud.iduCertificado(objBnSolicitud, objUsuario.getUsuario());
-                break;
             default:
                 k = objDsSolicitud.iduCertificado(objBnSolicitud, objUsuario.getUsuario());
-                 if(objBnSolicitud.getMode().equals("I")){
+                if (objBnSolicitud.getMode().equals("I")) {
                     objBnSolicitud.setCertificado(k);
                 }
                 if (!k.equals("0")) {
                     objBnSolicitud.setCorrelativo(0);
                     objBnSolicitud.setResolucion("0");
                     objBnSolicitud.setMode("D");
-                    k = ""+objDsSolicitud.iduCertificadoDetalle(objBnSolicitud, objUsuario.getUsuario());
+                    k = "" + objDsSolicitud.iduCertificadoDetalle(objBnSolicitud, objUsuario.getUsuario());
                     String lista[][] = Utiles.generaLista(request.getParameter("lista"), 6);
                     for (String[] item : lista) {
                         objBnSolicitud.setMode("I");
@@ -141,13 +134,13 @@ public class IduCertificadoPresupuestalServlet extends HttpServlet {
                         objBnSolicitud.setCadenaGasto(item[3]);
                         objBnSolicitud.setImporte(Utiles.checkDouble(item[4]));
                         objBnSolicitud.setMonedaExtranjera(Utiles.checkDouble(item[5]));
-                        k = ""+objDsSolicitud.iduCertificadoDetalle(objBnSolicitud, objUsuario.getUsuario());
+                        k = "" + objDsSolicitud.iduCertificadoDetalle(objBnSolicitud, objUsuario.getUsuario());
                     }
                     if (k.equals("0")) {
                         result = "ERROR";
                         objBnMsgerr = new BeanMsgerr();
                         objBnMsgerr.setUsuario(objUsuario.getUsuario());
-                        objBnMsgerr.setTabla("TASOCP");
+                        objBnMsgerr.setTabla("IAFAS_CERTIFICADO_PRESUPUESTAL");
                         objBnMsgerr.setTipo(objBnSolicitud.getMode());
                         objDsMsgerr = new MsgerrDAOImpl(objConnection);
                         objBnMsgerr = objDsMsgerr.getMsgerr(objBnMsgerr);
@@ -161,7 +154,7 @@ public class IduCertificadoPresupuestalServlet extends HttpServlet {
             result = "ERROR";
             objBnMsgerr = new BeanMsgerr();
             objBnMsgerr.setUsuario(objUsuario.getUsuario());
-            objBnMsgerr.setTabla("TASOCP");
+            objBnMsgerr.setTabla("IAFAS_CERTIFICADO_PRESUPUESTAL");
             objBnMsgerr.setTipo(objBnSolicitud.getMode());
             objDsMsgerr = new MsgerrDAOImpl(objConnection);
             objBnMsgerr = objDsMsgerr.getMsgerr(objBnMsgerr);

@@ -3,7 +3,6 @@
     Created on : 09/05/2017, 12:02:43 PM
     Author     : H-URBINA-M
 --%>
-
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <script type="text/javascript">
     var codigo = null;
@@ -186,7 +185,6 @@
                     });
                 }
             }
-        
         });
         //SELECCIONAMOS UN REGISTRO DE LA GRILLA
         $("#div_GrillaPrincipal").on('rowselect', function (event) {

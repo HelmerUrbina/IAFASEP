@@ -39,30 +39,29 @@ public class DescargaServlet extends HttpServlet {
             throws ServletException, IOException {
         String periodo = request.getParameter("periodo");
         String codigo = request.getParameter("codigo");
-        String unidadOperativa = request.getParameter("unidadOperativa");
         String presupuesto = request.getParameter("presupuesto");
         String documento = request.getParameter("documento");
         String opcion = request.getParameter("opcion");
-       // filePath = "D:/IAFAS/";
-        filePath = "/IAFASEP/";
+        filePath = "D:/IAFAS/";
+      //  filePath = "/IAFASEP/";
         switch (opcion) {
             case "DemandaAdicional":
-                filePath += "PROGRAMACION/DemandaAdicional/" + periodo + "-" + unidadOperativa + "-" + documento;
+                filePath += "PROGRAMACION/DemandaAdicional/" + periodo + "-" + codigo + "-" + documento;
                 break;
             case "MesaPartes":
                 filePath += "MesaPartes/Documentos/" + periodo + "-" + codigo + "-" + documento;
                 break;
             case "Firma":
-                filePath += "DOCUMENTOS/Firmas/" + periodo + "-" + unidadOperativa + "-" + codigo + "-" + documento;
+                filePath += "DOCUMENTOS/Firmas/" + periodo + "-" + codigo + "-" + documento;
                 break;
             case "CertificadoPresupuestal":
-                filePath += "EJECUCION/CertificadoPresupuestal/" + periodo + "-" + unidadOperativa + "-" + presupuesto + "-" + codigo + "-" + documento;
+                filePath += "Presupuesto/CertificadoPresupuestal/" + periodo + "-" + presupuesto + "-" + codigo + "-" + documento;
                 break;
             case "CompromisoAnual":
-                filePath += "EJECUCION/CompromisoAnual/" + periodo + "-" + unidadOperativa + "-" + presupuesto + "-" + codigo + "-" + documento;
+                filePath += "Presupuesto/CompromisoAnual/" + periodo + "-" + presupuesto + "-" + codigo + "-" + documento;
                 break;
             case "DeclaracionJurada":
-                filePath += "EJECUCION/DeclaracionJurada/" + periodo + "-" + unidadOperativa + "-" + presupuesto + "-" + codigo + "-" + documento;
+                filePath += "Presupuesto/DeclaracionJurada/" + periodo + "-" + presupuesto + "-" + codigo + "-" + documento;
                 break;
             default:
                 filePath = "";

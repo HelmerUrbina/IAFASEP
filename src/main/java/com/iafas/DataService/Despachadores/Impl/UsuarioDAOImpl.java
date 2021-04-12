@@ -43,7 +43,8 @@ public class UsuarioDAOImpl implements UsuarioDAO {
     @Override
     public BeanUsuario autentica(String usuario, String password, String periodo) {
      //    password = EncriptarCadena(password, true);
-        sql = "SELECT VUSUARIO_CODIGO, VUSUARIO_PATERNO, VUSUARIO_MATERNO, VUSUARIO_NOMBRES, "
+        sql = "SELECT VUSUARIO_CODIGO, UPPER(VUSUARIO_PATERNO) AS VUSUARIO_PATERNO, "
+                + "UPPER(VUSUARIO_MATERNO) AS VUSUARIO_MATERNO, UPPER(VUSUARIO_NOMBRES) AS VUSUARIO_NOMBRES, "
                 + "CASE NUSUARIO_AUTORIZACION WHEN 1 THEN 'TRUE' ELSE 'FALSE' END AS AUTORIZACION "
                 + "FROM IAFAS_USUARIOS WHERE "
                 + "VUSUARIO_CODIGO=? AND "

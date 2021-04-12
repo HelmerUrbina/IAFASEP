@@ -6,7 +6,6 @@
 
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <script type="text/javascript">
-
     var periodo = $("#cbo_Periodo").val();
     var codigo = null;
     var mode = null;
@@ -41,7 +40,7 @@
         //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
         $("#div_GrillaPrincipal").jqxGrid({
             width: '99.8%',
-            height: ($(window).height() - 60),
+            height: ($(window).height() - 100),
             source: dataAdapter,
             autoheight: false,
             autorowheight: false,
@@ -196,7 +195,6 @@
         }());
         $(document).ready(function () {
             customButtonsDemo.init();
-            fn_cargarComboAjax("#cbo_Tarea", {mode: 'tarea'});
         });
         //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
         function fn_Refrescar() {
@@ -264,6 +262,7 @@
         }
         //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
         function fn_GrabarDatos() {
+            var msg = "";
             var lista = new Array();
             var tarea = $("#cbo_Tarea").val();
             var items = $('#div_Opciones').jqxTree('getCheckedItems');
@@ -271,42 +270,56 @@
                 var item = items[i];
                 lista.push(item.id);
             }
-            $.ajax({
-                type: "POST",
-                url: "../IduTareaEspecifica",
-                data: {mode: mode, periodo: periodo, tarea: tarea, codigo: codigo, lista: JSON.stringify(lista)},
-                success: function (data) {
-                    msg = data;
-                    if (msg === "GUARDO") {
-                        $.confirm({
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Datos procesados correctamente!!',
-                            type: 'green',
-                            typeAnimated: true,
-                            autoClose: 'cerrarAction|1000',
-                            buttons: {
-                                cerrarAction: {
-                                    text: 'Cerrar',
-                                    action: function () {
-                                        $('#div_VentanaPrincipal').jqxWindow('close');
-                                        fn_Refrescar();
+            if (mode !== 'D')
+                msg += fn_validaCombos("#cbo_Tarea", "Seleccione una Tarea Presupuestal.");
+            if (msg === "") {
+                $.ajax({
+                    type: "POST",
+                    url: "../IduTareaEspecifica",
+                    data: {mode: mode, periodo: periodo, tarea: tarea, codigo: codigo, lista: JSON.stringify(lista)},
+                    success: function (data) {
+                        msg = data;
+                        if (msg === "GUARDO") {
+                            $.confirm({
+                                title: 'AVISO DEL SISTEMA',
+                                content: 'Datos procesados correctamente!!',
+                                type: 'green',
+                                typeAnimated: true,
+                                autoClose: 'cerrarAction|1000',
+                                buttons: {
+                                    cerrarAction: {
+                                        text: 'Cerrar',
+                                        action: function () {
+                                            $('#div_VentanaPrincipal').jqxWindow('close');
+                                            fn_Refrescar();
+                                        }
                                     }
                                 }
-                            }
-                        });
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: msg,
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
+                            });
+                        } else {
+                            $.alert({
+                                theme: 'material',
+                                title: 'AVISO DEL SISTEMA',
+                                content: msg,
+                                animation: 'zoom',
+                                closeAnimation: 'zoom',
+                                type: 'red',
+                                typeAnimated: true
+                            });
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: msg,
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'red',
+                    typeAnimated: true
+                });
+            }
         }
     });
 </script>
@@ -323,6 +336,9 @@
                     <td>
                         <select id="cbo_Tarea" name="cbo_Tarea">
                             <option value="0">Seleccione</option>
+                            <c:forEach var="d" items="${objTarea}">
+                                <option value="${d.codigo}">${d.descripcion}</option>
+                            </c:forEach>
                         </select>
                     </td> 
                 </tr>

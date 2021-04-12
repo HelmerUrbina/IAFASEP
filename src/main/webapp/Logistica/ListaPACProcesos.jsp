@@ -664,8 +664,20 @@
                         $('#btn_Cancelar').jqxButton({width: '65px', height: 25});
                         $('#btn_Guardar').jqxButton({width: '65px', height: 25});
                         $('#btn_Guardar').on('click', function () {
-                            fn_GrabarDatos();
+                            $('#frm_PACProcesos').jqxValidator('validate');
                         });
+                        $('#frm_PACProcesos').jqxValidator({
+                            rules: [
+                                {input: '#txt_NumeroPAAC', message: 'Ingrese la Nro de PAC!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Descripcion', message: 'Ingrese la Descripcion del Procedimiento de Selección!', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_PACProcesos').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatos();
+                            }
+                        });
+                        
                     }
                 });
                 ancho = 750;
@@ -941,7 +953,7 @@
                     }
                 });
                 ancho = 400;
-                alto = 140;
+                alto = 115;
                 posicionX = ($(window).width() / 2) - (ancho / 2);
                 posicionY = ($(window).height() / 2) - (alto / 2);
                 $('#div_Reporte').jqxWindow({
@@ -953,17 +965,9 @@
                         $('#div_LOG0001').on('checked', function (event) {
                             reporte = 'LOG0001';
                         });
-                        $("#div_LOG0003").jqxRadioButton({width: 200, height: 20});
-                        $('#div_LOG0003').on('checked', function (event) {
-                            reporte = 'LOG0003';
-                        });
-                        $("#div_LOG0004").jqxRadioButton({width: 200, height: 20});
-                        $('#div_LOG0004').on('checked', function (event) {
-                            reporte = 'LOG0004';
-                        });
-                        $("#div_LOG0005").jqxRadioButton({width: 200, height: 20});
-                        $('#div_LOG0005').on('checked', function (event) {
-                            reporte = 'LOG0005';
+                        $("#div_LOG0002").jqxRadioButton({width: 200, height: 20});
+                        $('#div_LOG0002').on('checked', function (event) {
+                            reporte = 'LOG0002';
                         });
                         $('#btn_CerrarImprimir').jqxButton({width: '65px', height: 25});
                         $('#btn_Imprimir').jqxButton({width: '65px', height: 25});
@@ -1135,6 +1139,7 @@
     }
     //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
     function fn_GrabarDatos() {
+        var msg = "";
         var numeroPAAC = $("#txt_NumeroPAAC").val();
         var tipoContratacion = $("#cbo_TipoContratacion").val();
         var procesoEtapa = $("#cbo_ProcesoEtapa").val();
@@ -1158,46 +1163,62 @@
             compras = 1;
         else
             compras = 0;
-        $.ajax({
-            type: "POST",
-            url: "../IduPACProcesos",
-            data: {mode: mode, periodo: periodo, presupuesto: presupuesto, codigo: codigo, numeroPAAC: numeroPAAC,
-                tipoContratacion: tipoContratacion, procesoEtapa: procesoEtapa, procesoDocumento: procesoDocumento, tipoProcedimiento: tipoProcedimiento,
-                descripcion: descripcion, numeroProceso: numeroProceso, montoProceso: montoProceso, convocatoria: convocatoria, participantes: participantes,
-                observaciones: observaciones, absolucion: absolucion, integracion: integracion, ofertas: ofertas, evaluacion: evaluacion,
-                buenaPro: buenaPro, consentimiento: consentimiento, contrato: contrato, compras: compras},
-            success: function (data) {
-                msg = data;
-                if (msg === "GUARDO") {
-                    $.confirm({
-                        title: 'AVISO DEL SISTEMA',
-                        content: 'Datos procesados correctamente!!',
-                        type: 'green',
-                        typeAnimated: true,
-                        autoClose: 'cerrarAction|1000',
-                        buttons: {
-                            cerrarAction: {
-                                text: 'Cerrar',
-                                action: function () {
-                                    $('#div_VentanaPrincipal').jqxWindow('close');
-                                    fn_Refrescar();
+        msg += fn_validaCombos("#cbo_TipoContratacion", "Seleccione el Tipo de Contratación.");
+        msg += fn_validaCombos("#cbo_ProcesoEtapa", "Seleccione la Etapa del Proceso.");
+        msg += fn_validaCombos("#cbo_ProcesoDocumento", "Seleccione el Tipo de Documento.");
+        msg += fn_validaCombos("#cbo_TipoProcedimiento", "Seleccione el Tipo de Procedimiento.");
+        if (msg === "") {
+            $.ajax({
+                type: "POST",
+                url: "../IduPACProcesos",
+                data: {mode: mode, periodo: periodo, presupuesto: presupuesto, codigo: codigo, numeroPAAC: numeroPAAC,
+                    tipoContratacion: tipoContratacion, procesoEtapa: procesoEtapa, procesoDocumento: procesoDocumento, tipoProcedimiento: tipoProcedimiento,
+                    descripcion: descripcion, numeroProceso: numeroProceso, montoProceso: montoProceso, convocatoria: convocatoria, participantes: participantes,
+                    observaciones: observaciones, absolucion: absolucion, integracion: integracion, ofertas: ofertas, evaluacion: evaluacion,
+                    buenaPro: buenaPro, consentimiento: consentimiento, contrato: contrato, compras: compras},
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente!!',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        $('#div_VentanaPrincipal').jqxWindow('close');
+                                        fn_Refrescar();
+                                    }
                                 }
                             }
-                        }
-                    });
-                } else {
-                    $.alert({
-                        theme: 'material',
-                        title: 'AVISO DEL SISTEMA',
-                        content: msg,
-                        animation: 'zoom',
-                        closeAnimation: 'zoom',
-                        type: 'red',
-                        typeAnimated: true
-                    });
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
     }
     //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
     function fn_GrabarDatosDetalle() {
@@ -1654,7 +1675,7 @@
                         <option value="0">Seleccione</option>
                     </select>
                 </td>
-            </tr>            
+            </tr>
             <tr>
                 <td class="Summit" colspan="4">
                     <div>
@@ -1802,10 +1823,8 @@
         <span style="float: left">LISTADO DE REPORTES</span>
     </div>
     <div style="overflow: hidden">
-        <div id='div_LOG0001'>Certificado VS PAC</div>
-        <div id='div_LOG0003'>Relación PAC</div>
-        <div id='div_LOG0004'>Avance Registro PAC</div>
-        <div id='div_LOG0005'>Proyección de Gastos AF-${periodo}</div>
+        <div id='div_LOG0001'>Relación PAC</div>
+        <div id='div_LOG0002'>Proyección de Gastos</div>
         <div class="Summit">
             <input type="submit" id="btn_Imprimir" name="btn_Imprimir" value="Ver" style="margin-right: 20px"/>
             <input type="button" id="btn_CerrarImprimir" name="btn_CerrarImprimir" value="Cerrar" style="margin-right: 20px"/>

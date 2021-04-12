@@ -143,6 +143,7 @@ public class IduPACProcesosServlet extends HttpServlet {
             objDsMsgerr = new MsgerrDAOImpl(objConnection);
             objBnMsgerr = objDsMsgerr.getMsgerr(objBnMsgerr);
             result = objBnMsgerr.getDescripcion();
+            System.out.println("ingreso");
         }
         System.out.println(k+" "+result);
         // EN CASO DE NO HABER PROBLEMAS RETORNAMOS UNA NUEVA CONSULTA CON TODOS LOS DATOS.

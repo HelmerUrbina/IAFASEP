@@ -59,7 +59,7 @@
                 </ul>
             </li>
         </c:forEach>
-        <li id="2"><span item-title="true" style="font-weight: bold; color: red">SALIR</span></li>
+        <li id="2" > <a href="javascript:fn_FinalizaSession();"><span item-title="true" style="font-weight: bold; color: red">SALIR</span></a></li>
     </ul>
 </div>
 <div id="div_Aviso"></div>

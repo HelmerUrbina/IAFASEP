@@ -41,15 +41,15 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
     @Override
     public List getListaCertificados(BeanEjecucionPresupuestal objBeanCertificado, String usuario) {
         lista = new LinkedList<>();
-        sql = "SELECT NCERTIFICADO_CODIGO, REPLACE(REGEXP_REPLACE(UPPER(VCERTIFICADO_DOCUMENTO),'[^A-Za-z0-9ÁÉÍÓÚáéíóú ]', ''),'\n"
-                + "', ' ') AS VCERTIFICADO_DOCUMENTO, REPLACE(REGEXP_REPLACE(UPPER(VCERTIFICADO_CONCEPTO),'[^A-Za-z0-9ÁÉÍÓÚáéíóú ]', ''),'\n"
-                + "', ' ') AS VCERTIFICADO_CONCEPTO, IFNULL(DCERTIFICADO_FECHA,'DD/MM/YYYY HH24:MM') AS FECHA, "
+        sql = "SELECT NCERTIFICADO_CODIGO, UPPER(VCERTIFICADO_DOCUMENTO) AS VCERTIFICADO_DOCUMENTO, "
+                + "UPPER(VCERTIFICADO_CONCEPTO) AS VCERTIFICADO_CONCEPTO, IFNULL(DCERTIFICADO_FECHA,'DD/MM/YYYY HH24:MM') AS FECHA, "
                 + "CASE CCERTIFICADO_TIPO_REGISTRO WHEN 'RE' THEN (-1)*NCERTIFICADO_IMPORTE ELSE NCERTIFICADO_IMPORTE END AS IMPORTE, NCERTIFICADO_TIPO_CAMBIO, "
                 + "CASE CCERTIFICADO_TIPO_REGISTRO WHEN 'RE' THEN (-1)*NCERTIFICADO_EXTRANJERA ELSE NCERTIFICADO_EXTRANJERA END AS EXTRANJERA, "
                 + "CASE CESTADO_CODIGO WHEN 'PE' THEN 'PENDIENTE' WHEN 'CE' THEN 'CERRADO' WHEN 'AT' THEN 'ATENDIDO' WHEN 'AN' THEN 'ANULADA' ELSE ' ' END AS ESTADO, "
                 + "CASE CCERTIFICADO_TIPO_REGISTRO WHEN 'CE' THEN 'CERTIFICADO' WHEN 'AM' THEN 'AMPLIACION' WHEN 'RE' THEN 'REBAJA' ELSE '' END AS TIP_SOL, "
                 + "NCERTIFICADO_ANEXO, NINFORME_DISPONIBILIDAD_CODIGO,"
-                + "`PK_UTIL.FUN_PAC_PROCESO_DESCRIPCION`(CPERIODO_CODIGO, NFUENTE_FINANCIAMIENTO_CODIGO, NPAC_PROCESOS_CODIGO) AS PROCESO "
+                + "`PK_UTIL.FUN_PAC_PROCESO_DESCRIPCION`(CPERIODO_CODIGO, NFUENTE_FINANCIAMIENTO_CODIGO, NPAC_PROCESOS_CODIGO) AS PROCESO, "
+                + "VCERTIFICADO_ARCHIVO AS ARCHIVO "
                 + "FROM IAFAS_CERTIFICADO_PRESUPUESTAL WHERE "
                 + "CPERIODO_CODIGO=? AND "
                 + "NFUENTE_FINANCIAMIENTO_CODIGO=? "
@@ -72,6 +72,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
                 objBnCertificado.setTipo(objResultSet.getString("TIP_SOL"));
                 objBnCertificado.setDependencia(objResultSet.getString("NINFORME_DISPONIBILIDAD_CODIGO"));
                 objBnCertificado.setProcesoSeleccion(objResultSet.getString("PROCESO"));
+                objBnCertificado.setArchivo(objResultSet.getString("ARCHIVO"));
                 lista.add(objBnCertificado);
             }
         } catch (SQLException e) {
@@ -273,7 +274,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
             cs.setString(3, objBnCertificado.getCertificado());
             cs.setString(4, objBnCertificado.getTipo());
             cs.setString(5, objBnCertificado.getProcesoSeleccion());
-            cs.setString(6, objBnCertificado.getCobertura());
+            cs.setString(6, objBnCertificado.getAnexoCertificado());
             cs.setString(7, objBnCertificado.getDisponibilidadPresupuestal());
             cs.setString(8, objBnCertificado.getDocumentoReferencia());
             cs.setString(9, objBnCertificado.getConcepto());
@@ -334,73 +335,6 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
             objBnMsgerr.setTabla("IAFAS_CERTIFICADO_PRESUPUESTAL");
             objBnMsgerr.setTipo(objBeanCertificado.getMode().toUpperCase());
             objBnMsgerr.setDescripcion(e.getMessage());
-            s = objDsMsgerr.iduMsgerr(objBnMsgerr);
-            return 0;
-        }
-        return s;
-    }
-
-    @Override
-    public int iduGenerarSolicitud(BeanEjecucionPresupuestal objBeanCertificado, String usuario) {
-        /*
-         * EJECUTAMOS EL PROCEDIMIENTO ALMACENADO PARA LOS PROVEEDORES, EN EL
-         * CUAL PODEMOS INSERTAR, MODIFICAR O ELIMINAR UN REGISTRO DE LA TABLA
-         * USUARIO, EN CASO DE OBTENER ALGUN ERROR ACTIVARA LA OPCION DE
-         * EXCEPCIONES EN LA CUAL SE REGISTRARA EL ERROR EL MOTIVO DEL ERROR.
-         */
-        sql = "{CALL SP_IDU_GENERAR_COBERTURA_A(?,?,?,?,?,?)}";
-        try (CallableStatement cs = objConnection.prepareCall(sql)) {
-            cs.setString(1, objBeanCertificado.getPeriodo());
-            cs.setString(2, objBeanCertificado.getUnidadOperativa());
-            cs.setInt(3, objBeanCertificado.getPresupuesto());
-            cs.setString(4, objBeanCertificado.getCertificado());
-            cs.setString(5, usuario);
-            cs.setString(6, objBeanCertificado.getMode());
-            s = cs.executeUpdate();
-            cs.close();
-            s++;
-        } catch (SQLException e) {
-            System.out.println("Error al ejecutar iduGenerarSolicitud : " + e.getMessage());
-            objDsMsgerr = new MsgerrDAOImpl(objConnection);
-            objBnMsgerr = new BeanMsgerr();
-            objBnMsgerr.setUsuario(usuario);
-            objBnMsgerr.setTabla("IAFAS_CERTIFICADO_PRESUPUESTAL");
-            objBnMsgerr.setTipo(objBeanCertificado.getMode().toUpperCase());
-            objBnMsgerr.setDescripcion(e.getMessage());
-            s = objDsMsgerr.iduMsgerr(objBnMsgerr);
-            return 0;
-        }
-        return s;
-    }
-
-    @Override
-    public int iduCertificadoSIAF(BeanEjecucionPresupuestal objBeanCertificado, String usuario) {
-        /*
-         * EJECUTAMOS EL PROCEDIMIENTO ALMACENADO PARA LOS PROVEEDORES, EN EL
-         * CUAL PODEMOS INSERTAR, MODIFICAR O ELIMINAR UN REGISTRO DE LA TABLA
-         * USUARIO, EN CASO DE OBTENER ALGUN ERROR ACTIVARA LA OPCION DE
-         * EXCEPCIONES EN LA CUAL SE REGISTRARA EL ERROR EL MOTIVO DEL ERROR.
-         */
-        sql = "{CALL SP_UPD_NUMERO_CERTIFICADO(?,?,?,?,?,?,?)}";
-        try (CallableStatement cs = objConnection.prepareCall(sql)) {
-            cs.setString(1, objBeanCertificado.getPeriodo());
-            cs.setInt(2, objBeanCertificado.getPresupuesto());
-            cs.setString(3, objBeanCertificado.getUnidadOperativa());
-            cs.setString(4, objBeanCertificado.getCertificado());
-            cs.setString(5, objBeanCertificado.getCertificado().trim());
-            cs.setString(6, usuario);
-            cs.setString(7, objBeanCertificado.getMode());
-            s = cs.executeUpdate();
-            cs.close();
-            s++;
-        } catch (SQLException e) {
-            System.out.println("Error al ejecutar iduCertificadoSIAF : " + e.getMessage());
-            objDsMsgerr = new MsgerrDAOImpl(objConnection);
-            objBnMsgerr = new BeanMsgerr();
-            objBnMsgerr.setUsuario(usuario);
-            objBnMsgerr.setTabla("IAFAS_CERTIFICADO_PRESUPUESTAL");
-            objBnMsgerr.setTipo(objBeanCertificado.getMode().toUpperCase());
-            objBnMsgerr.setDescripcion(e.toString());
             s = objDsMsgerr.iduMsgerr(objBnMsgerr);
             return 0;
         }

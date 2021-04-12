@@ -3,14 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.iafas.UserServices.Configuracion;
+package com.iafas.UserServices.Presupuesto;
 
-import com.iafas.BusinessServices.Beans.BeanTareaEspecifica;
+import com.iafas.BusinessServices.Beans.BeanCalendarioGastos;
 import com.iafas.BusinessServices.Beans.BeanUsuario;
+import com.iafas.DataService.Despachadores.CalendarioGastosDAO;
 import com.iafas.DataService.Despachadores.CombosDAO;
+import com.iafas.DataService.Despachadores.Impl.CalendarioGastosDAOImpl;
 import com.iafas.DataService.Despachadores.Impl.CombosDAOImpl;
-import com.iafas.DataService.Despachadores.Impl.TareaEspecificaDAOImpl;
-import com.iafas.DataService.Despachadores.TareaEspecificaDAO;
+import com.iafas.Utiles.Utiles;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -28,17 +29,17 @@ import javax.servlet.http.HttpSession;
  *
  * @author H-URBINA-M
  */
-@WebServlet(name = "TareaEspecificaServlet", urlPatterns = {"/TareaEspecifica"})
-public class TareaEspecificaServlet extends HttpServlet {
+@WebServlet(name = "CalendarioGastosServlet", urlPatterns = {"/CalendarioGastos"})
+public class CalendarioGastosServlet extends HttpServlet {
 
     private ServletConfig config = null;
     private ServletContext context = null;
     private HttpSession session = null;
     private RequestDispatcher dispatcher = null;
-    private BeanTareaEspecifica objBnTareaEspecifica;
+    private BeanCalendarioGastos objBnCalendarioGastos;
     private Connection objConnection;
-    private TareaEspecificaDAO objDsTareaEspecifica;
-    private CombosDAO objDsCombos;
+    private CalendarioGastosDAO objDsCalendarioGastos;
+    private CombosDAO objDsCombo;
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -54,40 +55,46 @@ public class TareaEspecificaServlet extends HttpServlet {
         config = this.getServletConfig();
         context = config.getServletContext();
         session = request.getSession();
+        String result = null;
+        // VERIFICAMOS LA SESSION DE LA SOLICITUD DE CREDITO
         BeanUsuario objUsuario = (BeanUsuario) session.getAttribute("objUsuario" + session.getId());
         if (objUsuario == null) {
-            dispatcher = request.getRequestDispatcher("/FinSession.jsp");
+            dispatcher = request.getRequestDispatcher("FinSession.jsp");
             dispatcher.forward(request, response);
         }
         objConnection = (Connection) context.getAttribute("objConnection");
-        String result = null;
-        objBnTareaEspecifica = new BeanTareaEspecifica();
-        objBnTareaEspecifica.setMode(request.getParameter("mode"));
-        objBnTareaEspecifica.setPeriodo(request.getParameter("periodo"));
-        objBnTareaEspecifica.setCodigo(request.getParameter("codigo"));
-        objDsTareaEspecifica = new TareaEspecificaDAOImpl(objConnection);
-        // DE ACUERO AL MODO, OBTENEMOS LOS DATOS NECESARIOS.  
-        if (objBnTareaEspecifica.getMode().equals("G")) {
-            if (request.getAttribute("objTareaEspecifica") != null) {
-                request.removeAttribute("objTareaEspecifica");
+        objBnCalendarioGastos = new BeanCalendarioGastos();
+        objBnCalendarioGastos.setMode(request.getParameter("mode"));
+        objBnCalendarioGastos.setPeriodo(request.getParameter("periodo"));
+        objBnCalendarioGastos.setPresupuesto(Utiles.checkNum(request.getParameter("presupuesto")));
+        objBnCalendarioGastos.setCodigo(request.getParameter("codigo"));
+        objDsCalendarioGastos = new CalendarioGastosDAOImpl(objConnection);
+        // DE ACUERO AL MODO, OBTENEMOS LOS DATOS NECESARIOS.
+        if (objBnCalendarioGastos.getMode().equals("G")) {
+            if (request.getAttribute("objCalendarioGastos") != null) {
+                request.removeAttribute("objCalendarioGastos");
             }
-            request.setAttribute("objTareaEspecifica", objDsTareaEspecifica.getListaTareasEspecificas(objBnTareaEspecifica, objUsuario.getUsuario()));
-            objDsCombos = new CombosDAOImpl(objConnection);
-            if (request.getAttribute("objTarea") != null) {
-                request.removeAttribute("objTarea");
+            if (request.getAttribute("objCalendarioGastosDetalle") != null) {
+                request.removeAttribute("objCalendarioGastosDetalle");
             }
-            request.setAttribute("objTarea", objDsCombos.getTarea());
+            request.setAttribute("objCalendarioGastos", objDsCalendarioGastos.getListaCalendarioGastos(objBnCalendarioGastos));
+            request.setAttribute("objCalendarioGastosDetalle", objDsCalendarioGastos.getListaCalendarioGastosDetalle(objBnCalendarioGastos));
+            objDsCombo = new CombosDAOImpl(objConnection);
+            if (request.getAttribute("objTareasPresupuestales") != null) {
+                request.removeAttribute("objTareasPresupuestales");
+            }
+            request.setAttribute("objTareasPresupuestales", objDsCombo.getTarea());
         }
-        if (objBnTareaEspecifica.getMode().equals("M")) {
-            result = "" + objDsTareaEspecifica.getCadenaGasto(objBnTareaEspecifica, objUsuario.getUsuario());
+        if (objBnCalendarioGastos.getMode().equals("B")) {
+            result = "" + objDsCalendarioGastos.getListaCalendarioGastoDetalle(objBnCalendarioGastos);
         }
         //SE ENVIA DE ACUERDO AL MODO SELECCIONADO
         switch (request.getParameter("mode")) {
-            case "tareaEspecifica":
-                dispatcher = request.getRequestDispatcher("Configuracion/TareaEspecifica.jsp");
+            case "calendarioGastos":
+                dispatcher = request.getRequestDispatcher("Presupuesto/CalendarioGastos.jsp");
                 break;
             case "G":
-                dispatcher = request.getRequestDispatcher("Configuracion/ListaTareaEspecifica.jsp");
+                dispatcher = request.getRequestDispatcher("Presupuesto/ListaCalendarioGastos.jsp");
                 break;
             default:
                 dispatcher = request.getRequestDispatcher("error.jsp");

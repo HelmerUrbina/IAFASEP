@@ -9,7 +9,7 @@
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="CODIGO" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["14/03/2021"]]></defaultValueExpression>
+		<defaultValueExpression><![CDATA["4/03/2021"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="USUARIO" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA["123"]]></defaultValueExpression>
@@ -50,7 +50,7 @@ FROM
 WHERE
      CPERIODO_CODIGO = $P{PERIODO}
  AND CMESA_PARTE_TIPO = $P{TIPO} 
- AND DATE_FORMAT(DMESA_PARTE_RECEPCION,'%d/%m/%Y')=$P{CODIGO}
+ AND DATE_FORMAT(DMESA_PARTE_RECEPCION,'%d/%m/%Y')=DATE_FORMAT($P{CODIGO},'%d/%m/%Y') 
  AND CESTADO_CODIGO!='AN'
 ORDER BY
      NUMERO ASC]]>
@@ -283,7 +283,7 @@ ORDER BY
 			</staticText>
 			<image>
 				<reportElement x="0" y="0" width="130" height="45" uuid="1642f6c0-7020-40c0-9805-f869f07a835b"/>
-				<imageExpression><![CDATA[$P{SUBREPORT_DIR}+"Imagenes\\logo.png"]]></imageExpression>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR}+"Imagenes/logo.png"]]></imageExpression>
 			</image>
 			<textField isBlankWhenNull="true">
 				<reportElement key="textField" x="0" y="20" width="782" height="20" uuid="df85d522-688a-4db8-883e-00931bb70084"/>
@@ -524,6 +524,6 @@ ORDER BY
 		</band>
 	</pageFooter>
 	<summary>
-		<band height="20" splitType="Stretch"/>
+		<band splitType="Stretch"/>
 	</summary>
 </jasperReport>

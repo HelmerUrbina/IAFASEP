@@ -11,11 +11,10 @@ public class BeanEjecucionPresupuestal implements Serializable {
 
     private String mode;
     private String Periodo;
-    private String UnidadOperativa;
     private String Certificado;
     private String CompromisoAnual;
     private String CompromisoMensual;
-    private String Cobertura;
+    private String AnexoCertificado;
     private String DocumentoReferencia;
     private String Concepto;
     private String Observacion;
@@ -58,14 +57,6 @@ public class BeanEjecucionPresupuestal implements Serializable {
         this.Periodo = Periodo;
     }
 
-    public String getUnidadOperativa() {
-        return UnidadOperativa;
-    }
-
-    public void setUnidadOperativa(String UnidadOperativa) {
-        this.UnidadOperativa = UnidadOperativa;
-    }
-
     public String getCertificado() {
         return Certificado;
     }
@@ -90,12 +81,12 @@ public class BeanEjecucionPresupuestal implements Serializable {
         this.CompromisoMensual = CompromisoMensual;
     }
 
-    public String getCobertura() {
-        return Cobertura;
+    public String getAnexoCertificado() {
+        return AnexoCertificado;
     }
 
-    public void setCobertura(String Cobertura) {
-        this.Cobertura = Cobertura;
+    public void setAnexoCertificado(String AnexoCertificado) {
+        this.AnexoCertificado = AnexoCertificado;
     }
 
     public String getDocumentoReferencia() {
@@ -234,6 +225,14 @@ public class BeanEjecucionPresupuestal implements Serializable {
         this.Sectorista = Sectorista;
     }
 
+    public String getResolucion() {
+        return Resolucion;
+    }
+
+    public void setResolucion(String Resolucion) {
+        this.Resolucion = Resolucion;
+    }
+
     public Date getFecha() {
         return Fecha;
     }
@@ -256,14 +255,6 @@ public class BeanEjecucionPresupuestal implements Serializable {
 
     public void setCorrelativo(Integer Correlativo) {
         this.Correlativo = Correlativo;
-    }
-
-    public String getResolucion() {
-        return Resolucion;
-    }
-
-    public void setResolucion(String Resolucion) {
-        this.Resolucion = Resolucion;
     }
 
     public Double getImporte() {

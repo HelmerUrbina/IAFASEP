@@ -29,8 +29,4 @@ public interface CertificadoPresupuestalDAO {
 
     public int iduCertificadoDetalle(BeanEjecucionPresupuestal objBeanCertificado, String usuario);
 
-    public int iduGenerarSolicitud(BeanEjecucionPresupuestal objBeanCertificado, String usuario);
-
-    public int iduCertificadoSIAF(BeanEjecucionPresupuestal objBeanCertificado, String usuario);
-
 }

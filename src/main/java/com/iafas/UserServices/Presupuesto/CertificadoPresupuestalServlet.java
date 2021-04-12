@@ -104,7 +104,6 @@ public class CertificadoPresupuestalServlet extends HttpServlet {
         if (objBnCertificado.getMode().equals("B")) {
             result = "" + objDsCertificado.getListaCertificadoDetalle(objBnCertificado, objUsuario.getUsuario());
         }
-
         //SE ENVIA DE ACUERDO AL MODO SELECCIONADO
         switch (objBnCertificado.getMode()) {
             case "G":
