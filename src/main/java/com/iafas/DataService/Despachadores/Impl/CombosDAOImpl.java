@@ -1047,15 +1047,13 @@ public class CombosDAOImpl implements CombosDAO {
                         + "ORDER BY CODIGO";
             }
         } else {
-            sql = "SELECT RESOL AS CODIGO, RESOL||':'||UTIL.FUN_DESCRIPCION_RESOLUCION(CPERIODO_CODIGO, RESOL) "
-                    + "||' S/. '||TO_CHAR(SUM(IMPORT),'FM999,999,999,999.009') AS DESCRIPCION "
-                    + "FROM V_TASOCP WHERE "
+            sql = "SELECT NRESOLUCION_CODIGO AS CODIGO, CONCAT(NRESOLUCION_CODIGO,':',`PK_UTIL.FUN_RESOLUCION_DESCRIPCION`(CPERIODO_CODIGO, NRESOLUCION_CODIGO), "
+                    + "' S/. ',FORMAT(SUM(IMPORTE),2)) AS DESCRIPCION "
+                    + "FROM V_CERTIFICADO_REBAJAS WHERE "
                     + "CPERIODO_CODIGO=? AND "
                     + "NFUENTE_FINANCIAMIENTO_CODIGO=? AND "
-                    + "COUUOO=? AND "
-                    + "TRIM(CODTIP)=TRIM(?) AND "
-                    + "NROCER='" + solicitudCredito + "'  "
-                    + "GROUP BY RESOL,CPERIODO_CODIGO "
+                    + "NCERTIFICADO_CODIGO='" + solicitudCredito + "' "
+                    + "GROUP BY NRESOLUCION_CODIGO "
                     + "ORDER BY CODIGO ";
         }
         try {
@@ -1095,7 +1093,7 @@ public class CombosDAOImpl implements CombosDAO {
         if (tipoCertificado.equals("CE") || tipoCertificado.equals("AM")) {
             if (opinionPresupuestal == null || opinionPresupuestal.trim().equals("0")) {
                 sql = "SELECT NTAREA_PRESUPUESTAL_CODIGO AS CODIGO, "
-                        + "CONCAT(NTAREA_PRESUPUESTAL_CODIGO,':',`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO),' S/. ',"
+                        + "CONCAT(`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO),' S/. ',"
                         + "FORMAT(SUM(PIM-CERTIFICADO),2)) AS DESCRIPCION "
                         + "FROM V_CERTIFICADO_PRESUPUESTAL WHERE "
                         + "CPERIODO_CODIGO=? AND "
@@ -1122,17 +1120,13 @@ public class CombosDAOImpl implements CombosDAO {
             }
         } else {
             sql = "SELECT NTAREA_PRESUPUESTAL_CODIGO AS CODIGO, "
-                    + "NTAREA_PRESUPUESTAL_CODIGO||':'||UTIL_NEW.FUN_NTAREA(NTAREA_PRESUPUESTAL_CODIGO)||' S/. '||"
-                    + "TO_CHAR(SUM(IMPORT),'FM999,999,999,999.009') AS DESCRIPCION "
-                    + "FROM V_TASOCP WHERE "
+                    + "CONCAT(`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO),' S/. ',"
+                    + "FORMAT(SUM(IMPORTE),2)) AS DESCRIPCION "
+                    + "FROM V_CERTIFICADO_REBAJAS WHERE "
                     + "CPERIODO_CODIGO=? AND "
                     + "NFUENTE_FINANCIAMIENTO_CODIGO=? AND "
-                    + "COUUOO=? AND "
-                    + "TRIM(CODTIP)=TRIM(?) AND "
-                    + "RESOL=? AND "
-                    + "CODDEP=? AND "
-                    + "SECFUN=? AND "
-                    + "NROCER='" + solicitudCredito + "'  "
+                    + "NRESOLUCION_CODIGO=? AND "
+                    + "NCERTIFICADO_CODIGO='" + solicitudCredito + "'  "
                     + "GROUP BY NTAREA_PRESUPUESTAL_CODIGO "
                     + "ORDER BY CODIGO ";
         }
@@ -1203,19 +1197,15 @@ public class CombosDAOImpl implements CombosDAO {
                         + "ORDER BY CODIGO";
             }
         } else {
-            sql = "SELECT NCLASIFICADOR_PRESUPUESTAL_CODIGO AS CODIGO, "
-                    + "NCLASIFICADOR_PRESUPUESTAL_CODIGO||':'||PK_UTIL.FUN_CLASIFICA_PRESUPUESTAL_NOM(NCLASIFICADOR_PRESUPUESTAL_CODIGO)||' S/. '||"
-                    + "TO_CHAR(SUM(IMPORT),'FM999,999,999,999.009') AS DESCRIPCION "
-                    + "FROM V_TASOCP WHERE "
+            sql = "SELECT SELECT NCLASIFICADOR_PRESUPUESTAL_CODIGO AS CODIGO, "
+                    + "CONCAT(`PK_UTIL.FUN_CLASIFICA_PRESUPUESTAL_NOMBRE`(NCLASIFICADOR_PRESUPUESTAL_CODIGO),' S/. ',"
+                    + "FORMAT(SUM(IMPORTE),2)) AS DESCRIPCION "
+                    + "FROM V_CERTIFICADO_REBAJAS WHERE "
                     + "CPERIODO_CODIGO=? AND "
                     + "NFUENTE_FINANCIAMIENTO_CODIGO=? AND "
-                    + "COUUOO=? AND "
-                    + "TRIM(CODTIP)=TRIM(?) AND "
-                    + "RESOL=? AND "
-                    + "CODDEP=? AND "
-                    + "SECFUN=? AND "
+                    + "NRESOLUCION_CODIGO=? AND "
                     + "NTAREA_PRESUPUESTAL_CODIGO=? AND "
-                    + "NROCER='" + solicitudCredito + "'  "
+                    + "NCERTIFICADO_CODIGO='" + solicitudCredito + "'  "
                     + "GROUP BY NCLASIFICADOR_PRESUPUESTAL_CODIGO "
                     + "ORDER BY CODIGO ";
         }

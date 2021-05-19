@@ -91,6 +91,7 @@ public class CertificadoPresupuestalServlet extends HttpServlet {
         if (objBnCertificado.getMode().equals("U")) {
             objBnCertificado = objDsCertificado.getCertificado(objBnCertificado, objUsuario.getUsuario());
             result = objBnCertificado.getCertificado() + "+++"
+                    + objBnCertificado.getAnexoCertificado()+ "+++"
                     + objBnCertificado.getFecha() + "+++"
                     + objBnCertificado.getDocumentoReferencia() + "+++"
                     + objBnCertificado.getConcepto() + "+++"
@@ -98,8 +99,7 @@ public class CertificadoPresupuestalServlet extends HttpServlet {
                     + objBnCertificado.getProcesoSeleccion() + "+++"
                     + objBnCertificado.getTipoMoneda() + "+++"
                     + objBnCertificado.getTipoCambio() + "+++"
-                    + objBnCertificado.getMonedaExtranjera() + "+++"
-                    + objBnCertificado.getDependencia();
+                    + objBnCertificado.getMonedaExtranjera() ;
         }
         if (objBnCertificado.getMode().equals("B")) {
             result = "" + objDsCertificado.getListaCertificadoDetalle(objBnCertificado, objUsuario.getUsuario());

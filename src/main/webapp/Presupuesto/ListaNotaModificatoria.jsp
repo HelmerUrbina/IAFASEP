@@ -684,13 +684,6 @@
                 cancelButton: $('#btn_Cancelar'),
                 initContent: function () {
                     $("#cbo_TipoNotaModificatoria").jqxDropDownList({animationType: 'fade', width: 650, height: 20});
-                    $('#cbo_TipoNotaModificatoria').on('change', function () {
-                        if ($("#cbo_TipoNotaModificatoria").val() === '5' || autorizacion === 'true') {
-                            $("#div_Importe").jqxNumberInput({decimalDigits: 2});
-                        } else {
-                            $("#div_Importe").jqxNumberInput({decimalDigits: 0});
-                        }
-                    });
                     $("#txt_Fecha").jqxDateTimeInput({culture: 'es-PE', animationType: 'fade', width: 150, height: 20, disabled: true});
                     $("#txt_Motivo").jqxInput({placeHolder: "MOTIVO", width: 650, height: 80, minLength: 1});
                     $('#btn_Cancelar').jqxButton({width: '65px', height: 25});
@@ -752,7 +745,7 @@
                             tarea: $("#cbo_Tarea").val()});
                     });
                     $("#cbo_CadenaGasto").jqxDropDownList({animationType: 'fade', width: 630, dropDownWidth: 750, height: 20});
-                    $("#div_Importe").jqxNumberInput({width: 150, height: 20, max: 999999999, digits: 9, decimalDigits: 0});
+                    $("#div_Importe").jqxNumberInput({width: 150, height: 20, max: 999999999, digits: 9, decimalDigits: 2});
                     $("#txt_Justificacion").jqxInput({placeHolder: "JUSTIFICACION", width: 630, height: 50, minLength: 10});
                     $('#btn_CancelarDetalle').jqxButton({width: '65px', height: 25});
                     $('#btn_GuardarDetalle').jqxButton({width: '65px', height: 25});

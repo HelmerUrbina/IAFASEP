@@ -41,13 +41,13 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
     @Override
     public List getListaCertificados(BeanEjecucionPresupuestal objBeanCertificado, String usuario) {
         lista = new LinkedList<>();
-        sql = "SELECT NCERTIFICADO_CODIGO, UPPER(VCERTIFICADO_DOCUMENTO) AS VCERTIFICADO_DOCUMENTO, "
+        sql = "SELECT NCERTIFICADO_CODIGO, NCERTIFICADO_ANEXO, UPPER(VCERTIFICADO_DOCUMENTO) AS VCERTIFICADO_DOCUMENTO, "
                 + "UPPER(VCERTIFICADO_CONCEPTO) AS VCERTIFICADO_CONCEPTO, IFNULL(DCERTIFICADO_FECHA,'DD/MM/YYYY HH24:MM') AS FECHA, "
                 + "CASE CCERTIFICADO_TIPO_REGISTRO WHEN 'RE' THEN (-1)*NCERTIFICADO_IMPORTE ELSE NCERTIFICADO_IMPORTE END AS IMPORTE, NCERTIFICADO_TIPO_CAMBIO, "
                 + "CASE CCERTIFICADO_TIPO_REGISTRO WHEN 'RE' THEN (-1)*NCERTIFICADO_EXTRANJERA ELSE NCERTIFICADO_EXTRANJERA END AS EXTRANJERA, "
                 + "CASE CESTADO_CODIGO WHEN 'PE' THEN 'PENDIENTE' WHEN 'CE' THEN 'CERRADO' WHEN 'AT' THEN 'ATENDIDO' WHEN 'AN' THEN 'ANULADA' ELSE ' ' END AS ESTADO, "
                 + "CASE CCERTIFICADO_TIPO_REGISTRO WHEN 'CE' THEN 'CERTIFICADO' WHEN 'AM' THEN 'AMPLIACION' WHEN 'RE' THEN 'REBAJA' ELSE '' END AS TIP_SOL, "
-                + "NCERTIFICADO_ANEXO, NINFORME_DISPONIBILIDAD_CODIGO,"
+                + "NINFORME_DISPONIBILIDAD_CODIGO, "
                 + "`PK_UTIL.FUN_PAC_PROCESO_DESCRIPCION`(CPERIODO_CODIGO, NFUENTE_FINANCIAMIENTO_CODIGO, NPAC_PROCESOS_CODIGO) AS PROCESO, "
                 + "VCERTIFICADO_ARCHIVO AS ARCHIVO "
                 + "FROM IAFAS_CERTIFICADO_PRESUPUESTAL WHERE "
@@ -62,6 +62,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
             while (objResultSet.next()) {
                 objBnCertificado = new BeanEjecucionPresupuestal();
                 objBnCertificado.setCertificado(objResultSet.getString("NCERTIFICADO_CODIGO"));
+                objBnCertificado.setAnexoCertificado(objResultSet.getString("NCERTIFICADO_ANEXO"));
                 objBnCertificado.setDocumentoReferencia(objResultSet.getString("VCERTIFICADO_DOCUMENTO"));
                 objBnCertificado.setConcepto(objResultSet.getString("VCERTIFICADO_CONCEPTO"));
                 objBnCertificado.setFecha(objResultSet.getDate("FECHA"));
@@ -94,7 +95,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
     public List getListaCertificadosDetalle(BeanEjecucionPresupuestal objBeanCertificado, String usuario) {
         lista = new LinkedList<>();
         sql = "SELECT NCERTIFICADO_CODIGO, `PK_UTIL.FUN_RESOLUCION_DESCRIPCION`(CPERIODO_CODIGO, NRESOLUCION_CODIGO) AS RESOLUCION,  "
-                + "CONCAT(NTAREA_PRESUPUESTAL_CODIGO,':',`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO)) AS TAREA_PRESUPUESTAL, "
+                + "`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO) AS TAREA_PRESUPUESTAL, "
                 + "`PK_UTIL.FUN_CLASIFICA_PRESUPUESTAL_NOMBRE`(NCLASIFICADOR_PRESUPUESTAL_CODIGO) AS CLASIFICADOR_PRESUPUESTAL, "
                 + "NCERTIFICADO_DETALLE_IMPORTE, NCERTIFICADO_DETALLE_TIPO_CAMBIO, NCERTIFICADO_DETALLE_EXTRANJERA "
                 + "FROM IAFAS_CERTIFI_PRESUPUESTAL_DETAL WHERE "
@@ -138,7 +139,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
         ArrayList<String> Filas = new ArrayList<>();
         sql = "SELECT CONCAT(NRESOLUCION_CODIGO,'---',NTAREA_PRESUPUESTAL_CODIGO,'---',NCLASIFICADOR_PRESUPUESTAL_CODIGO) AS CODIGO, "
                 + "`PK_UTIL.FUN_RESOLUCION_DESCRIPCION`(CPERIODO_CODIGO, NRESOLUCION_CODIGO) AS RESOLUCION,  "
-                + "CONCAT(NTAREA_PRESUPUESTAL_CODIGO,':',`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO)) AS TAREA_PRESUPUESTAL, "
+                + "`PK_UTIL.FUN_TAREA_PRESUPUESTAL_NOMBRE`(NTAREA_PRESUPUESTAL_CODIGO) AS TAREA_PRESUPUESTAL, "
                 + "`PK_UTIL.FUN_CLASIFICA_PRESUPUESTAL_NOMBRE`(NCLASIFICADOR_PRESUPUESTAL_CODIGO) AS CLASIFICADOR_PRESUPUESTAL, "
                 + "NCERTIFICADO_DETALLE_IMPORTE AS IMPORTE, NCERTIFICADO_DETALLE_EXTRANJERA AS MONEDA_EXTRANJERA "
                 + "FROM IAFAS_CERTIFI_PRESUPUESTAL_DETAL WHERE "
@@ -212,7 +213,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
 
     @Override
     public BeanEjecucionPresupuestal getCertificado(BeanEjecucionPresupuestal objBeanCertificado, String usuario) {
-        sql = "SELECT NCERTIFICADO_CODIGO, NINFORME_DISPONIBILIDAD_CODIGO AS NINFORME_DISPONIBILIDAD_CODIGO, "
+        sql = "SELECT NCERTIFICADO_CODIGO, NCERTIFICADO_ANEXO, NINFORME_DISPONIBILIDAD_CODIGO AS NINFORME_DISPONIBILIDAD_CODIGO, "
                 + "DCERTIFICADO_FECHA, NPAC_PROCESOS_CODIGO, "
                 + "IFNULL(VCERTIFICADO_DOCUMENTO, ' ') AS VCERTIFICADO_DOCUMENTO, "
                 + "IFNULL(VCERTIFICADO_CONCEPTO, ' ') AS VCERTIFICADO_CONCEPTO, "
@@ -231,6 +232,7 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
             objResultSet = objPreparedStatement.executeQuery();
             if (objResultSet.next()) {
                 objBeanCertificado.setCertificado(objResultSet.getString("NCERTIFICADO_CODIGO"));
+                objBeanCertificado.setAnexoCertificado(objResultSet.getString("NCERTIFICADO_ANEXO"));
                 objBeanCertificado.setDocumentoReferencia(objResultSet.getString("NINFORME_DISPONIBILIDAD_CODIGO"));
                 objBeanCertificado.setFecha(objResultSet.getDate("DCERTIFICADO_FECHA"));
                 objBeanCertificado.setProcesoSeleccion(objResultSet.getString("NPAC_PROCESOS_CODIGO"));
@@ -241,7 +243,6 @@ public class CertificadoPresupuestalDAOImpl implements CertificadoPresupuestalDA
                 objBeanCertificado.setTipoMoneda(objResultSet.getString("NMONEDA_CODIGO"));
                 objBeanCertificado.setTipoCambio(objResultSet.getDouble("NCERTIFICADO_TIPO_CAMBIO"));
                 objBeanCertificado.setMonedaExtranjera(objResultSet.getDouble("NCERTIFICADO_EXTRANJERA"));
-                objBeanCertificado.setDependencia(objResultSet.getString("NCERTIFICADO_ANEXO"));
             }
         } catch (SQLException e) {
             System.out.println("Error al obtener getCertificado(BeanCertificadoCreditoPresupuestal) : " + e.getMessage());

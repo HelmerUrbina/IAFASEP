@@ -42,8 +42,8 @@ public class DescargaServlet extends HttpServlet {
         String presupuesto = request.getParameter("presupuesto");
         String documento = request.getParameter("documento");
         String opcion = request.getParameter("opcion");
-        filePath = "D:/IAFAS/";
-      //  filePath = "/IAFASEP/";
+        // filePath = "D:/IAFAS/";
+        filePath = "/IAFASEP/";
         switch (opcion) {
             case "DemandaAdicional":
                 filePath += "PROGRAMACION/DemandaAdicional/" + periodo + "-" + codigo + "-" + documento;

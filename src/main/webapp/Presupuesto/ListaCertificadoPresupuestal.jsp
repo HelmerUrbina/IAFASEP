@@ -24,7 +24,7 @@
     var lista = new Array();
     <c:forEach var="c" items="${objCertificado}">
     var result = {certificado: '${c.certificado}', anexoCertificado: '${c.anexoCertificado}',
-        detalle: "${c.concepto}", documentoReferencia: "${c.documentoReferencia}", fecha: '${c.fecha}', paac: '${c.procesoSeleccion}',
+        detalle: '${c.concepto}', documentoReferencia: "${c.documentoReferencia}", fecha: '${c.fecha}', paac: '${c.procesoSeleccion}',
         importe: '${c.importe}', tipoCambio: '${c.tipoCambio}', monedaExtranjera: '${c.monedaExtranjera}', estado: '${c.estado}',
         tipo: '${c.tipo}', nroSolicitud: '${c.cadenaGasto}',
         opinion: '${c.dependencia}', firmaJefe: '${c.firmaJefe}', firmaSubJefe: '${c.firmaSubJefe}', fechaAprobacion: '${c.unidad}',
@@ -246,7 +246,7 @@
                 {text: 'EXTRANJERA', dataField: 'monedaExtranjera', width: '7%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
                 {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'TIPO', dataField: 'tipo', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'NRO SOLICITUD', dataField: 'nroSolicitud', width: '6%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'NRO ANEXO', dataField: 'anexoCertificado', width: '6%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'PAC', dataField: 'paac', width: '20%', align: 'center', cellclassname: cellclass},
                 {text: 'I.D.P.', dataField: 'opinion', width: '4%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
             ]
@@ -381,7 +381,6 @@
                     if (estado === 'CERRADO' && tipoCertificado === 'CERTIFICADO') {
                         tipoSolicitud = 'RE';
                         mode = 'I';
-                        codigo = '0';
                         fn_NuevoCab(codigo);
                     } else {
                         $.alert({
@@ -394,7 +393,7 @@
                             typeAnimated: true
                         });
                     }
-                }   
+                }
             } else {
                 $.alert({
                     theme: 'material',
@@ -580,16 +579,16 @@
                     var dato = data.split("+++");
                     if (dato.length === 10) {
                         $('#txt_NumeroSolicitud').val(dato[0]);
-                        var d = new Date(dato[1]);
+                        $('#txt_solicitudCredito').val(dato[1]);
+                        var d = new Date(dato[2]);
                         d.setDate(d.getDate() + 1);
                         $('#txt_Fecha ').jqxDateTimeInput('setDate', d);
-                        $('#txt_DocumentoReferencia').val(dato[2]);
-                        $('#txt_Detalle').val(dato[3]);
-                        $('#txt_Observacion').val(dato[4].trim());
-                        $("#cbo_PAACProcesos").jqxDropDownList('selectItem', dato[5]);
-                        $('#txt_solicitudCredito').val(dato[8].trim());
+                        $('#txt_DocumentoReferencia').val(dato[3]);
+                        $('#txt_Detalle').val(dato[4]);
+                        $('#txt_Observacion').val(dato[5].trim());
+                        $("#cbo_PAACProcesos").jqxDropDownList('selectItem', dato[6]);
                         $('#div_GrillaRegistro').jqxGrid('clear');
-                        $("#cbo_InformeDisponibilidad").jqxDropDownList('selectItem', dato[12]);
+                        //  $("#cbo_InformeDisponibilidad").jqxDropDownList('selectItem', dato[13]);
                         $.ajax({
                             type: "GET",
                             url: "../CertificadoPresupuestal",
@@ -968,12 +967,13 @@
             result = row.uid + "---" + row.codigo + "---" + row.importe + "---" + row.extranjera;
             lista.push(result);
         }
+        paac = '0';
         if (tipoSolicitud !== 'RE') {
-            if (paac === '' || paac === '0')
-                msg += "Seleccione el PAAC.<br>";
+            //  if (paac === '' || paac === '0')
+            //      msg += "Seleccione el PAAC.<br>";
         }
-        if (paac === '0')
-            msg += "Seleccione el Procedimiento de Selección<br>";
+        // if (paac === '0')
+        //      msg += "Seleccione el Procedimiento de Selección<br>";
         if (lista.length === 0)
             msg += "Ingrese el Detalle del Certificado <br>";
         if (msg === "") {
@@ -1356,7 +1356,7 @@
         <div id='div_EJE0003'>Listado de Compromisos Anuales</div>
         <div id='div_EJE0004'>Certificados vs Compromiso Anual</div>
         <div id='div_EJE0005'>Avance Presupuestal del Certificado</div>
-        
+
         <div class="Summit">
             <input type="submit" id="btn_Imprimir" name="btn_Imprimir" value="Ver" style="margin-right: 20px"/>
             <input type="button" id="btn_CerrarImprimir" name="btn_CerrarImprimir" value="Cerrar" style="margin-right: 20px"/>

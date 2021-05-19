@@ -47,7 +47,10 @@ import com.iafas.DataService.Despachadores.MesaParteDAO;
  */
 @WebServlet(name = "IduMesaPartesServlet", urlPatterns = {"/IduMesaPartes"})
 //@MultipartConfig(location = "D:/IAFAS/MesaPartes/Documentos")
-@MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos")
+@MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos",
+        fileSizeThreshold = 1024 * 1024 * 10,       // 10 MB 
+        maxFileSize = 1024 * 1024 * 500,            // 500 MB
+        maxRequestSize = 1024 * 1024 * 1000)        // 1000 MB
 public class IduMesaPartesServlet extends HttpServlet {
 
     private ServletConfig config = null;
