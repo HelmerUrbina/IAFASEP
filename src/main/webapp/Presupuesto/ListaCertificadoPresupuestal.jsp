@@ -457,7 +457,7 @@
                     $("#cbo_Resolucion").jqxDropDownList('clear');
                     $("#cbo_Tarea").jqxDropDownList('clear');
                     $("#cbo_CadenaGasto").jqxDropDownList('clear');
-                    fn_cargarComboAjax("#cbo_Resolucion", {mode: 'resolucionCertificacion', periodo: periodo, presupuesto: presupuesto, tipoCertificado: tipoSolicitud, solicitudCredito: $("#txt_solicitudCredito").val(), informeDisponibilidad: $("#cbo_InformeDisponibilidad").val()});
+                    fn_cargarComboAjax("#cbo_Resolucion", {mode: 'resolucionCertificacion', periodo: periodo, presupuesto: presupuesto, tipoCertificado: tipoSolicitud, solicitudCredito: $("#txt_solicitudCredito").val(), informeDisponibilidad: 0});
                     $('#div_Importe').val(0);
                     $('#div_MonedaExtranjera').val(0);
                     $("#cbo_Resolucion").jqxDropDownList({disabled: false});
@@ -546,6 +546,7 @@
                 $('#txt_NumeroSolicitud').val(data);
                 $('#txt_solicitudCredito').val(certificado);
                 if (tipoSolicitud === 'CE') {
+                    $('#txt_solicitudCredito').val('0');
                     $('#txt_DocumentoReferencia').val('');
                     $('#txt_Detalle').val('');
                     $('#txt_Observacion').val('');
@@ -675,7 +676,7 @@
                     });
                     $("#div_TipoCambio").jqxNumberInput({width: 80, height: 20, digits: 3, decimalDigits: 3, disabled: true});
                     $("#cbo_PAACProcesos").jqxDropDownList({animationType: 'fade', width: 650, dropDownWidth: 750, height: 20});
-                    $("#cbo_InformeDisponibilidad").jqxDropDownList({animationType: 'fade', dropDownWidth: 350, height: 20});
+                    // $("#cbo_InformeDisponibilidad").jqxDropDownList({animationType: 'fade', dropDownWidth: 350, height: 20});
                     $("#txt_DocumentoReferencia").jqxInput({placeHolder: "Ingrese Documento de Referencia", width: 670, height: 20, minLength: 1});
                     $("#txt_Detalle").jqxInput({placeHolder: "Ingrese detalle de la Solicitud", width: 670, height: 20, minLength: 1});
                     $("#txt_Observacion").jqxInput({placeHolder: "Ingrese las Observaciones", width: 670, height: 20, minLength: 1});
@@ -712,12 +713,12 @@
                     $("#cbo_Resolucion").jqxDropDownList({animationType: 'fade', width: 480, dropDownWidth: 550, height: 20});
                     $('#cbo_Resolucion').on('change', function () {
                         fn_cargarComboAjax("#cbo_Tarea", {mode: 'tareaCertificacion', periodo: periodo, presupuesto: presupuesto,
-                            resolucion: $("#cbo_Resolucion").val(), tipoCertificado: tipoSolicitud, solicitudCredito: $("#txt_solicitudCredito").val(), informeDisponibilidad: $("#cbo_InformeDisponibilidad").val()});
+                            resolucion: $("#cbo_Resolucion").val(), tipoCertificado: tipoSolicitud, solicitudCredito: $("#txt_solicitudCredito").val(), informeDisponibilidad: 0});
                     });
                     $("#cbo_Tarea").jqxDropDownList({animationType: 'fade', width: 480, dropDownWidth: 600, height: 20});
                     $('#cbo_Tarea').on('change', function () {
                         fn_cargarComboAjax("#cbo_CadenaGasto", {mode: 'cadenaGastoCertificacion', periodo: periodo, presupuesto: presupuesto,
-                            resolucion: $("#cbo_Resolucion").val(), tarea: $("#cbo_Tarea").val(), tipoCertificado: tipoSolicitud, solicitudCredito: $("#txt_solicitudCredito").val(), informeDisponibilidad: $("#cbo_InformeDisponibilidad").val()});
+                            resolucion: $("#cbo_Resolucion").val(), tarea: $("#cbo_Tarea").val(), tipoCertificado: tipoSolicitud, solicitudCredito: $("#txt_solicitudCredito").val(), informeDisponibilidad: 0});
                     });
                     $("#cbo_CadenaGasto").jqxDropDownList({animationType: 'fade', width: 480, dropDownWidth: 600, height: 20});
                     $("#div_Importe").jqxNumberInput({width: 150, height: 20, max: 999999999, digits: 9, decimalDigits: 2});
@@ -956,7 +957,7 @@
         var solicitudCredito = $("#txt_solicitudCredito").val();
         var importe = $("#div_TotalNacional").val();
         var monedaExtranjera = $("#div_TotalExtranjera").val();
-        var informeDisponibilidad = $("#cbo_InformeDisponibilidad").val();
+        var informeDisponibilidad = 0;
         var paac = $("#cbo_PAACProcesos").val();
         var msg = "";
         var lista = new Array();
@@ -1220,14 +1221,6 @@
                     <td colspan="5" >
                         <select id="cbo_PAACProcesos" name="cbo_PAACProcesos">
                             <option value="0">Seleccione</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="inputlabel">IDP : </td>
-                    <td colspan="5">
-                        <select id="cbo_InformeDisponibilidad" name="cbo_InformeDisponibilidad">
-                            <option value="0">Seleccione</option>   
                         </select>
                     </td>
                 </tr>

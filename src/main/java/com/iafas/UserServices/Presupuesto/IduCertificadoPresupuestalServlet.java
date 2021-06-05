@@ -38,8 +38,8 @@ import javax.servlet.http.Part;
  * @author H-URBINA-M
  */
 @WebServlet(name = "IduCertificadoPresupuestalServlet", urlPatterns = {"/IduCertificadoPresupuestal"})
-@MultipartConfig(location = "D:/IAFAS/Presupuesto/CertificadoPresupuestal")
-//@MultipartConfig(location = "/IAFASEP/Presupuesto/CertificadoPresupuestal")
+//@MultipartConfig(location = "D:/IAFAS/Presupuesto/CertificadoPresupuestal")
+@MultipartConfig(location = "/IAFASEP/Presupuesto/CertificadoPresupuestal")
 public class IduCertificadoPresupuestalServlet extends HttpServlet {
 
     private ServletConfig config = null;
