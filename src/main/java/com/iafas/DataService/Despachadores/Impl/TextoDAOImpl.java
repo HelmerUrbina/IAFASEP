@@ -235,7 +235,7 @@ public class TextoDAOImpl implements TextoDAO {
     public List getInstitucion(String busqueda) {
         lista = new LinkedList<>();
         sql = "SELECT NINSTITUCION_CODIGO AS CODIGO, VINSTITUCION_ABREVIATURA AS DESCRIPCION "
-                + "FROM OPREFA_INSTITUCIONES WHERE "
+                + "FROM IAFAS_INSTITUCIONES WHERE "
                 + "CESTADO_CODIGO!='AN'  "
                 + "ORDER BY DESCRIPCION ";
         try {

@@ -1,11 +1,15 @@
 package com.iafas.BusinessServices.Beans;
 
 import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
  * @author H-URBINA-M
  */
+@Getter
+@Setter
 public class BeanUsuarioMenu implements Serializable {
 
     private String Mode;
@@ -17,67 +21,4 @@ public class BeanUsuarioMenu implements Serializable {
     private String Modo;
     private String Privilegio;
 
-    public String getMode() {
-        return Mode;
-    }
-
-    public void setMode(String Mode) {
-        this.Mode = Mode;
-    }
-
-    public String getUsuario() {
-        return Usuario;
-    }
-
-    public void setUsuario(String Usuario) {
-        this.Usuario = Usuario;
-    }
-
-    public String getModulo() {
-        return Modulo;
-    }
-
-    public void setModulo(String Modulo) {
-        this.Modulo = Modulo;
-    }
-
-    public String getMenu() {
-        return Menu;
-    }
-
-    public void setMenu(String Menu) {
-        this.Menu = Menu;
-    }
-
-    public String getDescripcion() {
-        return Descripcion;
-    }
-
-    public void setDescripcion(String Descripcion) {
-        this.Descripcion = Descripcion;
-    }
-
-    public String getServlet() {
-        return Servlet;
-    }
-
-    public void setServlet(String Servlet) {
-        this.Servlet = Servlet;
-    }
-
-    public String getModo() {
-        return Modo;
-    }
-
-    public void setModo(String Modo) {
-        this.Modo = Modo;
-    }
-
-    public String getPrivilegio() {
-        return Privilegio;
-    }
-
-    public void setPrivilegio(String Privilegio) {
-        this.Privilegio = Privilegio;
-    }
 }

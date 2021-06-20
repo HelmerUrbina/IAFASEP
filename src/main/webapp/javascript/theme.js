@@ -1,7 +1,7 @@
 var theme = "iafas"; // ui-start  -- ui-redmond -- ui-lightness -- arctic -- darkblue -- fresh
 function getTheme() {
-    //var url = "/IAFAS/css/styles/" + theme + ".css";
-    var url = "/IAFAS-1.0-SNAPSHOT/css/styles/" + theme + ".css";
+    var url = "/IAFAS/css/styles/" + theme + ".css";
+    //var url = "/IAFAS-1.0-SNAPSHOT/css/styles/" + theme + ".css";
     var hasStyle = false;
     if (document.styleSheets) {
         $.each(document.styleSheets, function (index, value) {

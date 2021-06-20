@@ -5,12 +5,12 @@
               maxActive="20" 
               maxIdle="10" 
               maxWait="-1" 
-              name="IAFAS_MySQL" 
               type="javax.sql.DataSource" 
-              url="jdbc:mysql://localhost:3306/IAFASEP?zeroDateTimeBehavior=CONVERT_TO_NULL" 
-              username="iafasep"
-              password="iafasEP$2021" 
-              url2="jdbc:mysql://SERVER2012:3307/IAFAS?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true" 
-              username2="root"
-              password2="root"/>
+              name="IAFAS_MySQL" 
+              username2="iafasep" 
+              password2="iafasEP$2021" 
+              url2="jdbc:mysql://localhost:3306/IAFASEP?zeroDateTimeBehavior=CONVERT_TO_NULL" 
+              url="jdbc:mysql://SERVER2012:3307/IAFAS?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true" 
+              username="root"
+              password="root" />
 </Context>

@@ -266,15 +266,16 @@ public class MesaParteDAOImpl implements MesaParteDAO {
     @Override
     public List getListaRemisionMesaParte(BeanMesaParte objBeanMesaParte, String usuario) {
         lista = new LinkedList<>();
-        sql = "SELECT CMESA_PARTE_NUMERO AS CODIGO, "
-                + "PK_UTIL.FUN_NOMBRE_TIPO_MESA_PARTE(NTIPO_MESA_PARTE_CODIGO)||'-'||VMESA_PARTE_NUMERO AS NUMERO, "
-                + "VMESA_PARTE_ASUNTO AS ASUNTO, PK_UTIL.FUN_NOMBRE_PRIORIDAD(NPRIORIDAD_CODIGO) AS PRIORIDAD, "
-                + "PK_UTIL.FUN_INSTITUCION(NINSTITUCION_CODIGO) AS INSTITUCION, "
-                + "DMESA_PARTE_FECHA AS FECHA_MESA_PARTE, PK_UTIL.FUN_DESCRIPCION_ESTADO(CESTADO_CODIGO) AS ESTADO,"
-                + "VMESA_PARTE_POST_FIRMA AS FIRMA, NMESA_PARTE_LEGAJOS AS LEGAJO, NMESA_PARTE_FOLIOS AS FOLIO,"
-                + "PK_UTIL.FUN_MESA_PARTE_RESPUESTA(CPERIODO_CODIGO, CMESA_PARTE_TIPO,CMESA_PARTE_NUMERO) AS DOC_RESPUESTA,"
-                + "VMESA_PARTE_DIGITAL AS MESA_PARTE  "
-                + "FROM OPREFA_MESA_PARTES WHERE "
+        sql = "SELECT NMESA_PARTE_CODIGO AS CODIGO, "
+                + "CONCAT(`PK_UTIL.FUN_DOCUMENTO_NOMBRE`(NDOCUMENTO_CODIGO),'-',VMESA_PARTE_NUMERO) AS NUMERO, "
+                + "VMESA_PARTE_ASUNTO AS ASUNTO, `PK_UTIL.FUN_PRIORIDAD_NOMBRE`(NPRIORIDAD_CODIGO) AS PRIORIDAD, "
+                + "`PK_UTIL.FUN_INSTITUCION_NOMBRE`(NINSTITUCION_CODIGO) AS INSTITUCION, "
+                + "DMESA_PARTE_FECHA AS FECHA_MESA_PARTE, "
+                + "`PK_UTIL.FUN_ESTADO_NOMBRE`(CESTADO_CODIGO) AS ESTADO,"
+                + "VMESA_PARTE_POST_FIRMA AS FIRMA, NMESA_PARTE_LEGAJOS AS LEGAJO, NMESA_PARTE_FOLIOS AS FOLIO, "
+             //   + "PK_UTIL.FUN_MESA_PARTE_RESPUESTA(CPERIODO_CODIGO, CMESA_PARTE_TIPO, NMESA_PARTE_CODIGO) AS DOC_RESPUESTA,"
+                + "VMESA_PARTE_DIGITAL AS DIGITAL  "
+                + "FROM IAFAS_MESA_PARTES WHERE "
                 + "CPERIODO_CODIGO=? AND "
                 + "CMES_CODIGO=? AND "
                 + "CMESA_PARTE_TIPO=? AND "
@@ -292,6 +293,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
                 objBnMesaParte = new BeanMesaParte();
                 objBnMesaParte.setNumero(objResultSet.getString("CODIGO"));
                 objBnMesaParte.setNumeroDocumento(objResultSet.getString("NUMERO"));
+                objBnMesaParte.setInstitucion(objResultSet.getString("INSTITUCION"));
                 objBnMesaParte.setAsunto(objResultSet.getString("ASUNTO"));
                 objBnMesaParte.setPrioridad(objResultSet.getString("PRIORIDAD"));
                 objBnMesaParte.setFecha(objResultSet.getDate("FECHA_MESA_PARTE"));
@@ -299,8 +301,8 @@ public class MesaParteDAOImpl implements MesaParteDAO {
                 objBnMesaParte.setPostFirma(objResultSet.getString("FIRMA"));
                 objBnMesaParte.setLegajo(objResultSet.getInt("LEGAJO"));
                 objBnMesaParte.setFolio(objResultSet.getInt("FOLIO"));
-                objBnMesaParte.setReferencia(objResultSet.getString("DOC_RESPUESTA"));
-                objBnMesaParte.setArchivo(objResultSet.getString("MESA_PARTE"));
+                //objBnMesaParte.setReferencia(objResultSet.getString("DOC_RESPUESTA"));
+                objBnMesaParte.setArchivo(objResultSet.getString("DIGITAL"));
                 lista.add(objBnMesaParte);
             }
         } catch (SQLException e) {
@@ -321,10 +323,11 @@ public class MesaParteDAOImpl implements MesaParteDAO {
     @Override
     public String getNumeroMesaParteSalida(BeanMesaParte objBnMesaParte, String usuario) {
         String result = "00001";
-        sql = "SELECT LPAD(IFNULL(MAX(CNUMERO_MESA_PARTE)+1,1),5,0) AS CODIGO "
-                + "FROM OPREFA_MESA_PARTES WHERE "
+        sql = "SELECT LPAD(IFNULL(MAX(VMESA_PARTE_NUMERO)+1,1),5,0) AS CODIGO "
+                + "FROM IAFAS_MESA_PARTES WHERE "
                 + "CPERIODO_CODIGO = ? AND "
-                + "NTIPO_MESA_PARTE_CODIGO = ? ";
+                + "NDOCUMENTO_CODIGO = ? AND "
+                + "CMESA_PARTE_TIPO = 'S' ";
         try {
             objPreparedStatement = objConnection.prepareStatement(sql);
             objPreparedStatement.setString(1, objBnMesaParte.getPeriodo());

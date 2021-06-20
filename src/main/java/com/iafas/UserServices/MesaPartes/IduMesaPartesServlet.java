@@ -46,8 +46,8 @@ import com.iafas.DataService.Despachadores.MesaParteDAO;
  * @author H-URBINA-M
  */
 @WebServlet(name = "IduMesaPartesServlet", urlPatterns = {"/IduMesaPartes"})
-//@MultipartConfig(location = "D:/IAFAS/MesaPartes/Documentos")
-@MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos",
+@MultipartConfig(location = "D:/IAFAS/MesaPartes/Documentos",
+//@MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos",
         fileSizeThreshold = 1024 * 1024 * 10,       // 10 MB 
         maxFileSize = 1024 * 1024 * 500,            // 500 MB
         maxRequestSize = 1024 * 1024 * 1000)        // 1000 MB
@@ -113,7 +113,7 @@ public class IduMesaPartesServlet extends HttpServlet {
         objBnMesaParte.setUsuarioResponsable(request.getParameter("usuario"));
         objBnMesaParte.setReferencia(request.getParameter("referencia"));
         objDsMesaParte = new MesaParteDAOImpl(objConnection);
-        System.out.println(objBnMesaParte.getTipo() + " " + objBnMesaParte.getMode());
+        System.out.println(objBnMesaParte.getTipo()+" "+objBnMesaParte.getMode());
         if (objBnMesaParte.getTipo().equals("E") && !objBnMesaParte.getMode().equals("D")) {
             Collection<Part> parts = request.getParts();
             for (Part part : parts) {
@@ -123,7 +123,7 @@ public class IduMesaPartesServlet extends HttpServlet {
                 }
             }
         } else {
-            if (objBnMesaParte.getMode().equals("C") || objBnMesaParte.getTipo().equals("S")) {
+            if (objBnMesaParte.getMode().equals("C")) {
                 Collection<Part> parts = request.getParts();
                 for (Part part : parts) {
                     if (null != Utiles.getFileName(part)) {

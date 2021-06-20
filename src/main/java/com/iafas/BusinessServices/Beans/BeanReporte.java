@@ -6,11 +6,15 @@
 package com.iafas.BusinessServices.Beans;
 
 import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
  * @author H-URBINA-M
  */
+@Getter
+@Setter
 public class BeanReporte implements Serializable {
 
     private String Codigo;
@@ -21,69 +25,5 @@ public class BeanReporte implements Serializable {
     private String Unidad;
     private Integer Presupuesto;
     private String Generica;
-
-    public String getGenerica() {
-        return Generica;
-    }
-
-    public void setGenerica(String Generica) {
-        this.Generica = Generica;
-    }
-
-    public String getCodigo() {
-        return Codigo;
-    }
-
-    public void setCodigo(String Codigo) {
-        this.Codigo = Codigo;
-    }
-
-    public String getCodigo2() {
-        return Codigo2;
-    }
-
-    public void setCodigo2(String Codigo2) {
-        this.Codigo2 = Codigo2;
-    }
-
-    public String getReporte() {
-        return Reporte;
-    }
-
-    public void setReporte(String Reporte) {
-        this.Reporte = Reporte;
-    }
-
-    public String getPeriodo() {
-        return Periodo;
-    }
-
-    public void setPeriodo(String Periodo) {
-        this.Periodo = Periodo;
-    }
-
-    public String getTipo() {
-        return Tipo;
-    }
-
-    public void setTipo(String Tipo) {
-        this.Tipo = Tipo;
-    }
-
-    public String getUnidad() {
-        return Unidad;
-    }
-
-    public void setUnidad(String Unidad) {
-        this.Unidad = Unidad;
-    }
-
-    public Integer getPresupuesto() {
-        return Presupuesto;
-    }
-
-    public void setPresupuesto(Integer Presupuesto) {
-        this.Presupuesto = Presupuesto;
-    }
 
 }

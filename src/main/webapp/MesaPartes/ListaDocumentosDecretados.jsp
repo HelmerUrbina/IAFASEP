@@ -88,7 +88,7 @@
         //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
         $("#div_GrillaPrincipal").jqxGrid({
             width: '99.8%',
-            height: ($(window).height() - 60),
+            height: ($(window).height() - 100),
             source: dataAdapter,
             autoheight: false,
             autorowheight: false,

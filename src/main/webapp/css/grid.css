@@ -39,7 +39,7 @@ and open the template in the editor.
     color: gray;
     font-weight: bold;
 }
-.RowAnulado {    
+.RowAnulado {
     background-color: lightcoral;
 }
 .RowAnulado:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .RowAnulado:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {

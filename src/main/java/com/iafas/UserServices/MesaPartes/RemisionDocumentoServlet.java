@@ -14,7 +14,6 @@ import com.iafas.DataService.Despachadores.MesaParteDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -27,21 +26,29 @@ import javax.servlet.http.HttpSession;
 
 /**
  *
- * @author H-TECCSI-V
+ * @author helme
  */
-@WebServlet(name = "RemisionDocumentoServlet", urlPatterns = {"/RemisionDocumento"})
+@WebServlet(name = "RemisionDocumentoServlet", urlPatterns = {"/RemisionDocumentos"})
 public class RemisionDocumentoServlet extends HttpServlet {
 
     private ServletConfig config = null;
     private ServletContext context = null;
     private HttpSession session = null;
     private RequestDispatcher dispatcher = null;
-    private List objRemisionDocumento;
     private BeanMesaParte objBnMesaParte;
     private Connection objConnection;
     private MesaParteDAO objDsMesaParte;
     private CombosDAO objDsCombo;
 
+    /**
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         config = this.getServletConfig();
@@ -64,7 +71,6 @@ public class RemisionDocumentoServlet extends HttpServlet {
         objBnMesaParte.setDocumento(request.getParameter("tipoDocumento"));
         objDsMesaParte = new MesaParteDAOImpl(objConnection);
         if (objBnMesaParte.getMode().equals("G")) {
-            objRemisionDocumento = objDsMesaParte.getListaRemisionMesaParte(objBnMesaParte, objUsuario.getUsuario());
             objDsCombo = new CombosDAOImpl(objConnection);
             if (request.getAttribute("objPrioridad") != null) {
                 request.removeAttribute("objPrioridad");
@@ -82,20 +88,26 @@ public class RemisionDocumentoServlet extends HttpServlet {
                 request.removeAttribute("objArea");
             }
             request.setAttribute("objArea", objDsCombo.getAreaLaboral());
-            objBnMesaParte.setArea(objUsuario.getAreaLaboral());
-            objBnMesaParte.setUsuario(objUsuario.getUsuario());
+            if (request.getAttribute("objInstitucion") != null) {
+                request.removeAttribute("objInstitucion");
+            }
+            request.setAttribute("objInstitucion", objDsCombo.getInstituciones());
+            if (request.getAttribute("objRemisionDocumento") != null) {
+                request.removeAttribute("objRemisionDocumento");
+            }
+            request.setAttribute("objRemisionDocumento", objDsMesaParte.getListaRemisionMesaParte(objBnMesaParte, objUsuario.getUsuario()));
         }
         if (objBnMesaParte.getMode().equals("B")) {
-           // result = objDsMesaParte.getNumeroDocumentoSalida(objBnMesaParte, objUsuario.getUsuario());
+            result = objDsMesaParte.getNumeroMesaParteSalida(objBnMesaParte, objUsuario.getUsuario());
         }
         if (objBnMesaParte.getMode().equals("I")) {
-        //    result = objDsMesaParte.getNumeroDocumento(objBnMesaParte, objUsuario.getUsuario());
+            result = objDsMesaParte.getNumeroMesaParte(objBnMesaParte, objUsuario.getUsuario());
         }
         if (objBnMesaParte.getMode().equals("U")) {
             objBnMesaParte = objDsMesaParte.getMesaParte(objBnMesaParte, objUsuario.getUsuario());
             result = objBnMesaParte.getNumeroDocumento() + "+++"
                     + objBnMesaParte.getFecha() + "+++"
-                    + objBnMesaParte.getPostFirma()+ "+++"
+                    + objBnMesaParte.getPostFirma() + "+++"
                     + objBnMesaParte.getAsunto() + "+++"
                     + objBnMesaParte.getFechaRegistro() + "+++"
                     + objBnMesaParte.getDocumento() + "+++"
@@ -109,21 +121,13 @@ public class RemisionDocumentoServlet extends HttpServlet {
                     + objBnMesaParte.getUsuarioResponsable() + "+++"
                     + objBnMesaParte.getReferencia();
         }
-        if (request.getAttribute("objRemisionDocumento") != null) {
-            request.removeAttribute("objRemisionDocumento");
-        }
-        if (request.getAttribute("objBnMesaParte") != null) {
-            request.removeAttribute("objBnMesaParte");
-        }
-        request.setAttribute("objRemisionDocumento", objRemisionDocumento);
-        request.setAttribute("objBnMesaParte", objBnMesaParte);
         //SE ENVIA DE ACUERDO AL MODO SELECCIONADO
         switch (request.getParameter("mode")) {
-            case "remision":
-                dispatcher = request.getRequestDispatcher("MesaPartes/RemisionDocumento.jsp");
+            case "remisionDocumentos":
+                dispatcher = request.getRequestDispatcher("MesaPartes/RemisionDocumentos.jsp");
                 break;
             case "G":
-                dispatcher = request.getRequestDispatcher("MesaPartes/ListaRemisionDocumento.jsp");
+                dispatcher = request.getRequestDispatcher("MesaPartes/ListaRemisionDocumentos.jsp");
                 break;
             default:
                 dispatcher = request.getRequestDispatcher("error.jsp");

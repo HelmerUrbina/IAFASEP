@@ -545,7 +545,7 @@
                 fn_cargarComboAjax("#cbo_Usuario", {mode: 'usuarioMesaPartes', periodo: periodo, codigo: $("#cbo_Area").val()});
             }
             $.ajax({
-                type: "POST",
+                type: "GET",
                 url: "../MesaParte",
                 data: {mode: mode, periodo: periodo, mes: mes, tipo: tipo},
                 success: function (data) {

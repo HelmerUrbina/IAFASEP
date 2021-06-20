@@ -318,7 +318,7 @@ public class CombosAjaxServlet extends HttpServlet {
                 request.setAttribute("objCombosAjax", objDsCombos.getUsuarioAreaLaboral(codigo));
                 break;
             case "referenciaDoc":
-                request.setAttribute("objCombosAjax", objDsCombos.getDocumentoReferencia(periodo, unidadOperativa, codigo));
+                request.setAttribute("objCombosAjax", objDsCombos.getDocumentoReferencia(periodo, unidadOperativa, objUsuario.getUsuario()));
                 break;
             case "usuarioSubDecreto":
                 request.setAttribute("objCombosAjax", objDsCombos.getUsuarioSubDecreto(codigo, objUsuario.getUsuario()));

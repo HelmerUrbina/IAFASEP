@@ -6,11 +6,15 @@
 package com.iafas.BusinessServices.Beans;
 
 import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
- * @author OPRE
+ * @author H-URBINA-M
  */
+@Getter
+@Setter
 public class BeanTareaEspecifica implements Serializable {
 
     private String Mode;
@@ -19,44 +23,4 @@ public class BeanTareaEspecifica implements Serializable {
     private String Tarea;
     private String CadenaGasto;
 
-    public String getMode() {
-        return Mode;
-    }
-
-    public void setMode(String Mode) {
-        this.Mode = Mode;
-    }
-
-    public String getCodigo() {
-        return Codigo;
-    }
-
-    public void setCodigo(String Codigo) {
-        this.Codigo = Codigo;
-    }
-
-    public String getPeriodo() {
-        return Periodo;
-    }
-
-    public void setPeriodo(String Periodo) {
-        this.Periodo = Periodo;
-    }
-
-    public String getTarea() {
-        return Tarea;
-    }
-
-    public void setTarea(String Tarea) {
-        this.Tarea = Tarea;
-    }
-
-    public String getCadenaGasto() {
-        return CadenaGasto;
-    }
-
-    public void setCadenaGasto(String CadenaGasto) {
-        this.CadenaGasto = CadenaGasto;
-    }
-   
 }

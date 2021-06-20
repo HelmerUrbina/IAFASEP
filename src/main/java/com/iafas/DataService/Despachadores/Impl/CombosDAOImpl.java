@@ -4155,7 +4155,7 @@ public class CombosDAOImpl implements CombosDAO {
         }
         sql = "SELECT CDOCUMENTO_NUMERO AS CODIGO,"
                 + "PK_MESA_PARTES.FUN_NOMBRE_TIPO_DOCUMENTO(NTIPO_DOCUMENTO_CODIGO)||'-'||CDOCUMENTO_NRO_DOCUMENTO AS DESCRIPCION "
-                + "FROM SIPE_DOCUMENTO WHERE "
+                + "FROM IAFAS_MESA_PARTES WHERE "
                 + "CPERIODO_CODIGO=? AND "
                 + "CDOCUMENTO_TIPO='E' AND "
                 + add
@@ -4171,7 +4171,7 @@ public class CombosDAOImpl implements CombosDAO {
                 lista.add(comun);
             }
         } catch (SQLException e) {
-            System.out.println("Error al obtener getDocumentoReferencia() " + e.getMessage());
+            System.out.println("Error al obtener getDocumentoReferencia(" + periodo + "," + tipo + ") " + e.getMessage());
         } finally {
             try {
                 if (objResultSet != null) {
@@ -4222,22 +4222,21 @@ public class CombosDAOImpl implements CombosDAO {
         lista = new LinkedList<>();
         String add = "";
         if (tipo.equals("I")) {
-            add = " DD.CESTADO_DOCUMENTO IN ('RE') ";
+            add = " DECRETO.CESTADO_CODIGO IN ('RE') ";
         } else {
-            add = " DD.CESTADO_DOCUMENTO  IN ('DE','RE','RS') ";
+            add = " DECRETO.CESTADO_CODIGO IN ('DE','RE','RS') ";
         }
-        sql = "SELECT D.CDOCUMENTO_NUMERO AS CODIGO,"
-                + "PK_MESA_PARTES.FUN_NOMBRE_TIPO_DOCUMENTO(D.NTIPO_DOCUMENTO_CODIGO)||'-'||TRIM(D.CDOCUMENTO_NRO_DOCUMENTO)||' '||TRIM(VDOCUMENTO_ASUNTO) AS DESCRIPCION "
-                + "FROM SIPE_DOCUMENTO D INNER JOIN SIPE_DECRETO_DOCUMENTO DD ON"
-                + "(D.CPERIODO_CODIGO=DD.CPERIODO_CODIGO AND "
-                + "D.CDOCUMENTO_NUMERO=DD.CDOCUMENTO_NUMERO) "
-                + " WHERE "
-                + "D.CPERIODO_CODIGO=? AND "
-                + "DD.VUSUARIO_RECEPCION=? AND "
-                + "D.CDOCUMENTO_TIPO='E' AND "
+        sql = "SELECT DECRETO.NMESA_PARTE_DECRETO_CODIGO AS CODIGO, "
+                + "CONCAT(`PK_UTIL.FUN_DOCUMENTO_NOMBRE`(MESA_PARTE.NDOCUMENTO_CODIGO),'-',TRIM(MESA_PARTE.VMESA_PARTE_NUMERO),' ',TRIM(VMESA_PARTE_ASUNTO)) AS DESCRIPCION "
+                + "FROM IAFAS_MESA_PARTES MESA_PARTE INNER JOIN IAFAS_MESA_PARTES_DECRETOS DECRETO ON "
+                + "(MESA_PARTE.CPERIODO_CODIGO=DECRETO.CPERIODO_CODIGO AND "
+                + "MESA_PARTE.CMESA_PARTE_TIPO=DECRETO.CMESA_PARTE_TIPO AND "
+                + "MESA_PARTE.NMESA_PARTE_CODIGO=DECRETO.NMESA_PARTE_CODIGO) WHERE "
+                + "MESA_PARTE.CPERIODO_CODIGO=? AND "
+                + "DECRETO.VUSUARIO_RESPONSABLE=? AND "
+                + "MESA_PARTE.CMESA_PARTE_TIPO='E' AND "
                 + add
                 + "ORDER BY DESCRIPCION";
-
         try {
             objPreparedStatement = objConnection.prepareStatement(sql);
             objPreparedStatement.setString(1, periodo);
@@ -4250,7 +4249,7 @@ public class CombosDAOImpl implements CombosDAO {
                 lista.add(comun);
             }
         } catch (SQLException e) {
-            System.out.println("Error al obtener getDocumentoReferencia() " + e.getMessage());
+            System.out.println("Error al obtener getDocumentoReferencia(" + periodo + "," + tipo + "," + usuario + ") " + e.getMessage());
         } finally {
             try {
                 if (objResultSet != null) {
