@@ -26,5 +26,5 @@ public interface MesaParteDAO {
 
     public List getListaRemisionMesaParte(BeanMesaParte objBeanMesaParte, String usuario);
 
-    public String getNumeroMesaParteSalida(BeanMesaParte objBnMesaParte, String usuario);
+    public String getNumeroMesaParteSalida(BeanMesaParte objBnMesaParte);
 }

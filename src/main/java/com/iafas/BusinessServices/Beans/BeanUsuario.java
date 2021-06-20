@@ -1,15 +1,13 @@
 package com.iafas.BusinessServices.Beans;
 
 import java.io.Serializable;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
  *
  * @author H-URBINA-M
  */
-@Getter
-@Setter
+@Data
 public class BeanUsuario implements Serializable {
 
     private String Mode;

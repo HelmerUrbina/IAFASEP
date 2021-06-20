@@ -7,7 +7,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <script type="text/javascript">
     var periodo = $("#cbo_Periodo").val();
-    var tipo = "E";
+    var tipo = "S";
     var mes = $("#cbo_Mes").val();
     var codigo = null;
     var archivo = null;
@@ -21,8 +21,8 @@
     var lista = new Array();
     <c:forEach var="d" items="${objRemisionDocumento}">
     var result = {numero: '${d.numero}', numeroDocumento: '${d.numeroDocumento}', asunto: '${d.asunto}',
-        institucion: '${d.institucion}', prioridad: '${d.prioridad}', fecha: '${d.fecha}', estado: '${d.estado}', firma: '${d.hora}',
-        legajo: '${d.legajo}', folio: '${d.folio}', referencia: '${d.referencia}',
+        institucion: '${d.institucion}', prioridad: '${d.prioridad}', fecha: '${d.fecha}', estado: '${d.estado}', firma: '${d.postFirma}',
+        legajo: '${d.legajo}', folio: '${d.folio}', referencia: '${d.referencia}', cargo: '${d.cargo}',
         codigoUsuario: '${d.usuario}', archivo: '${d.archivo}'};
     lista.push(result);
     </c:forEach>
@@ -52,9 +52,10 @@
                         {name: 'asunto', type: "string"},
                         {name: 'institucion', type: "string"},
                         {name: 'prioridad', type: "string"},
-                        {name: 'fecha', type: "date", format: 'dd/MM/yyyy'},
+                        {name: 'fecha', type: "string"},
                         {name: 'estado', type: "string"},
                         {name: 'firma', type: "string"},
+                        {name: 'cargo', type: "string"},
                         {name: 'legajo', type: "number"},
                         {name: 'folio', type: "string"},
                         {name: 'referencia', type: "string"},
@@ -121,18 +122,17 @@
                         return "<div style='margin:4px; text-align: center;'>" + (value + 1) + "</div>";
                     }
                 },
-                {text: 'CÓDIGO', dataField: 'numero', width: '6%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
-                {text: 'ASUNTO', dataField: 'asunto', width: '20%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
-                {text: 'INSTITUCIÓN', dataField: 'institucion', width: '10%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'PRIORIDAD', dataField: 'prioridad', filtertype: 'checkedlist', width: '6%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'FEC. DOC', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'DOCUMENTO', dataField: 'numeroDocumento', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'ASUNTO', dataField: 'asunto', width: '25%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'institucion', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'DIRIGIDO A', dataField: 'firma', width: '20%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'CARGO', dataField: 'cargo', width: '15%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'FEC. DOC', dataField: 'fecha', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'PRIORIDAD', dataField: 'prioridad', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'ESTADO', dataField: 'estado', filtertype: 'list', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'FIRMA', dataField: 'firma', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
                 {text: 'LEGAJO', dataField: 'legajo', width: '5%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
                 {text: 'FOLIO', dataField: 'folio', width: '5%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
-                {text: 'REFERENCIA', dataField: 'referencia', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'ARCHIVO', dataField: 'archivo', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+                {text: 'REFERENCIA', dataField: 'referencia', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
             ]
         });
         // DEFINIMOS EL MENU CONTEXTUAL 
@@ -261,7 +261,7 @@
                 //INICIA LOS VALORES DE LA VENTANA
                 var posicionX, posicionY;
                 var ancho = 600;
-                var alto = 365;
+                var alto = 345;
                 posicionX = ($(window).width() / 2) - (ancho / 2);
                 posicionY = ($(window).height() / 2) - (alto / 2);
                 $('#div_VentanaPrincipal').jqxWindow({
@@ -290,7 +290,6 @@
                         $("#txt_FechaDocumento").jqxDateTimeInput({culture: 'es-PE', animationType: 'fade', width: 120, height: 20});
                         $("#txt_FechaRecepcion").jqxDateTimeInput({culture: 'es-PE', width: 120, height: 20, disabled: true});
                         $("#txt_Asunto").jqxInput({placeHolder: "Ingrese el asunto", width: 450, height: 20});
-                        $("#txt_Observacion").jqxInput({placeHolder: "Ingrese la Observación", width: 450, height: 20});
                         $("#txt_PostFirma").jqxInput({placeHolder: "Ingrese a quien va Diridigo", width: 450, height: 20});
                         $("#txt_Cargo").jqxInput({placeHolder: "Ingrese el Cargo", width: 450, height: 20});
                         $("#div_Legajos").jqxNumberInput({width: 50, height: 20, max: 99, digits: 2, decimalDigits: 0});
@@ -376,9 +375,9 @@
             $("#div_ContextMenu").remove();
             var $contenidoAjax = $('#div_Detalle').html('<img src="../Imagenes/Fondos/cargando.gif">');
             $.ajax({
-                type: "POST",
+                type: "GET",
                 url: "../RemisionDocumentos",
-                data: {mode: 'G', periodo: periodo, mes: mes, tipo: tipo},
+                data: {mode: "G", periodo: periodo, mes: mes, tipo: tipo},
                 success: function (data) {
                     $contenidoAjax.html(data);
                 }
@@ -418,7 +417,6 @@
             $("#txt_FechaRecepcion").val(new Date);
             $("#txt_Institucion").val('');
             $("#txt_NumeroDocumento").val('');
-            $("#txt_Observacion").val('');
             $("#txt_Asunto").val('');
             $("#txt_PostFirma").val('');
             $("#div_Legajos").val('0');
@@ -436,23 +434,23 @@
                 data: {mode: mode, periodo: periodo, mes: mes, tipo: tipo, codigo: codigo},
                 success: function (data) {
                     var dato = data.split("+++");
-                    if (dato.length === 16) {
+                    if (dato.length === 13) {
                         $("#txt_Numero").val(codigo);
-                        $("#txt_NumeroDocumento").val(dato[0]);
-                        $('#txt_FechaDocumento').jqxDateTimeInput('setDate', dato[1]);
-                        $("#txt_Observacion").val(dato[2]);
-                        $("#txt_Asunto").val(dato[3]);
-                        $('#txt_FechaRecepcion').jqxDateTimeInput('setDate', dato[4]);
-                        $("#cbo_TipoDocumento").jqxDropDownList('selectItem', dato[5]);
-                        $("#cbo_Clasificacion").jqxDropDownList('selectItem', dato[6]);
-                        institucion = dato[7];
-                        $("#txt_Institucion").val(dato[8]);
-                        $("#cbo_Prioridad").jqxDropDownList('selectItem', dato[9]);
-                        $("#txt_PostFirma").val(dato[10]);
+                        $("#cbo_TipoDocumento").jqxDropDownList('selectItem', dato[0]);
+                        $("#txt_NumeroDocumento").val(dato[1]);
+                        institucion = dato[2];
+                        $("#txt_Institucion").val(dato[3]);
+                        $("#txt_PostFirma").val(dato[4]);
+                        $("#txt_Cargo").val(dato[5]);
+                        $("#txt_Asunto").val(dato[6]);
+                        $("#cbo_Prioridad").jqxDropDownList('selectItem', dato[7]);
+                        $("#cbo_Clasificacion").jqxDropDownList('selectItem', dato[8]);
+                        $('#txt_FechaDocumento').jqxDateTimeInput('setDate', dato[9]);
+                        $('#txt_FechaRecepcion').jqxDateTimeInput('setDate', dato[10]);
                         $("#div_Legajos").val(dato[11]);
                         $("#div_Folios").val(dato[12]);
-                        $("#cbo_Referencia").jqxDropDownList('addItem', {label: docReferencia, value: dato[15]});
-                        $("#cbo_Referencia").jqxDropDownList('selectItem', dato[15]);
+                        // $("#cbo_Referencia").jqxDropDownList('addItem', {label: docReferencia, value: dato[15]});
+                        // $("#cbo_Referencia").jqxDropDownList('selectItem', dato[15]);
                     }
                 }
             });
@@ -470,7 +468,6 @@
             var fechaDocumento = $("#txt_FechaDocumento").val();
             var fechaRecepcion = $("#txt_FechaRecepcion").val();
             var asunto = $("#txt_Asunto").val();
-            var observacion = $("#txt_Observacion").val();
             var postFirma = $("#txt_PostFirma").val();
             var legajos = $("#div_Legajos").val();
             var folios = $("#div_Folios").val();
@@ -483,9 +480,9 @@
             $.ajax({
                 type: "POST",
                 url: "../IduMesaPartes",
-                data: {mode: mode, periodo: periodo, tipo: 'S', mes: mes, numero: numero, prioridad: prioridad,
+                data: {mode: mode, periodo: periodo, tipo: tipo, mes: mes, numero: numero, prioridad: prioridad,
                     documento: documento, numeroDocumento: numeroDocumento, clasificacion: clasificacion,
-                    fechaDocumento: fechaDocumento, fechaRecepcion: fechaRecepcion, asunto: asunto, observacion: observacion,
+                    fechaDocumento: fechaDocumento, fechaRecepcion: fechaRecepcion, asunto: asunto,
                     postFirma: postFirma, legajos: legajos, folios: folios, lista: JSON.stringify(lista), institucion: institucion,
                     area: area},
                 success: function (data) {
@@ -563,10 +560,6 @@
                 <tr>
                     <td class="inputlabel">Asunto : </td>
                     <td colspan="3"><input type="text" id="txt_Asunto" name="txt_Asunto" style="text-transform: uppercase;"/></td>
-                </tr>
-                <tr>
-                    <td class="inputlabel">Observaci&oacute;n : </td>
-                    <td colspan="3"><input type="text" id="txt_Observacion" name="txt_Observacion" style="text-transform: uppercase;"/></td>
                 </tr>
                 <tr>
                     <td class="inputlabel">Doc. Referencia : </td>

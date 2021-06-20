@@ -14,11 +14,12 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <meta http-equiv="Expires" content="0"/>
+        <meta http-equiv="pragma"  content='no-cache'/>
+        <meta http-equiv="Cache-Control" content='no-cache, must-revalidate'/>
+        <meta http-equiv="expires" content="0"/>
         <meta http-equiv="Last-Modified" content="0"/>
-        <meta http-equiv="Cache-Control" content="no-cache, mustrevalidate"/>
-        <meta http-equiv="Pragma" content="no-cache"/>
-        <meta http-equiv="refresh" content="300; url=index.jsp">
+        <meta http-equiv="refresh" content="300; url=index.jsp"/>
+        <link rel="shortcut icon" href="Imagenes/Logos/favicon.ico" type="image/x-icon"/>
         <title>.:: IAFAS - Institución Administradora de Fondos de Aseguramiento en Salud del Ejército del Perú ::.</title>
         <link type="text/css" rel="stylesheet" href="css/styles/jqx.base.css">
         <link type="text/css" rel="stylesheet" href="css/login.css">

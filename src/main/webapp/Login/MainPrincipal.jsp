@@ -8,10 +8,6 @@
 <%@include file="../WEB-INF/jspf/session.jspf" %>
 <html lang="en">
     <head>
-        <meta http-equiv="Expires" content="0"/>
-        <meta http-equiv="Last-Modified" content="0"/>
-        <meta http-equiv="Cache-Control" content="no-cache, mustrevalidate"/>
-        <meta http-equiv="Pragma" content="no-cache"/>
         <link type="text/css" rel="stylesheet" href="../css/main.css">
         <link type="text/css" rel="stylesheet" href="../css/styles/jqx.base.css">
         <link type="text/css" rel="stylesheet" href="../css/grid.css">
@@ -178,7 +174,7 @@
                             }
                         });
                     };
-                    
+
                     return {
                         init: function () {
                             createWidgets();

@@ -151,7 +151,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
     public BeanMesaParte getMesaParte(BeanMesaParte objBeanMesaParte, String usuario) {
         sql = "SELECT LPAD(NMESA_PARTE_CODIGO,5,0) AS NUMERO, NINSTITUCION_CODIGO,"
                 + "`PK_UTIL.FUN_INSTITUCION_NOMBRE`(NINSTITUCION_CODIGO) AS INSTITUCION, "
-                + "NPRIORIDAD_CODIGO, NDOCUMENTO_CODIGO, VMESA_PARTE_NUMERO, "
+                + "NPRIORIDAD_CODIGO, NDOCUMENTO_CODIGO, VMESA_PARTE_NUMERO, VMESA_PARTE_CARGO, "
                 + "NCLASIFICACION_DOCUMENTO_CODIGO, DMESA_PARTE_FECHA, DMESA_PARTE_RECEPCION, "
                 + "VMESA_PARTE_ASUNTO, VMESA_PARTE_POST_FIRMA, NMESA_PARTE_LEGAJOS, NMESA_PARTE_FOLIOS "
                 + "FROM IAFAS_MESA_PARTES WHERE "
@@ -178,6 +178,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
                 objBeanMesaParte.setFechaRegistro(objResultSet.getDate("DMESA_PARTE_RECEPCION"));
                 objBeanMesaParte.setAsunto(objResultSet.getString("VMESA_PARTE_ASUNTO"));
                 objBeanMesaParte.setPostFirma(objResultSet.getString("VMESA_PARTE_POST_FIRMA"));
+                objBeanMesaParte.setCargo(objResultSet.getString("VMESA_PARTE_CARGO"));
                 objBeanMesaParte.setLegajo(objResultSet.getInt("NMESA_PARTE_LEGAJOS"));
                 objBeanMesaParte.setFolio(objResultSet.getInt("NMESA_PARTE_FOLIOS"));
             }
@@ -268,11 +269,12 @@ public class MesaParteDAOImpl implements MesaParteDAO {
         lista = new LinkedList<>();
         sql = "SELECT NMESA_PARTE_CODIGO AS CODIGO, "
                 + "CONCAT(`PK_UTIL.FUN_DOCUMENTO_NOMBRE`(NDOCUMENTO_CODIGO),'-',VMESA_PARTE_NUMERO) AS NUMERO, "
-                + "VMESA_PARTE_ASUNTO AS ASUNTO, `PK_UTIL.FUN_PRIORIDAD_NOMBRE`(NPRIORIDAD_CODIGO) AS PRIORIDAD, "
+                + "UPPER(VMESA_PARTE_ASUNTO) AS ASUNTO, `PK_UTIL.FUN_PRIORIDAD_NOMBRE`(NPRIORIDAD_CODIGO) AS PRIORIDAD, "
                 + "`PK_UTIL.FUN_INSTITUCION_NOMBRE`(NINSTITUCION_CODIGO) AS INSTITUCION, "
                 + "DMESA_PARTE_FECHA AS FECHA_MESA_PARTE, "
                 + "`PK_UTIL.FUN_ESTADO_NOMBRE`(CESTADO_CODIGO) AS ESTADO,"
-                + "VMESA_PARTE_POST_FIRMA AS FIRMA, NMESA_PARTE_LEGAJOS AS LEGAJO, NMESA_PARTE_FOLIOS AS FOLIO, "
+                + "UPPER(VMESA_PARTE_POST_FIRMA) AS FIRMA, UPPER(VMESA_PARTE_CARGO) AS CARGO, "
+                + "NMESA_PARTE_LEGAJOS AS LEGAJO, NMESA_PARTE_FOLIOS AS FOLIO, "
              //   + "PK_UTIL.FUN_MESA_PARTE_RESPUESTA(CPERIODO_CODIGO, CMESA_PARTE_TIPO, NMESA_PARTE_CODIGO) AS DOC_RESPUESTA,"
                 + "VMESA_PARTE_DIGITAL AS DIGITAL  "
                 + "FROM IAFAS_MESA_PARTES WHERE "
@@ -281,7 +283,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
                 + "CMESA_PARTE_TIPO=? AND "
                 + "VUSUARIO_CREADOR=? AND "
                 + "CESTADO_CODIGO NOT IN ('AN')"
-                + "ORDER BY ESTADO DESC";
+                + "ORDER BY NMESA_PARTE_CODIGO DESC";
         try {
             objPreparedStatement = objConnection.prepareStatement(sql);
             objPreparedStatement.setString(1, objBeanMesaParte.getPeriodo());
@@ -299,6 +301,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
                 objBnMesaParte.setFecha(objResultSet.getDate("FECHA_MESA_PARTE"));
                 objBnMesaParte.setEstado(objResultSet.getString("ESTADO"));
                 objBnMesaParte.setPostFirma(objResultSet.getString("FIRMA"));
+                objBnMesaParte.setCargo(objResultSet.getString("CARGO"));
                 objBnMesaParte.setLegajo(objResultSet.getInt("LEGAJO"));
                 objBnMesaParte.setFolio(objResultSet.getInt("FOLIO"));
                 //objBnMesaParte.setReferencia(objResultSet.getString("DOC_RESPUESTA"));
@@ -321,7 +324,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
     }
 
     @Override
-    public String getNumeroMesaParteSalida(BeanMesaParte objBnMesaParte, String usuario) {
+    public String getNumeroMesaParteSalida(BeanMesaParte objBnMesaParte) {
         String result = "00001";
         sql = "SELECT LPAD(IFNULL(MAX(VMESA_PARTE_NUMERO)+1,1),5,0) AS CODIGO "
                 + "FROM IAFAS_MESA_PARTES WHERE "

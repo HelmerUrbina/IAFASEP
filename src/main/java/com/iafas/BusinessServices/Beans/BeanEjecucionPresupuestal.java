@@ -2,15 +2,13 @@ package com.iafas.BusinessServices.Beans;
 
 import java.io.Serializable;
 import java.sql.Date;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
  *
  * @author H-URBINA-M
  */
-@Getter
-@Setter
+@Data
 public class BeanEjecucionPresupuestal implements Serializable {
 
     private String mode;

@@ -57,7 +57,7 @@ public class RemisionDocumentoServlet extends HttpServlet {
         BeanUsuario objUsuario = (BeanUsuario) session.getAttribute("objUsuario" + session.getId());
         //VERIFICAMOS LA SESSION DEL USUARIO
         if (objUsuario == null) {
-            dispatcher = request.getRequestDispatcher("/FinSession.jsp");
+            dispatcher = request.getRequestDispatcher("Login/FinSession.jsp");
             dispatcher.forward(request, response);
         }
         objConnection = (Connection) context.getAttribute("objConnection");
@@ -98,28 +98,27 @@ public class RemisionDocumentoServlet extends HttpServlet {
             request.setAttribute("objRemisionDocumento", objDsMesaParte.getListaRemisionMesaParte(objBnMesaParte, objUsuario.getUsuario()));
         }
         if (objBnMesaParte.getMode().equals("B")) {
-            result = objDsMesaParte.getNumeroMesaParteSalida(objBnMesaParte, objUsuario.getUsuario());
+            result = objDsMesaParte.getNumeroMesaParteSalida(objBnMesaParte);
         }
         if (objBnMesaParte.getMode().equals("I")) {
             result = objDsMesaParte.getNumeroMesaParte(objBnMesaParte, objUsuario.getUsuario());
         }
         if (objBnMesaParte.getMode().equals("U")) {
             objBnMesaParte = objDsMesaParte.getMesaParte(objBnMesaParte, objUsuario.getUsuario());
-            result = objBnMesaParte.getNumeroDocumento() + "+++"
-                    + objBnMesaParte.getFecha() + "+++"
+            result = objBnMesaParte.getDocumento() + "+++"
+                    + objBnMesaParte.getNumeroDocumento() + "+++"
+                     + objBnMesaParte.getInstitucion() + "+++"
+                    + objBnMesaParte.getReferencia() + "+++"
                     + objBnMesaParte.getPostFirma() + "+++"
+                    + objBnMesaParte.getCargo() + "+++"
                     + objBnMesaParte.getAsunto() + "+++"
-                    + objBnMesaParte.getFechaRegistro() + "+++"
-                    + objBnMesaParte.getDocumento() + "+++"
-                    + objBnMesaParte.getClasificacion() + "+++"
-                    + objBnMesaParte.getInstitucion() + "+++"
                     + objBnMesaParte.getPrioridad() + "+++"
-                    + objBnMesaParte.getHora() + "+++"
+                    + objBnMesaParte.getClasificacion() + "+++"
+                    + objBnMesaParte.getFecha() + "+++"
+                    + objBnMesaParte.getFechaRegistro() + "+++"
                     + objBnMesaParte.getLegajo() + "+++"
-                    + objBnMesaParte.getFolio() + "+++"
-                    + objBnMesaParte.getArea() + "+++"
-                    + objBnMesaParte.getUsuarioResponsable() + "+++"
-                    + objBnMesaParte.getReferencia();
+                    + objBnMesaParte.getFolio();
+            System.out.println(result);
         }
         //SE ENVIA DE ACUERDO AL MODO SELECCIONADO
         switch (request.getParameter("mode")) {
