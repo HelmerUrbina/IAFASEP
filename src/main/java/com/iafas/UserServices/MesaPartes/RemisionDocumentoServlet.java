@@ -118,7 +118,6 @@ public class RemisionDocumentoServlet extends HttpServlet {
                     + objBnMesaParte.getFechaRegistro() + "+++"
                     + objBnMesaParte.getLegajo() + "+++"
                     + objBnMesaParte.getFolio();
-            System.out.println(result);
         }
         //SE ENVIA DE ACUERDO AL MODO SELECCIONADO
         switch (request.getParameter("mode")) {

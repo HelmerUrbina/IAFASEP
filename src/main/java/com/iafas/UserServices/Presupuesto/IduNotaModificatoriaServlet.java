@@ -39,7 +39,8 @@ import javax.servlet.http.Part;
  * @author H-URBINA-M
  */
 @WebServlet(name = "IduNotaModificatoriaServlet", urlPatterns = {"/IduNotaModificatoria"})
-@MultipartConfig(location = "D:/SIPRE/EJECUCION/NotaModificatoria")
+//@MultipartConfig(location = "D:/IAFASEP/Presupuesto/NotasModificatorias")
+@MultipartConfig(location = "/IAFASEP/Presupuesto/NotasModificatorias")
 public class IduNotaModificatoriaServlet extends HttpServlet {
 
     private ServletConfig config = null;
@@ -106,7 +107,8 @@ public class IduNotaModificatoriaServlet extends HttpServlet {
                 for (Part part : parts) {
                     if (null != Utiles.getFileName(part)) {
                         objBnNotaModificatoria.setJustificacion(Utiles.getFileName(part));
-                        File fichero = new File("D:/SIPRE/EJECUCION/NotaModificatoria/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getUnidadOperativa() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
+                        //File fichero = new File("D:/IAFASEP/Presupuesto/NotasModificatorias/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getUnidadOperativa() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
+                        File fichero = new File("/IAFASEP/Presupuesto/NotasModificatorias/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getUnidadOperativa() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
                         if (fichero.exists()) {
                             fichero.delete();
                         }
@@ -128,14 +130,12 @@ public class IduNotaModificatoriaServlet extends HttpServlet {
                 k = objDsNotaModificatoria.iduNotaModificatoria(objBnNotaModificatoria, objUsuario.getUsuario());
                 if (k != 0) {
                     String lista[][] = Utiles.generaLista(request.getParameter("lista"), 8);
-                    
                     objBnNotaModificatoria.setMode("D");
                     objBnNotaModificatoria.setDetalle(0);
                     objBnNotaModificatoria.setResolucion(0);
                     objBnNotaModificatoria.setImporte(0.0);
                     k = objDsNotaModificatoria.iduNotaModificatoriaDetalle(objBnNotaModificatoria, objUsuario.getUsuario());
                     for (String[] item : lista) {
-                        
                         objBnNotaModificatoria.setMode("I");
                         objBnNotaModificatoria.setDetalle(Utiles.checkNum(item[0].trim()) + 1);
                         objBnNotaModificatoria.setTipo(item[1].trim());
@@ -155,7 +155,7 @@ public class IduNotaModificatoriaServlet extends HttpServlet {
             result = "ERROR";
             objBnMsgerr = new BeanMsgerr();
             objBnMsgerr.setUsuario(objUsuario.getUsuario());
-            objBnMsgerr.setTabla("SIPE_NOTA_MODIFICATORIA");
+            objBnMsgerr.setTabla("IAFAS_NOTAS_MODIFICATORIAS");
             objBnMsgerr.setTipo(objBnNotaModificatoria.getMode());
             objDsMsgerr = new MsgerrDAOImpl(objConnection);
             objBnMsgerr = objDsMsgerr.getMsgerr(objBnMsgerr);

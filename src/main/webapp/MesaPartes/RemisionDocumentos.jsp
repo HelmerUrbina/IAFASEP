@@ -30,10 +30,9 @@
             var periodo = $("#cbo_Periodo").val();
             var tipo = 'S';
             var mes = $("#cbo_Mes").val();
+            $("#div_GrillaPrincipal").remove();
             $("#div_VentanaPrincipal").remove();
             $("#div_ContextMenu").remove();
-            $("#div_GrillaPrincipal").remove();
-            $("#cbo_Ajax").remove();
             var $contenidoAjax = $('#div_Detalle').html('<img src="../Imagenes/Fondos/cargando.gif">');
             $.ajax({
                 type: "GET",

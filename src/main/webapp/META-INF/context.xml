@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context path="/IAFAS">
-    <Resource auth="Container" 
-              driverClassName="com.mysql.jdbc.Driver" 
-              maxActive="20" 
-              maxIdle="10" 
-              maxWait="-1" 
-              type="javax.sql.DataSource" 
-              name="IAFAS_MySQL" 
-              username2="iafasep" 
-              password2="iafasEP$2021" 
-              url2="jdbc:mysql://localhost:3306/IAFASEP?zeroDateTimeBehavior=CONVERT_TO_NULL" 
-              url="jdbc:mysql://SERVER2012:3307/IAFAS?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true" 
-              username="root"
-              password="root" />
+  <Resource auth="Container" 
+            driverClassName="com.mysql.jdbc.Driver" 
+            maxActive="20" maxIdle="10" maxWait="-1" 
+            name="IAFAS_MySQL" 
+            password2="root" 
+            password="iafasEP$2021" 
+            type="javax.sql.DataSource" 
+            url2="jdbc:mysql://SERVER2012:3307/IAFAS?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true" 
+            url="jdbc:mysql://localhost:3306/IAFASEP?zeroDateTimeBehavior=CONVERT_TO_NULL" 
+            username2="root" 
+            username="iafasep"/>
 </Context>

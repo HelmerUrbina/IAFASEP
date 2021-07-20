@@ -84,7 +84,7 @@ public class NotaModificatoriaServlet extends HttpServlet {
         }
         if (objBnNotaModificatoria.getMode().equals("B")) {
             result = "" + objDsNotaModificatoria.getListaNotaModificatoriaDetalle(objBnNotaModificatoria, objUsuario.getUsuario());
-        }
+         }
         //SE ENVIA DE ACUERDO AL MODO SELECCIONADO
         switch (objBnNotaModificatoria.getMode()) {
             case "notaModificatoria":

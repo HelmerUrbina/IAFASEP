@@ -46,8 +46,8 @@ import com.iafas.DataService.Despachadores.MesaParteDAO;
  * @author H-URBINA-M
  */
 @WebServlet(name = "IduMesaPartesServlet", urlPatterns = {"/IduMesaPartes"})
-@MultipartConfig(location = "D:/IAFAS/MesaPartes/Documentos",
-//@MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos",
+//@MultipartConfig(location = "D:/IAFAS/MesaPartes/Documentos",
+@MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos",
         fileSizeThreshold = 1024 * 1024 * 10,       // 10 MB 
         maxFileSize = 1024 * 1024 * 500,            // 500 MB
         maxRequestSize = 1024 * 1024 * 1000)        // 1000 MB
@@ -107,13 +107,13 @@ public class IduMesaPartesServlet extends HttpServlet {
         objBnMesaParte.setFecha(new java.sql.Date(fecha_doc.getTime()));
         objBnMesaParte.setAsunto(request.getParameter("asunto"));
         objBnMesaParte.setPostFirma(request.getParameter("postFirma"));
+        objBnMesaParte.setCargo(request.getParameter("cargo"));
         objBnMesaParte.setLegajo(Utiles.checkNum(request.getParameter("legajos")));
         objBnMesaParte.setFolio(Utiles.checkNum(request.getParameter("folios")));
         objBnMesaParte.setArea(request.getParameter("area"));
         objBnMesaParte.setUsuarioResponsable(request.getParameter("usuario"));
         objBnMesaParte.setReferencia(request.getParameter("referencia"));
         objDsMesaParte = new MesaParteDAOImpl(objConnection);
-        System.out.println(objBnMesaParte.getTipo()+" "+objBnMesaParte.getMode());
         if (objBnMesaParte.getTipo().equals("E") && !objBnMesaParte.getMode().equals("D")) {
             Collection<Part> parts = request.getParts();
             for (Part part : parts) {
@@ -157,7 +157,7 @@ public class IduMesaPartesServlet extends HttpServlet {
                     parametro.put("CODIGO", objBnMesaParte.getNumero());
                     parametro.put("TIPO", objBnMesaParte.getTipo());
                     parametro.put("USUARIO", objUsuario.getUsuario());
-                    parametro.put("SUBREPORT_DIR", "D:\\OPREFA\\Reportes");
+                    parametro.put("SUBREPORT_DIR", "\\IAFASEP\\Reportes");
                     JasperPrint reporte = JasperFillManager.fillReport(stream, parametro, objConnection);
                     /*  Utiles u = new Utiles();
                     u.printTicket(reporte);*/

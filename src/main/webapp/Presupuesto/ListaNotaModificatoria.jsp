@@ -27,7 +27,7 @@
     </c:forEach>
     var listaDet = new Array();
     <c:forEach var="d" items="${objNotaModificatoriaDetalle}">
-    var result = {codigo: '${d.codigo}', detalle: '${d.detalle}',
+    var result = {detalle: '${d.detalle}', codigo: '${d.codigo}',
         presupuesto: '${d.presupuesto}', tarea: '${d.tarea}', cadenaGasto: '${d.cadenaGasto}',
         anulacion: '${d.importeAnulacion}', credito: '${d.importeCredito}', justificacion: '${d.justificacion}'};
     listaDet.push(result);
@@ -612,7 +612,7 @@
                             data: {mode: 'B', periodo: periodo, codigo: codigo},
                             success: function (data) {
                                 data = data.replace("[", "");
-                                var indice = 7;
+                                var indice = 8;
                                 var fila = data.split("[");
                                 var rows = new Array();
                                 for (i = 1; i < fila.length; i++) {
@@ -624,9 +624,9 @@
                                     while (datos[indice].indexOf(',') > 0) {
                                         datos[indice] = datos[indice].replace(",", "");
                                     }
-                                    var row = {tipo: datos[0], presupuesto: datos[1],
-                                        tarea: datos[3], cadenaGasto: datos[4], anulacion: parseFloat(datos[5]), credito: parseFloat(datos[6]),
-                                        justificacion: datos[7], resolucion: datos[2]};
+                                    var row = {codigo: datos[0], tipo: datos[1], presupuesto: datos[2],
+                                        tarea: datos[4], cadenaGasto: datos[5], anulacion: parseFloat(datos[6]), credito: parseFloat(datos[7]),
+                                        justificacion: datos[8], resolucion: datos[3]};
                                     rows.push(row);
                                 }
                                 if (rows.length > 0)
@@ -936,8 +936,8 @@
         var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i];
-            result = row.uid + "---" + row.tipo.substring(0, 1) + "---" + row.codigo +
-                    "---" + parseFloat(row.anulacion + row.credito) + "---" + row.justificacion;
+            result = row.uid + "---" + row.tipo.substring(0, 1) + "---" + row.codigo + "---" +
+                    parseFloat(row.anulacion + row.credito) + "---" + row.justificacion;
             lista.push(result);
         }
         if (lista.length === 0)

@@ -11,10 +11,7 @@
     var mes = $("#cbo_Mes").val();
     var codigo = null;
     var archivo = null;
-    var codigoUsuario = '';
     var institucion = null;
-    var area = null;
-    var docReferencia = '';
     var estado = '';
     var mode = null;
     var msg = '';
@@ -23,7 +20,7 @@
     var result = {numero: '${d.numero}', numeroDocumento: '${d.numeroDocumento}', asunto: '${d.asunto}',
         institucion: '${d.institucion}', prioridad: '${d.prioridad}', fecha: '${d.fecha}', estado: '${d.estado}', firma: '${d.postFirma}',
         legajo: '${d.legajo}', folio: '${d.folio}', referencia: '${d.referencia}', cargo: '${d.cargo}',
-        codigoUsuario: '${d.usuario}', archivo: '${d.archivo}'};
+        archivo: '${d.archivo}'};
     lista.push(result);
     </c:forEach>
     var listaInstitucion = new Array();
@@ -59,7 +56,6 @@
                         {name: 'legajo', type: "number"},
                         {name: 'folio', type: "string"},
                         {name: 'referencia', type: "string"},
-                        {name: 'codigoUsuario', type: "string"},
                         {name: 'archivo', type: "string"}
                     ],
             root: "RemisionDocumentos",
@@ -252,8 +248,6 @@
             codigo = row['numero'];
             estado = row['estado'];
             archivo = row['archivo'];
-            codigoUsuario = row['codigoUsuario'];
-            docReferencia = row['referencia'];
         });
         //CREA LOS ELEMENTOS DE LAS VENTANAS
         var customButtonsDemo = (function () {
@@ -371,6 +365,7 @@
         }
         //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
         function fn_Refrescar() {
+            $("#div_GrillaPrincipal").remove();
             $("#div_VentanaPrincipal").remove();
             $("#div_ContextMenu").remove();
             var $contenidoAjax = $('#div_Detalle').html('<img src="../Imagenes/Fondos/cargando.gif">');
@@ -469,9 +464,9 @@
             var fechaRecepcion = $("#txt_FechaRecepcion").val();
             var asunto = $("#txt_Asunto").val();
             var postFirma = $("#txt_PostFirma").val();
+            var cargo = $("#txt_Cargo").val();
             var legajos = $("#div_Legajos").val();
             var folios = $("#div_Folios").val();
-            var referencia = $("#cbo_Referencia").val();
             var items = $("#cbo_Referencia").jqxDropDownList('getCheckedItems');
             var lista = new Array();
             $.each(items, function (index) {
@@ -483,8 +478,8 @@
                 data: {mode: mode, periodo: periodo, tipo: tipo, mes: mes, numero: numero, prioridad: prioridad,
                     documento: documento, numeroDocumento: numeroDocumento, clasificacion: clasificacion,
                     fechaDocumento: fechaDocumento, fechaRecepcion: fechaRecepcion, asunto: asunto,
-                    postFirma: postFirma, legajos: legajos, folios: folios, lista: JSON.stringify(lista), institucion: institucion,
-                    area: area},
+                    postFirma: postFirma, cargo: cargo, legajos: legajos, folios: folios,
+                    referencia: JSON.stringify(lista), institucion: institucion},
                 success: function (data) {
                     msg = data;
                     if (msg === "GUARDO") {

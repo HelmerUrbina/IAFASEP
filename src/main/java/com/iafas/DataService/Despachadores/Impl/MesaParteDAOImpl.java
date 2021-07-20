@@ -150,7 +150,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
     @Override
     public BeanMesaParte getMesaParte(BeanMesaParte objBeanMesaParte, String usuario) {
         sql = "SELECT LPAD(NMESA_PARTE_CODIGO,5,0) AS NUMERO, NINSTITUCION_CODIGO,"
-                + "`PK_UTIL.FUN_INSTITUCION_NOMBRE`(NINSTITUCION_CODIGO) AS INSTITUCION, "
+                + "`PK_UTIL.FUN_INSTITUCION_ABREVIATURA`(NINSTITUCION_CODIGO) AS INSTITUCION, "
                 + "NPRIORIDAD_CODIGO, NDOCUMENTO_CODIGO, VMESA_PARTE_NUMERO, VMESA_PARTE_CARGO, "
                 + "NCLASIFICACION_DOCUMENTO_CODIGO, DMESA_PARTE_FECHA, DMESA_PARTE_RECEPCION, "
                 + "VMESA_PARTE_ASUNTO, VMESA_PARTE_POST_FIRMA, NMESA_PARTE_LEGAJOS, NMESA_PARTE_FOLIOS "
@@ -229,7 +229,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
 
     @Override
     public int iduMesaParte(BeanMesaParte objBeanMesaParte, String usuario) {
-        sql = "{CALL SP_IDU_MESA_PARTES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
+        sql = "{CALL SP_IDU_MESA_PARTES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
         try (CallableStatement cs = objConnection.prepareCall(sql)) {
             cs.setString(1, objBeanMesaParte.getPeriodo());
             cs.setString(2, objBeanMesaParte.getTipo());
@@ -242,14 +242,16 @@ public class MesaParteDAOImpl implements MesaParteDAO {
             cs.setDate(9, objBeanMesaParte.getFecha());
             cs.setString(10, objBeanMesaParte.getAsunto());
             cs.setString(11, objBeanMesaParte.getPostFirma());
-            cs.setInt(12, objBeanMesaParte.getLegajo());
-            cs.setInt(13, objBeanMesaParte.getFolio());
-            cs.setString(14, objBeanMesaParte.getArchivo());
-            cs.setString(15, usuario);
-            cs.setString(16, objBeanMesaParte.getMode().toUpperCase());
-            s = cs.executeUpdate();
+            cs.setString(12, objBeanMesaParte.getCargo());
+            cs.setInt(13, objBeanMesaParte.getLegajo());
+            cs.setInt(14, objBeanMesaParte.getFolio());
+            cs.setString(15, objBeanMesaParte.getArchivo());
+            cs.setString(16, usuario);
+            cs.setString(17, objBeanMesaParte.getMode().toUpperCase());
+            cs.executeUpdate();
             cs.close();
             s++;
+            System.out.println(s);
         } catch (SQLException e) {
             System.out.println("Error al ejecutar iduMesaParte : " + e.toString());
             objDsMsgerr = new MsgerrDAOImpl(objConnection);
@@ -304,6 +306,7 @@ public class MesaParteDAOImpl implements MesaParteDAO {
                 objBnMesaParte.setCargo(objResultSet.getString("CARGO"));
                 objBnMesaParte.setLegajo(objResultSet.getInt("LEGAJO"));
                 objBnMesaParte.setFolio(objResultSet.getInt("FOLIO"));
+                System.out.println(objBnMesaParte.getFecha());
                 //objBnMesaParte.setReferencia(objResultSet.getString("DOC_RESPUESTA"));
                 objBnMesaParte.setArchivo(objResultSet.getString("DIGITAL"));
                 lista.add(objBnMesaParte);
