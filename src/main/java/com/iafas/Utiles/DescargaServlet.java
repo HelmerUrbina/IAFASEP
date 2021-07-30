@@ -42,7 +42,7 @@ public class DescargaServlet extends HttpServlet {
         String presupuesto = request.getParameter("presupuesto");
         String documento = request.getParameter("documento");
         String opcion = request.getParameter("opcion");
-        // filePath = "D:/IAFAS/";
+        //filePath = "D:/IAFASEP/";
         filePath = "/IAFASEP/";
         switch (opcion) {
             case "DemandaAdicional":
@@ -62,6 +62,9 @@ public class DescargaServlet extends HttpServlet {
                 break;
             case "DeclaracionJurada":
                 filePath += "Presupuesto/DeclaracionJurada/" + periodo + "-" + presupuesto + "-" + codigo + "-" + documento;
+                break;
+            case "NotaModificatoria":
+                filePath += "Presupuesto/NotasModificatorias/" + periodo + "-" + codigo + "-" + documento;
                 break;
             default:
                 filePath = "";

@@ -6,7 +6,6 @@
 
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <script type="text/javascript">
-    var autorizacion = '${autorizacion}';
     var periodo = $("#cbo_Periodo").val();
     var mes = $("#cbo_Mes").val();
     var codigo = null;
@@ -20,9 +19,9 @@
     <c:forEach var="c" items="${objNotaModificatoria}">
     var result = {codigo: '${c.codigo}', tipo: '${c.tipo}', credito: '${c.importeCredito}',
         anulacion: '${c.importeAnulacion}', justificacion: '${c.justificacion}', fecha: '${c.fecha}', estado: '${c.estado}',
-        usuarioCierre: '${c.usuarioCierre}', fechaCierre: '${c.fechaCierre}', usuarioVerifica: '${c.usuarioVerifica}', fechaVerifica: '${c.fechaVerifica}',
+        usuarioCierre: '${c.usuarioCierre}', fechaCierre: '${c.fechaCierre}',
         usuarioAprueba: '${c.usuarioAprobacion}', fechaAprueba: '${c.fechaAprobacion}', usuarioRechazo: '${c.usuarioRechazo}',
-        fechaRechazo: '${c.fechaRechazo}', justificaRechazo: '${c.dependencia}', SIAF: '${c.SIAF}', consolidado: '${c.consolidado}', archivo: '${c.archivo}'};
+        fechaRechazo: '${c.fechaRechazo}', justificaRechazo: '${c.rechazo}', archivo: '${c.archivo}'};
     lista.push(result);
     </c:forEach>
     var listaDet = new Array();
@@ -65,15 +64,11 @@
                         {name: "estado", type: "string"},
                         {name: "usuarioCierre", type: "string"},
                         {name: "fechaCierre", type: "string"},
-                        {name: "usuarioVerifica", type: "string"},
-                        {name: "fechaVerifica", type: "string"},
                         {name: "usuarioAprueba", type: "string"},
                         {name: "fechaAprueba", type: "string"},
                         {name: "usuarioRechazo", type: "string"},
                         {name: "fechaRechazo", type: "string"},
                         {name: "justificaRechazo", type: "string"},
-                        {name: "SIAF", type: "string"},
-                        {name: "consolidado", type: "string"},
                         {name: "archivo", type: "string"}
                     ],
             root: "NotaModificatoria",
@@ -187,7 +182,7 @@
         };
         $("#div_GrillaPrincipal").jqxGrid({
             width: '99.8%',
-            height: ($(window).height() - 60),
+            height: ($(window).height() - 100),
             source: sourceCab,
             rowdetails: true,
             autoheight: false,
@@ -253,9 +248,6 @@
                 {text: 'CODIGO', dataField: 'codigo', width: '3%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'JUSTIFICACIÓN', dataField: 'justificacion', width: '40%', align: 'center', cellclassname: cellclass},
                 {text: 'TIPO', dataField: 'tipo', filtertype: 'checkedlist', width: '20%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                /* {text: 'ANULACION', dataField: 'anulacion', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
-                 {text: 'CREDITO', dataField: 'credito', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
-                 */{text: 'CONSOL.', dataField: 'consolidado', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'FECHA', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
                 {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
                 {text: 'CERRADO POR : ', dataField: 'usuarioCierre', width: '15%', align: 'center', cellclassname: cellclass},
@@ -268,7 +260,7 @@
             ]
         });
         // DEFINIMOS EL MENU CONTEXTUAL 
-        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 215, autoOpenPopup: false, mode: 'popup'});
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 175, autoOpenPopup: false, mode: 'popup'});
         $("#div_GrillaPrincipal").on('contextmenu', function () {
             return false;
         });
@@ -341,86 +333,62 @@
                         });
                     }
                 } else if ($.trim($(opcion).text()) === "Rechazar") {
-                    if (autorizacion === 'true') {
-                        $.confirm({
-                            theme: 'material',
-                            title: 'RECHAZAR NOTA',
-                            content: '' +
-                                    '<form action="" class="formName">' +
-                                    '<div class="form-group">' +
-                                    '<label>Motivo : </label>' +
-                                    '<input type="text" placeholder="Ingrese Motivo de Rechazo" class="motivo form-control" required />' +
-                                    '</div>' +
-                                    '</form>',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'blue',
-                            typeAnimated: true,
-                            buttons: {
-                                aceptar: {
-                                    text: 'Aceptar',
-                                    btnClass: 'btn-primary',
-                                    keys: ['enter', 'shift'],
-                                    action: function () {
-                                        var motivo = this.$content.find('.motivo').val();
-                                        if (!motivo) {
-                                            $.alert('Ingrese el Motivo del Rechazo');
-                                            return false;
-                                        }
-                                        mode = 'R';
-                                        fn_GrabarDatosEstados(motivo);
+                    $.confirm({
+                        theme: 'material',
+                        title: 'RECHAZAR NOTA',
+                        content: '' +
+                                '<form action="" class="formName">' +
+                                '<div class="form-group">' +
+                                '<label>Motivo : </label>' +
+                                '<input type="text" placeholder="Ingrese Motivo de Rechazo" class="motivo form-control" required />' +
+                                '</div>' +
+                                '</form>',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    var motivo = this.$content.find('.motivo').val();
+                                    if (!motivo) {
+                                        $.alert('Ingrese el Motivo del Rechazo');
+                                        return false;
                                     }
-                                },
-                                cancelar: function () {
+                                    mode = 'R';
+                                    fn_GrabarDatosEstados(motivo);
                                 }
+                            },
+                            cancelar: function () {
                             }
-                        });
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
-                } else if ($.trim($(opcion).text()) === "Verificar") {
-                    if (autorizacion === 'true') {
-                        $.confirm({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: '¿Desea Verificar esta Nota Modificatoria?',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'blue',
-                            typeAnimated: true,
-                            buttons: {
-                                aceptar: {
-                                    text: 'Aceptar',
-                                    btnClass: 'btn-primary',
-                                    keys: ['enter', 'shift'],
-                                    action: function () {
-                                        mode = 'V';
-                                        fn_GrabarDatosEstados('');
-                                    }
-                                },
-                                cancelar: function () {
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Aprobar") {
+                    $.confirm({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: '¿Desea Aprobar este Registro?',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'A';
+                                    fn_GrabarDatosEstados('');
                                 }
+                            },
+                            cancelar: function () {
                             }
-                        });
-                    } else {
-                        $.alert({
-                            theme: 'material',
-                            title: 'AVISO DEL SISTEMA',
-                            content: 'Usuario no Autorizado para realizar este Tipo de Operación',
-                            animation: 'zoom',
-                            closeAnimation: 'zoom',
-                            type: 'red',
-                            typeAnimated: true
-                        });
-                    }
+                        }
+                    });
                 }
             } else {
                 $.alert({
@@ -677,7 +645,7 @@
             var ancho = 850;
             var alto = 700;
             posicionX = ($(window).width() / 2) - (ancho / 2);
-            posicionY = ($(window).height() / 2) - (alto / 2);
+            posicionY = ($(window).height() / 2) - (alto / 2) + 50;
             $('#div_VentanaPrincipal').jqxWindow({
                 position: {x: posicionX, y: posicionY},
                 width: ancho, height: alto, resizable: false,

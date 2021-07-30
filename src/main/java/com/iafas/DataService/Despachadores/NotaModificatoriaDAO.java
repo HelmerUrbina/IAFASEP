@@ -28,9 +28,7 @@ public interface NotaModificatoriaDAO {
     public int iduNotaModificatoria(BeanNotaModificatoria objBeanNotaModificatoria, String usuario);
 
     public int iduNotaModificatoriaDetalle(BeanNotaModificatoria objBeanNotaModificatoria, String usuario);
-
-    public int iduNotaModificatoriaDetalleMensualizacion(BeanNotaModificatoria objBeanNotaModificatoria, String usuario);
-
+ 
     public int iduNotaModificatoriaVerifica(BeanNotaModificatoria objBeanNotaModificatoria, String usuario);
 
 }

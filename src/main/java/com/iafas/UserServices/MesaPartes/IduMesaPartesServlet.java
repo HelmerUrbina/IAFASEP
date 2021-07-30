@@ -46,7 +46,7 @@ import com.iafas.DataService.Despachadores.MesaParteDAO;
  * @author H-URBINA-M
  */
 @WebServlet(name = "IduMesaPartesServlet", urlPatterns = {"/IduMesaPartes"})
-//@MultipartConfig(location = "D:/IAFAS/MesaPartes/Documentos",
+//@MultipartConfig(location = "D:/IAFASEP/MesaPartes/Documentos",
 @MultipartConfig(location = "/IAFASEP/MesaPartes/Documentos",
         fileSizeThreshold = 1024 * 1024 * 10,       // 10 MB 
         maxFileSize = 1024 * 1024 * 500,            // 500 MB

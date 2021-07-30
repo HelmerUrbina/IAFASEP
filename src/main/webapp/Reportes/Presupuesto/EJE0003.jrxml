@@ -4,15 +4,15 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.24184264611831"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="182"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="CODIGO" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["306"]]></defaultValueExpression>
+		<defaultValueExpression><![CDATA["2"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="PERIODO" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["2020"]]></defaultValueExpression>
+		<defaultValueExpression><![CDATA["2021"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA["D:\\Desarrollo\\IAFAS\\src\\main\\webapp\\Reportes\\"]]></defaultValueExpression>
@@ -95,7 +95,7 @@ ORDER BY NMD.NTAREA_PRESUPUESTAL_CODIGO, NMD.NCLASIFICADOR_PRESUPUESTAL_CODIGO]]
 			<band/>
 		</groupHeader>
 		<groupFooter>
-			<band height="13">
+			<band height="128">
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false">
 					<reportElement key="textField-32" mode="Opaque" x="0" y="0" width="320" height="13" backcolor="#CCFFCC" uuid="244018ec-757a-4586-88ea-d68a6e84937a"/>
 					<box rightPadding="2">
@@ -166,6 +166,69 @@ ORDER BY NMD.NTAREA_PRESUPUESTAL_CODIGO, NMD.NCLASIFICADOR_PRESUPUESTAL_CODIGO]]
 					</textElement>
 					<textFieldExpression><![CDATA[$V{SUMA_NUEVO_PIM}]]></textFieldExpression>
 				</textField>
+				<staticText>
+					<reportElement x="118" y="56" width="120" height="11" uuid="9489f436-5f32-4cfe-90a0-b1f2f6b3e198"/>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Dashed"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[O-224006267-O+]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="118" y="67" width="120" height="11" uuid="0c85fe36-5c9f-496f-ae11-4a7671d90040"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[OSCAR ARTURO DE LA CRUZ ORBEGOZO ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="118" y="78" width="120" height="11" uuid="efd6b15b-b46d-4fa2-8cad-44e4e42d0dc5"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[CRL EP]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="118" y="89" width="120" height="22" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" uuid="da25609a-85b1-4084-9578-85cefbcf92c8"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[DIRECTOR EJECUTIVO 
+IAFAS-EP (FOSPEME)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="350" y="89" width="120" height="22" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" uuid="bf8bcd4e-30a3-4dd4-ad50-650961000ee6"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[JEFE DPTO PLANEAMIENTO Y PRESUPUESTO]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="350" y="56" width="120" height="11" uuid="19512010-3a0c-4f18-a332-88242cf31518"/>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Dashed"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[O-111536179-B+]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="350" y="67" width="120" height="11" uuid="1c081bd5-aa81-43e6-88b4-61171b4aad9a"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[RUBEN RAMOS RUIZ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="350" y="78" width="120" height="11" uuid="98204f36-1e6b-43ec-a39b-6d7ed06c3be7"/>
+					<textElement textAlignment="Center">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[TTE CRL EP]]></text>
+				</staticText>
 			</band>
 		</groupFooter>
 	</group>

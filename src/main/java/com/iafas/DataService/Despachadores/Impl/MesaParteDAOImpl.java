@@ -251,15 +251,14 @@ public class MesaParteDAOImpl implements MesaParteDAO {
             cs.executeUpdate();
             cs.close();
             s++;
-            System.out.println(s);
         } catch (SQLException e) {
-            System.out.println("Error al ejecutar iduMesaParte : " + e.toString());
+            System.out.println("Error al ejecutar iduMesaParte : " + e.getMessage());
             objDsMsgerr = new MsgerrDAOImpl(objConnection);
             objBnMsgerr = new BeanMsgerr();
             objBnMsgerr.setUsuario(usuario);
             objBnMsgerr.setTabla("IAFAS_MESA_PARTES");
             objBnMsgerr.setTipo(objBeanMesaParte.getMode().toUpperCase());
-            objBnMsgerr.setDescripcion(e.toString());
+            objBnMsgerr.setDescripcion(e.getMessage());
             s = objDsMsgerr.iduMsgerr(objBnMsgerr);
             return 0;
         }

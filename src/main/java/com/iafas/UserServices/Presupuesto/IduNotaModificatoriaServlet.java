@@ -84,16 +84,11 @@ public class IduNotaModificatoriaServlet extends HttpServlet {
         objBnNotaModificatoria = new BeanNotaModificatoria();
         objBnNotaModificatoria.setMode(request.getParameter("mode"));
         objBnNotaModificatoria.setPeriodo(request.getParameter("periodo"));
-        objBnNotaModificatoria.setUnidadOperativa(request.getParameter("unidadOperativa"));
         objBnNotaModificatoria.setMes(request.getParameter("mes"));
         objBnNotaModificatoria.setCodigo(request.getParameter("codigo"));
         objBnNotaModificatoria.setTipo(request.getParameter("tipo"));
         objBnNotaModificatoria.setFecha(new java.sql.Date(fecha_util.getTime()));
         objBnNotaModificatoria.setJustificacion(request.getParameter("motivo"));
-        objBnNotaModificatoria.setImportancia(request.getParameter("importancia"));
-        objBnNotaModificatoria.setFinanciamiento(request.getParameter("financiamiento"));
-        objBnNotaModificatoria.setConsecuencia(request.getParameter("consecuencias"));
-        objBnNotaModificatoria.setVariacion(request.getParameter("variacion"));
         objDsNotaModificatoria = new NotaModificatoriaDAOImpl(objConnection);
         int k = 0;
         // EJECUTAMOS EL PROCEDIMIENTO SEGUN EL MODO QUE SE ESTA TRABAJANDO
@@ -107,12 +102,12 @@ public class IduNotaModificatoriaServlet extends HttpServlet {
                 for (Part part : parts) {
                     if (null != Utiles.getFileName(part)) {
                         objBnNotaModificatoria.setJustificacion(Utiles.getFileName(part));
-                        //File fichero = new File("D:/IAFASEP/Presupuesto/NotasModificatorias/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getUnidadOperativa() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
-                        File fichero = new File("/IAFASEP/Presupuesto/NotasModificatorias/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getUnidadOperativa() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
+                        //File fichero = new File("D:/IAFASEP/Presupuesto/NotasModificatorias/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
+                        File fichero = new File("/IAFASEP/Presupuesto/NotasModificatorias/" + objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
                         if (fichero.exists()) {
                             fichero.delete();
                         }
-                        part.write(objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getUnidadOperativa() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
+                        part.write(objBnNotaModificatoria.getPeriodo() + "-" + objBnNotaModificatoria.getCodigo() + "-" + objBnNotaModificatoria.getJustificacion().toUpperCase());
                     }
                 }
                 k = objDsNotaModificatoria.iduNotaModificatoriaVerifica(objBnNotaModificatoria, objUsuario.getUsuario());
@@ -121,6 +116,9 @@ public class IduNotaModificatoriaServlet extends HttpServlet {
                 k = objDsNotaModificatoria.iduNotaModificatoriaVerifica(objBnNotaModificatoria, objUsuario.getUsuario());
                 break;
             case "R":
+                k = objDsNotaModificatoria.iduNotaModificatoriaVerifica(objBnNotaModificatoria, objUsuario.getUsuario());
+                break;
+            case "A":
                 k = objDsNotaModificatoria.iduNotaModificatoriaVerifica(objBnNotaModificatoria, objUsuario.getUsuario());
                 break;
             default:

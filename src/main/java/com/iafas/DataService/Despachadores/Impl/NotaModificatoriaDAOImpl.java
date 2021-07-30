@@ -43,21 +43,16 @@ public class NotaModificatoriaDAOImpl implements NotaModificatoriaDAO {
         lista = new LinkedList<>();
         sql = "SELECT NNOTA_MODIFICATORIA_CODIGO AS CODIGO, "
                 + "`PK_UTIL.FUN_TIPO_NOTA_MODIFICATORIA_NOMBRE`(NTIPO_NOTA_MODIFICATORIA_CODIGO) AS TIPO, "
-                //  + "OPRE_NEW.FUN_TOTAL_DETALLE_NOTA(CPERIODO_CODIGO,CUNIDAD_OPERATIVA_CODIGO,NNOTA_MODIFICATORIA_CODIGO,'C') AS IMP_CREDITO, "
-                //  + "OPRE_NEW.FUN_TOTAL_DETALLE_NOTA(CPERIODO_CODIGO,CUNIDAD_OPERATIVA_CODIGO,NNOTA_MODIFICATORIA_CODIGO,'A') AS IMP_ANULACION, "
                 + "UPPER(VNOTA_MODIFICATORIA_JUSTIFICACION) AS JUSTIFICACION, "
                 + "DNOTA_MODIFICATORIA_FECHA AS FECHA_NOTA, "
                 + "`PK_UTIL.FUN_ESTADO_NOMBRE`(CESTADO_CODIGO) AS ESTADO, "
-                //   + "IFNULL(UTIL_NEW.FUN_DESC_USUARIO(VUSUARIO_TERMINA),'--') AS USU_CERRAR, "
-                //   + "DUSUARIO_TERMINA AS FECHA_CERRAR, "
-                //  + "IFNULL(UTIL_NEW.FUN_DESC_USUARIO(VUSUARIO_VERIFICA),'--') AS USU_VERIFICA, "
-                //    + "DUSUARIO_VERIFICA AS FECHA_VERIFICA, "
-                //   + "IFNULL(UTIL_NEW.FUN_DESC_USUARIO(VUSUARIO_ENVIO),'--') AS USU_APRUEBA, "
-                //   + "DNOTA_MODIFICATORIA_ENVIO AS FECHA_APRUEBA, "
-                /*  + "IFNULL(UTIL_NEW.FUN_DESC_USUARIO(VUSUARIO_RECHAZO),'--') AS USU_RECHAZO, "
-                + "DUSUARIO_RECHAZO AS FECHA_RECHAZO, "*/
-                + "VNOTA_MODIFICATORIA_RECHAZO, "
-                + "NCONSOLIDADO_CODIGO AS NCONSOLIDADO_CODIGO "
+                + "IFNULL(`PK_UTIL.FUN_USUARIO_NOMBRE`(VUSUARIO_TERMINA),'--') AS USU_CERRAR, "
+                + "DUSUARIO_TERMINA AS FECHA_CERRAR, "
+                + "IFNULL(`PK_UTIL.FUN_USUARIO_NOMBRE`(VUSUARIO_APRUEBA),'--') AS USU_APRUEBA, "
+                + "DUSUARIO_APRUEBA AS FECHA_APRUEBA, "
+                + "IFNULL(`PK_UTIL.FUN_USUARIO_NOMBRE`(VUSUARIO_RECHAZA),'--') AS USU_RECHAZO, "
+                + "DUSUARIO_RECHAZA AS FECHA_RECHAZO, "
+                + "VNOTA_MODIFICATORIA_RECHAZO, VNOTA_MODIFICATORIA_ARCHIVO "
                 + "FROM IAFAS_NOTAS_MODIFICATORIAS WHERE "
                 + "CPERIODO_CODIGO=? AND "
                 + "CMES_CODIGO=? "
@@ -71,21 +66,17 @@ public class NotaModificatoriaDAOImpl implements NotaModificatoriaDAO {
                 objBnNotaModificatoria = new BeanNotaModificatoria();
                 objBnNotaModificatoria.setCodigo(objResultSet.getString("CODIGO"));
                 objBnNotaModificatoria.setTipo(objResultSet.getString("TIPO"));
-                //  objBnNotaModificatoria.setImporteCredito(objResultSet.getDouble("IMP_CREDITO"));
-                //   objBnNotaModificatoria.setImporteAnulacion(objResultSet.getDouble("IMP_ANULACION"));
                 objBnNotaModificatoria.setJustificacion(objResultSet.getString("JUSTIFICACION"));
                 objBnNotaModificatoria.setFecha(objResultSet.getDate("FECHA_NOTA"));
                 objBnNotaModificatoria.setEstado(objResultSet.getString("ESTADO"));
-                /*   objBnNotaModificatoria.setUsuarioCierre(objResultSet.getString("USU_CERRAR"));
+                objBnNotaModificatoria.setUsuarioCierre(objResultSet.getString("USU_CERRAR"));
                 objBnNotaModificatoria.setFechaCierre(objResultSet.getDate("FECHA_CERRAR"));
-                objBnNotaModificatoria.setUsuarioVerifica(objResultSet.getString("USU_VERIFICA"));
-                objBnNotaModificatoria.setFechaVerifica(objResultSet.getDate("FECHA_VERIFICA"));
                 objBnNotaModificatoria.setUsuarioAprobacion(objResultSet.getString("USU_APRUEBA"));
-              //  objBnNotaModificatoria.setFechaAprobacion(objResultSet.getDate("FECHA_APRUEBA"));*/
-                //objBnNotaModificatoria.setUsuarioRechazo(objResultSet.getString("USU_RECHAZO"));
-                //objBnNotaModificatoria.setFechaRechazo(objResultSet.getDate("FECHA_RECHAZO"));
-                objBnNotaModificatoria.setDependencia(objResultSet.getString("VNOTA_MODIFICATORIA_RECHAZO"));
-                objBnNotaModificatoria.setConsolidado(objResultSet.getString("NCONSOLIDADO_CODIGO"));
+                objBnNotaModificatoria.setFechaAprobacion(objResultSet.getDate("FECHA_APRUEBA"));
+                objBnNotaModificatoria.setUsuarioRechazo(objResultSet.getString("USU_RECHAZO"));
+                objBnNotaModificatoria.setFechaRechazo(objResultSet.getDate("FECHA_RECHAZO"));
+                objBnNotaModificatoria.setRechazo(objResultSet.getString("VNOTA_MODIFICATORIA_RECHAZO"));
+                objBnNotaModificatoria.setArchivo(objResultSet.getString("VNOTA_MODIFICATORIA_ARCHIVO"));
                 lista.add(objBnNotaModificatoria);
             }
         } catch (SQLException e) {
@@ -340,55 +331,14 @@ public class NotaModificatoriaDAOImpl implements NotaModificatoriaDAO {
     }
 
     @Override
-    public int iduNotaModificatoriaDetalleMensualizacion(BeanNotaModificatoria objBeanNotaModificatoria, String usuario) {
-        sql = "{CALL SP_IDU_NOTA_MODIFICATORIA_MESU(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
-        try (CallableStatement cs = objConnection.prepareCall(sql)) {
-            cs.setString(1, objBeanNotaModificatoria.getPeriodo());
-            cs.setString(2, objBeanNotaModificatoria.getUnidadOperativa());
-            cs.setString(3, objBeanNotaModificatoria.getCodigo());
-            cs.setInt(4, objBeanNotaModificatoria.getDetalle());
-            cs.setDouble(5, objBeanNotaModificatoria.getEnero());
-            cs.setDouble(6, objBeanNotaModificatoria.getFebrero());
-            cs.setDouble(7, objBeanNotaModificatoria.getMarzo());
-            cs.setDouble(8, objBeanNotaModificatoria.getAbril());
-            cs.setDouble(9, objBeanNotaModificatoria.getMayo());
-            cs.setDouble(10, objBeanNotaModificatoria.getJunio());
-            cs.setDouble(11, objBeanNotaModificatoria.getJulio());
-            cs.setDouble(12, objBeanNotaModificatoria.getAgosto());
-            cs.setDouble(13, objBeanNotaModificatoria.getSetiembre());
-            cs.setDouble(14, objBeanNotaModificatoria.getOctubre());
-            cs.setDouble(15, objBeanNotaModificatoria.getNoviembre());
-            cs.setDouble(16, objBeanNotaModificatoria.getDiciembre());
-            cs.setString(17, usuario);
-            cs.setString(18, objBeanNotaModificatoria.getMode().toUpperCase());
-            s = cs.executeUpdate();
-            cs.close();
-            s++;
-        } catch (SQLException e) {
-            System.out.println("Error al ejecutar iduNotaModificatoriaDetalleMensualizacion : " + e.getMessage());
-            objDsMsgerr = new MsgerrDAOImpl(objConnection);
-            objBnMsgerr = new BeanMsgerr();
-            objBnMsgerr.setUsuario(usuario);
-            objBnMsgerr.setTabla("IAFAS_NOTAS_MODIFICATORIAS_MENSUA");
-            objBnMsgerr.setTipo(objBeanNotaModificatoria.getMode().toUpperCase());
-            objBnMsgerr.setDescripcion(e.getMessage());
-            s = objDsMsgerr.iduMsgerr(objBnMsgerr);
-            return 0;
-        }
-        return s;
-    }
-
-    @Override
     public int iduNotaModificatoriaVerifica(BeanNotaModificatoria objBeanNotaModificatoria, String usuario) {
-        sql = "{CALL SP_VERIFICA_NOTA_MODIFICATORIA(?,?,?,?,?,?,?)}";
+        sql = "{CALL SP_VERIFICA_NOTA_MODIFICATORIA(?,?,?,?,?)}";
         try (CallableStatement cs = objConnection.prepareCall(sql)) {
             cs.setString(1, objBeanNotaModificatoria.getPeriodo());
-            cs.setString(2, objBeanNotaModificatoria.getUnidadOperativa());
-            cs.setString(3, objBeanNotaModificatoria.getCodigo());
-            cs.setDate(4, objBeanNotaModificatoria.getFecha());
-            cs.setString(5, objBeanNotaModificatoria.getJustificacion());
-            cs.setString(6, usuario);
-            cs.setString(7, objBeanNotaModificatoria.getMode());
+            cs.setString(2, objBeanNotaModificatoria.getCodigo());
+            cs.setString(3, objBeanNotaModificatoria.getJustificacion());
+            cs.setString(4, usuario);
+            cs.setString(5, objBeanNotaModificatoria.getMode());
             s = cs.executeUpdate();
             cs.close();
             s++;
