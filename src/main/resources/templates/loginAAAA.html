@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Institución Administradora de Fondos de Aseguramiento en Salud del Ejército del Perú</title>
+        <link rel="shortcut icon" th:href="@{/images/Logos/favicon.ico}" type="image/x-icon"/>
+        <link rel="stylesheet" th:href="@{/css/styles/jqx.base.css}"/>
+        <link rel="stylesheet" th:href="@{/css/jquery-confirm.min.css}"/>
+        <link rel="stylesheet" th:href="@{/css/login.css}"/>
+        <link rel="stylesheet" th:href="@{/css/scaf.css}"/> 
+        <script th:src="@{/javascript/theme.js}"></script>
+        <script th:src="@{/javascript/jquery.min.js}"></script>
+        <script th:src="@{/javascript/jquery-confirm.min.js}"></script>
+        <script th:src="@{/javascript/pdfobject.min.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxcore.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxpasswordinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxtooltip.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxbuttons.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxvalidator.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxwindow.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxcombobox.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdropdownlist.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdropdownlist.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxscrollbar.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxlistbox.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxexpander.js}"></script>
+        <script th:inline="javascript">
+            $(document).ready(function () {
+                var theme = getTheme();
+                $("#username").jqxInput({theme: theme, placeHolder: "Usuario", height: 25, width: 150});
+                $("#password").jqxPasswordInput({theme: theme, placeHolder: "Contraseña", width: 150, height: 25, showStrength: true, showStrengthPosition: "right"});
+                $("#btn_Ingresar").jqxButton({theme: theme, template: "success", height: '35', width: '150'});
+            });
+            function fn_login() {
+                var usuario = $("#txt_Usuario").val();
+                var password = $("#txt_Password").val();
+                $.ajax({
+                    type: "POST",
+                    url: "login",
+                    data: {accion: "LOGIN", usuario: usuario, password: password},
+                    success: function (data) {
+                        alert(data);
+                        if (data === "Login/Principal") {
+                            href = data;
+                        } else {
+                            $.alert({
+                                theme: 'material',
+                                title: 'Mensaje!',
+                                content: data,
+                                animation: 'zoom',
+                                closeAnimation: 'zoom',
+                                type: 'orange',
+                                typeAnimated: true
+                            });
+                        }
+                    }
+                });
+            }
+        </script>
+    </head>
+    <body oncontextmenu='return false' style="background: url(images/Fondos/fondo.jpg); background-repeat: repeat;">
+        <div style="text-align:center;">
+            <table border="0" style="margin: 0 auto;">
+                <tr>
+                    <td colspan="3" height="60px"></td>
+                </tr>
+                <tr >
+                    <td align="center" style="width: 450px">
+                        <form method="POST" th:action="@{/login}">
+                            <div class="header">INGRESO AL SISTEMA</div>
+                            <div id="content">
+                                <table >
+                                    <tr>
+                                        <td colspan="2" >
+                                            <div style="text-align: center">
+                                                <img src="images/Logos/logo.png" width="200px" height="200px" th:src="@{images/Logos/logo.png}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="usuario">Usuario </label></td>
+                                        <td><input type="text" class="text-input" name="username" id="username" autocomplete="off"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label for="password">Password </label></td>
+                                        <td><input type="password" class="text-input" name="password" id="password" autocomplete="off"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">&nbsp;</td>
+                                    </tr>
+                                </table>
+                                <div style="text-align: center;">
+                                    <div style="padding: 12px">
+                                        <input name="btn_Ingresar" id="btn_Ingresar" type="submit" value="Ingresar" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer">
+                                <span style="font-weight: bold">IAFAS-EP</span><br/>
+                                &copy; Todos los derechos reservados
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>

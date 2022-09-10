@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http.thymeleaf.org/extras/spring-security">
+    <head th:fragment="head">
+        <meta charset="UTF-8"/>
+        <title>Institución Administradora de Fondos de Aseguramiento en Salud del Ejército del Perú</title>
+        <link rel="shortcut icon" th:href="@{/images/Logos/favicon.ico}" type="image/x-icon"/>
+        <link rel="stylesheet" th:href="@{/css/styles/jqx.base.css}"/>        
+        <link rel="stylesheet" th:href="@{/css/jquery-ui.css}"/>
+        <link rel="stylesheet" th:href="@{/css/jquery-confirm.min.css}"/>
+        <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"/>
+        <link rel="stylesheet" th:href="@{/css/main.css}"/>
+        <link rel="stylesheet" th:href="@{/css/scaf.css}"/>
+        <link rel="stylesheet" th:href="@{/css/grid.css}"/>
+        <script th:src="@{/javascript/jquery.min.js}"></script>
+        <script th:src="@{/javascript/jquery-confirm.min.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxcore.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxmenu.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxsplitter.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxpasswordinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxtooltip.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxbuttons.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxscrollbar.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxpanel.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxtree.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxvalidator.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxwindow.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxcombobox.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdropdownlist.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdropdownlist.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxscrollbar.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxlistbox.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxexpander.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdata.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdata.export.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.columnsresize.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.columnsreorder.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.pager.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.sort.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.filter.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.storage.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.selection.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.export.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.filter.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.edit.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.aggregates.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxgrid.grouping.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxnumberinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxcheckbox.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxmaskedinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxdatetimeinput.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxcalendar.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxradiobutton.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxnotification.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxpopover.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxfileupload.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/jqxexport.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/globalization/globalize.js}"></script>
+        <script th:src="@{/javascript/jqwidgets/globalization/globalize.culture.es-PE.js}"></script>
+        <script th:src="@{/javascript/validacion.js}"></script>        
+        <script th:src="@{/javascript/demos.js}"></script>
+        <script th:src="@{/javascript/theme.js}"></script>
+        <script th:src="@{/javascript/pdfobject.min.js}"></script>
+        <script th:src="@{/javascript/jszip.min.js}"></script>
+        <!--<script th:src="@{https://dsp.reniec.gob.pe/refirma_invoker/resources/js/clientclickonce.js}"></script>-->
+       <script th:src="@{https://dsp.reniec.gob.pe/refirma_invoker/resources/js/client.js}"></script>
+        <script>
+            $(document).ready(function () {
+                $("#div_MenuOpciones").jqxMenu({width: '100%', height: 30, showTopLevelArrows: true, keyboardNavigation: true});
+                $("#div_MenuOpciones").css('visibility', 'visible');
+                $("#div_MenuOpciones").jqxMenu('focus');
+                //fn_mensaje();
+                $("#div_Aviso").jqxNotification({width: "700", position: "top-right", opacity: 0.9, autoOpen: false, animationOpenDelay: 800, autoClose: true, autoCloseDelay: 10000, template: "info"});
+                $("#div_Aviso").jqxNotification({width: "700", position: "top-right", opacity: 0.9, autoOpen: false, animationOpenDelay: 800, autoClose: true, autoCloseDelay: 10000, template: "info"});
+                $("#div_Notificacion").jqxNotification({width: "auto", position: "top-right", opacity: 0.9, autoOpen: false, animationOpenDelay: 800, autoClose: false, autoCloseDelay: 3000, template: "error"});
+                $('#div_Notificacion').click(function () {
+                    $('#div_Splitter').jqxSplitter('collapse');
+                    var $contenidoAjax = $('#div_Contenido').html('<div style="text-align: center"><img src="/images/Fondos/cargando.gif" th:src="@{/images/Fondos/cargando.gif}" alt=""/></div>');
+                    $.ajax({
+                        type: "POST",
+                        url: "../Decretos",
+                        data: {mode: 'documentoDecretado'},
+                        success: function (data) {
+                            $contenidoAjax.html(data);
+                        }
+                    });
+                });
+                //VENTANA PARA VIZUALIZAR LOS REPORTES
+                var posicionX, posicionY;
+                var ancho = ($(window).width() * .8);
+                var alto = ($(window).height() - 100);
+                posicionX = ($(window).width() - ancho) / 2;
+                posicionY = ($(window).height() - alto) / 2;
+                $('#div_Reporte').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: true,
+                    initContent: function () {
+                    }
+                });
+                $('#div_Reporte').on('close', function (event) {
+                    $('#div_ReporteViewer').contents().empty();
+                    $('#div_ReporteViewer').attr('src', '');
+                });
+                //VENTANA PARA CAMBIAR PASSWORD 
+                ancho = 500;
+                alto = 215;
+                posicionX = ($(window).width() - ancho) / 2;
+                posicionY = ($(window).height() - alto) / 2;
+                $('#div_CambiarPassword').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: true,
+                    cancelButton: $('#btn_PasswordCancelar'),
+                    initContent: function () {
+                        $("#txt_PasswordPaterno").jqxInput({placeHolder: "APELLIDO PATERNO", width: 300, height: 25, disabled: true});
+                        $("#txt_PasswordMaterno").jqxInput({placeHolder: "APELLIDO MATERNO", width: 300, height: 25, disabled: true});
+                        $("#txt_PasswordNombres").jqxInput({placeHolder: "NOMBRES", width: 300, height: 25, disabled: true});
+                        $("#txt_PasswordPassword").jqxPasswordInput({placeHolder: "Contraseña", width: 180, height: 25, showStrength: true, showStrengthPosition: "right"});
+                        $("#txt_PasswordConfirmaPassword").jqxPasswordInput({placeHolder: "Contraseña", width: 180, height: 25, showStrength: true, showStrengthPosition: "right"});
+                        $('#btn_PasswordCancelar').jqxButton({width: '65px', height: 30});
+                        $('#btn_PasswordGuardar').jqxButton({width: '65px', height: 30});
+                        $('#btn_PasswordGuardar').on('click', function () {
+                            fn_cambiarPassword();
+                        });
+                    }
+                });
+            });
+            function fn_mensaje() {
+                var interval = setInterval(function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "../Decretos",
+                        data: {mode: 'C'},
+                        success: function (data) {
+                            if (parseInt(data) > 0) {
+                                $("#div_Notificacion").jqxNotification("closeLast");
+                                $('#div_Notificacion').html("USTED TIENE " + parseInt(data) + " DOCUMENTOS(S) PENDIENTE(S) DE RESPUESTA");
+                                $("#div_Notificacion").jqxNotification("open");
+                            }
+                        }
+                    });
+                }, 8000);
+            }
+            function fn_verCambiarPassword() {
+                $("#txt_PasswordPaterno").val('[[${session.usuario.paterno}]]');
+                $("#txt_PasswordMaterno").val('[[${session.usuario.materno}]]');
+                $("#txt_PasswordNombres").val('[[${session.usuario.nombres}]]');
+                $("#txt_PasswordPassword").val('');
+                $("#txt_PasswordConfirmaPassword").val('');
+                $('#div_CambiarPassword').jqxWindow({isModal: true, modalOpacity: 0.8});
+                $('#div_CambiarPassword').jqxWindow('open');
+            }
+            function fn_cambiarPassword() {
+                var codigo = '[[${session.usuario.usuario}]]';
+                var password = $("#txt_PasswordPassword").val();
+                var nuevoPassword = $("#txt_PasswordConfirmaPassword").val();
+                if (password === nuevoPassword) {
+                    $.ajax({
+                        type: "GET",
+                        url: "IduUsuarios",
+                        data: {mode: 'R', codigo: codigo, password: password, areaLaboral: '',
+                            rol: '', brigada: '', paterno: '', materno: '',
+                            nombres: '', correo: '', telefono: '', cargo: '', autorizacion: '0', lista: ''},
+                        success: function (data) {
+                            msg = data;
+                            if (msg === "GUARDO") {
+                                $.confirm({
+                                    title: 'AVISO DEL SISTEMA',
+                                    content: 'Datos procesados correctamente!!',
+                                    type: 'green',
+                                    typeAnimated: true,
+                                    autoClose: 'cerrarAction|1000',
+                                    buttons: {
+                                        cerrarAction: {
+                                            text: 'Cerrar',
+                                            action: function () {
+                                                $('#div_CambiarPassword').jqxWindow('close');
+                                                fn_MenuPrincipal();
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                $.alert({
+                                    theme: 'material',
+                                    title: 'AVISO DEL SISTEMA',
+                                    content: msg,
+                                    animation: 'zoom',
+                                    closeAnimation: 'zoom',
+                                    type: 'red',
+                                    typeAnimated: true
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Los passwords no coincide. Verifique!!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <section th:fragment="menuOpciones">
+            <div id='div_MenuOpciones' style='visibility: hidden;'>
+                <ul>
+                    <li><a th:onclick="fn_MenuPrincipal();">Home</a> </li>
+                    <li th:each="modulo : ${session.objModulos}">
+                        <span th:text="${modulo.nombre}"> </span>
+                        <ul style='width: 250px;'>
+                            <li  th:each="menu : ${session.objMenus}" th:if="${modulo.modulo == menu.modulo}">
+                                <a th:onclick="javascript: fn_CargarMenu([[${menu.modo}]],[[${menu.url}]])">
+                                    <span  th:text="${menu.nombre}">Opcion</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li id="2" > 
+                        <form th:onclick="fn_verCambiarPassword();">
+                            <a href="#" style="font-weight: bold; color: blue">Cambiar Password</a>
+                        </form>
+                    </li>
+                    <li id="3" > 
+                        <form method="POST" th:action="@{/logout}">
+                            <a href="#" onclick="this.parentNode.submit();" style="font-weight: bold; color: red">SALIR</a>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <div id="div_Aviso"></div>
+            <div id="div_Notificacion"></div>
+        </section>
+        <section th:fragment="logoPresentacion">
+            <div style="align-content: center; padding: 100px">
+                <center> 
+                    <div>
+                        <img src="../static/images/Logos/logo.png" width="450px" height="450px" th:src="@{images/Logos/logo.png}"/>
+                    </div>
+                    <div class="TituloFocus">
+                        Institución Administradora de Fondos de Aseguramiento en Salud del Ejército del Perú
+                    </div>
+                    <div class="copyright">Todos los derechos reservados</div>
+                </center>
+            </div>
+        </section>
+        <section th:fragment="reportes">
+            <div id="div_Reporte" style="display: none">
+                <div>
+                    <div id="div_ReporteTitulo">Reporte</div>
+                </div>
+                <div>
+                    <div style="width:100%; height:100%;">
+                        <iframe id="div_ReporteViewer" name="div_ReporteViewer" style="width:100%; height:100%;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section th:fragment="cambiarPassword">
+            <div id="div_CambiarPassword" style="display: none">
+                <div>
+                    <div>Cambias Password</div>
+                </div>
+                <div>
+                    <div style="width:100%; height:100%;">
+                        <form id="frm_Usuario" name="frm_Usuario" method="post" >
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td class="inputlabel">Apellido Paterno : </td>
+                                    <td><input class="text-input" id="txt_PasswordPaterno" name="txt_PasswordPaterno" style="text-transform: uppercase;"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="inputlabel">Apellido Materno : </td>
+                                    <td><input class="text-input" id="txt_PasswordMaterno" name="txt_PasswordMaterno" style="text-transform: uppercase;"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="inputlabel">Nombres : </td>
+                                    <td><input class="text-input" id="txt_PasswordNombres" name="txt_PasswordNombres" style="text-transform: uppercase;"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="inputlabel">Password : </td>
+                                    <td><input type="password" class="text-input" name="txt_PasswordPassword" id="txt_PasswordPassword" autocomplete="off"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="inputlabel">Confirmar Password : </td>
+                                    <td><input type="password" class="text-input" name="txt_PasswordConfirmaPassword" id="txt_PasswordConfirmaPassword" autocomplete="off"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="Summit" colspan="2">
+                                        <div>
+                                            <input type="button" id="btn_PasswordGuardar"  value="Guardar" style="margin-right: 20px"/>
+                                            <input type="button" id="btn_PasswordCancelar" value="Cancelar" style="margin-right: 20px"/>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

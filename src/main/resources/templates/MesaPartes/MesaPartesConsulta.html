@@ -1,0 +1,346 @@
+<script>
+    var archivo = null;
+    var codigo = null;
+    $(document).ready(function () {
+        $("#div_Titulo").jqxExpander({width: '100%'});
+        $("#cbo_Tipo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 250, height: 25});
+        $("#cbo_Periodo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 180, height: 25});        
+        $("#cbo_Mes").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 150, dropDownWidth: 200, height: 25});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $("#cbo_Mes").jqxComboBox('selectIndex', fecha.getMonth());
+        $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Tipo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Mes').on('change', function () {
+            fn_CargarBusqueda();
+        });
+
+        //ESTILOS A LAS CELDAS DE LA GRILLA 
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (datafield === "numero") {
+                return "RowBold";
+            }
+            if (datafield === "usuarioResponsable") {
+                return "RowBlue";
+            }
+            if (datafield === "institucion") {
+                return "RowPurple";
+            }
+        };
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 95),
+            pageable: true,
+            columnsresize: true,
+            enabletooltips: true,
+            altrows: false,
+            editable: false,
+            autoheight: false,
+            autorowheight: false,
+            sortable: true,
+            filterable: true,
+            showtoolbar: true,
+            autoshowfiltericon: true,
+            showfilterrow: true,
+            showstatusbar: true,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonExportar);
+                toolbar.append(container);
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'Consulta Mesa de Partes');
+                });
+            },
+            columns: [
+                {text: 'CÓDIGO', dataField: 'numero', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '7%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'ASUNTO', dataField: 'asunto', width: '20%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'institucion', filtertype: 'checkedlist', width: '10%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FEC. DOC', datafield: 'fecha', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'OBSERVACION', dataField: 'postFirma', width: '15%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'PRIORIDAD', dataField: 'prioridad', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'RECEPCIÓN', datafield: 'fechaRegistro', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'USUARIO RESP.', dataField: 'usuarioResponsable', filtertype: 'checkedlist', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'REFERENCIA', dataField: 'referencia', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'LEGAJO', dataField: 'legajos', width: '3%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
+                {text: 'FOLIO', dataField: 'folios', width: '3%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS CAMPOS DE LA GRILLA DE CONSULTA
+        $("#div_GrillaDetalle").jqxGrid({
+            width: '100%',
+            height: 370,
+            pageable: true,
+            columnsresize: true,
+            altrows: false,
+            editable: false,
+            statusbarheight: 25,
+            autoheight: false,
+            autorowheight: false,
+            sortable: true,
+            columns: [
+                {text: 'DECRETADO POR', datafield: 'usuarioDecreta', width: '25%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'RESPONSABLE', datafield: 'usuarioResponsable', width: '25%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'COMENTARIO', datafield: 'descripcion', width: '25%', align: 'center', cellsAlign: 'left'},
+                {text: 'PRIORIDAD', datafield: 'prioridad', width: '15%', align: 'center', cellsAlign: 'center'},
+                {text: 'DECRETADO', datafield: 'fecha', width: '11%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'RECIBIDO', datafield: 'fechaRecepcion', width: '11%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'ESTADO', datafield: 'estado', width: '10%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL 
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 60, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if ($.trim($(opcion).text()) === "Ver Documento") {
+                if (archivo !== null && archivo !== '') {
+                    var extencion = fn_getFileExtension(archivo);
+                    if (extencion.toUpperCase() === 'PDF') {
+                        $('#div_ViewerTituloPDF').html(archivo);
+                        var getUrl = window.location;
+                        var url = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=MesaPartes&filename=" + $("#cbo_Periodo").val() + "-" + $("#cbo_Tipo").val() + "-" + codigo + "-" + archivo;
+                        $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                        $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                        $('#div_Reporte').jqxWindow('open');
+                    } else {
+                        document.location.target = "_blank";
+                        document.location.href = "../Descarga?opcion=MesaParte&periodo=" + $('#cbo_Periodo').val() + "&codigo=" + $('#cbo_Tipo').val() + "-" + codigo + "&documento=" + archivo;
+                    }
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No existe Archivo a Vizualizar!!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            } else if ($.trim($(opcion).text()) === "Seguimiento Decreto") {
+                if ($("#cbo_Estado").val() === 'AC') {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: "No hay Opción a mostrar, aun no se ha decretado el documento.",
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'orange',
+                        typeAnimated: true
+                    });
+                } else {
+                    mode = 'U';
+                    fn_SeguimientoDecreto();
+                }
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: "No hay Opción a mostrar",
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['numero'];
+            archivo = row['digital'];
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIALIZAMOS LOS VALORES DE LA VENTANA DE DETALLE
+                var posicionX, posicionY;
+                var ancho = 850;
+                var alto = 465;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaDetalle').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cerrar'),
+                    initContent: function () {
+                        $('#btn_Cerrar').jqxButton({width: 36, height: 32});
+                        $('#btn_Cerrar').jqxTooltip({position: 'bottom', content: "Cerrar"});
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_CargarBusqueda();
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_CargarBusqueda() {
+        msg = "";
+        msg += fn_validaCombos('#cbo_Tipo', "Seleccione el Tipo.");
+        msg += fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        msg += fn_validaCombos('#cbo_Mes', "Seleccione el Mes.");
+        if (msg === "") {
+            //PARA CARGAR LOS ELEMENTOS DE LA GRILLA
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: 'numero', type: "string"},
+                    {name: 'numeroDocumento', type: "string"},
+                    {name: 'asunto', type: "string"},
+                    {name: 'institucion', type: "string"},
+                    {name: 'prioridad', type: "string"},
+                    {name: 'fecha', type: "date"},
+                    {name: 'fechaRegistro', type: "date"},
+                    {name: 'estado', type: "string"},
+                    {name: 'postFirma', type: "string"},
+                    {name: 'legajos', type: "number"},
+                    {name: 'folios', type: "string"},
+                    {name: 'usuarioResponsable', type: "string"},
+                    {name: 'referencia', type: "string"},
+                    {name: 'codigoUsuario', type: "string"},
+                    {name: 'digital', type: "string"}
+                ],
+                id: 'codigo',
+                url: "MesaPartes",
+                data: {mode: 'L', tipo: $('#cbo_Tipo').val(), periodo: $('#cbo_Periodo').val(), mes: $('#cbo_Mes').val()}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+            if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA VER EL SEGUIMIENTO DEL DECRETO
+    function fn_SeguimientoDecreto() {
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: "decreto", type: "number"},
+                {name: "usuarioDecreta", type: "string"},
+                {name: "usuarioResponsable", type: "string"},
+                {name: "prioridad", type: "string"},
+                {name: "descripcion", type: "string"},
+                {name: "fecha", type: "date"},
+                {name: "fechaRecepcion", type: "date"},
+                {name: "estado", type: "string"}
+            ],
+            id: 'codigo',
+            url: "Decreto",
+            data: {mode: 'S', tipo: $('#cbo_Tipo').val(), periodo: $('#cbo_Periodo').val(), codigo: codigo}
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        $("#div_GrillaDetalle").jqxGrid({source: dataAdapter});
+        if ($('#div_GrillaDetalle').jqxGrid('getselectedrowindex') >= 0)
+            $('#div_GrillaDetalle').jqxGrid('clearselection');
+        $('#div_VentanaDetalle').jqxWindow({isModal: true});
+        $('#div_VentanaDetalle').jqxWindow('open');
+    }
+</script>
+<div style="border: none;" id='div_Titulo'>
+    <div class="jqx-hideborder">CONSULTA DE MESA DE PARTES</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr>
+                        <td class="Titulo">Tipo : </td>
+                        <td>
+                            <select id="cbo_Tipo" name="cbo_Tipo">
+                                <option value="E">INGRESO DE DOCUMENTO</option>
+                                <option value="S">SALIDA DE DOCUMENTO</option>
+                            </select>
+                        </td>
+                        <td class="Titulo">Periodo : </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>                        
+                        <td class="Titulo">Mes : </td>
+                        <td>
+                            <select id="cbo_Mes" name="cbo_Mes">
+                                <span th:each="mes : ${session.objMeses}">
+                                    <option th:value="${mes.codigo}"><span th:text="${mes.descripcion}"> </span></option>
+                                </span>
+                                <option value="00">Todos</option>
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit" /></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaDetalle" style="display: none">
+    <div>
+        <span style="float: left">SEGUIMIENTO DE LA DOCUMENTACIÓN</span>
+    </div>
+    <div style="overflow: hidden">
+        <table width="100%" border="0" >
+            <tr>
+                <td><div id="div_GrillaDetalle"> </div></td>  
+            </tr>
+            <tr>
+                <td class="Summit">
+                    <div>
+                        <div id="btn_Cerrar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display:none;'>
+    <ul>   
+        <li style="font-weight: bold">Ver Documento</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: blue;">Seguimiento Decreto</li>
+    </ul>
+</div>

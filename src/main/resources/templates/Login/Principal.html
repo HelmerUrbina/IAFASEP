@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http.thymeleaf.org/extras/spring-security">
+    <head th:replace="/layout/plantilla :: head"></head>
+    <body oncontextmenu='return false'>
+        <span th:if="${session.usuario!=null}">
+            <div id="div_Menu" th:replace="/layout/plantilla :: menuOpciones"></div>
+            <div id="div_Contenido" >
+                <div  th:replace="/layout/plantilla :: logoPresentacion"></div>
+            </div>
+            <div id="div_Report" th:replace="/layout/plantilla :: reportes"></div>
+            <div id="div_Password" th:replace="/layout/plantilla :: cambiarPassword"></div>
+            <div id="div_Componentes">
+                <div id="addComponent"></div>
+            </div>
+        </span>
+    </body>
+</html>

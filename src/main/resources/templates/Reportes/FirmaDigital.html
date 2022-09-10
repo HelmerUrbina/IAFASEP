@@ -1,0 +1,567 @@
+<script>
+    var codigo = null;
+    var detalle = null;
+    var estado = null;
+    var mode = null;
+    var tipoSolicitud = null;
+    var indiceDetalle = -1;
+    var modeDetalle = null;
+    var tipoCertificado = null;
+    var reporte = null;
+    var cobertura = null;
+    var archivo = '';
+    var documentName_ = "";
+    $(document).ready(function () {
+        var theme = getTheme();
+        $("#div_Titulo").jqxExpander({theme: theme, width: '100%'});
+        $("#cbo_Periodo").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 100, dropDownWidth: 150, height: 25});
+        $("#cbo_FuenteFinanciamiento").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 300, dropDownWidth: 450, height: 25});
+        $("#cbo_Estado").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 150, dropDownWidth: 200, height: 25});
+        $("#cbo_Opcion").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 250, height: 25});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_FuenteFinanciamiento').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Estado').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Opcion').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (rowdata['estado'] === "ANULADA") {
+                return "RowAnulado";
+            }
+            if (datafield === "codigo" || datafield === "certificado" || datafield === "tipoCambio") {
+                return "RowBold";
+            }
+            if (datafield === "anexoCertificado") {
+                return "RowGreen";
+            }
+            if (datafield === "importe" && rowdata['importe'] >= 0.0) {
+                return "RowBlue";
+            }
+            if (datafield === "importe" && rowdata['importe'] < 0.0) {
+                return "RowRed";
+            }
+            if (datafield === "extranjera") {
+                return "RowBrown";
+            }
+        };
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 90),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            showstatusbar: true,
+            showtoolbar: true,
+            selectionmode: 'checkbox',
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                // Appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo42.gif' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonReporte = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                container.append(ButtonReporte);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 36, height: 34});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonReporte.jqxButton({width: 36, height: 34});
+                ButtonReporte.jqxTooltip({position: 'bottom', content: "Reportes"});
+                // Adicionar un Nuevo Registro en la Cabecera.
+                ButtonNuevo.click(function (event) {
+                    fn_firmarDocumentos();
+                });
+                //EXPORTAR A EXCEL
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'CertificadoPresupuestal');
+                });
+                //ABRIR LOS REPORTES
+                ButtonReporte.click(function (event) {
+                    $('#div_Reportes').jqxWindow({isModal: true, modalOpacity: 0.5});
+                    $('#div_Reportes').jqxWindow('open');
+                });
+            },
+            columns: [
+                {text: 'CERTIFICADO', dataField: 'certificado', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'CONCEPTO', dataField: 'concepto', width: '29%', align: 'center', cellclassname: cellclass},
+                {text: 'DOCU. REFERENCIA', dataField: 'documento', width: '15%', align: 'center', cellclassname: cellclass},
+                {text: 'FECHA', datafield: 'fecha', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'IMPORTE', dataField: 'importe', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                {text: 'T/CAMBIO', dataField: 'tipoCambio', width: '4%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                {text: 'EXTRANJERA', dataField: 'extranjera', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                {text: 'TIPO', dataField: 'tipo', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ANEXO', dataField: 'anexo', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        // handle context menu clicks.
+        $('#div_GrillaPrincipal').on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                if (parseInt(event.args.originalEvent.clientY) > 600) {
+                    scrollTop = scrollTop - alto;
+                }
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //Seleccionar un Registro de la Cabecera
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['certificado'];
+            estado = row['estado'];
+            tipoCertificado = row['tipo'];
+            anexoCertificado = row['anexoCertificado'];
+            archivo = row['archivo'];
+        });
+        $(document).ready(function () {
+            fn_CargarBusqueda();
+            //------------------------api de refirma------------ 
+            //Listener obligatorio a implementar
+            window.addEventListener('getArguments', function (e) {
+                type = e.detail;
+                if (type === 'W') {
+                    ObtieneArgumentosParaFirmaDesdeLaWeb(); // Llama a sendArguments al terminar
+                } else if (type === 'L') {
+                    ObtieneArgumentosParaFirmaDesdeArchivoLocal(); // Llama a sendArguments al terminar
+                }
+            });
+            //Listener obligatorio a implementar
+            window.addEventListener('invokerOk', function (e) {
+                type = e.detail;
+                if (type === 'W') {
+                    MiFuncionOkWeb();
+                } else if (type === 'L') {
+                    MiFuncionOkLocal();
+                }
+            });
+            //Listener obligatorio a implementar
+            window.addEventListener('invokerCancel', function (e) {
+                MiFuncionCancel();
+            });
+
+        });
+    });
+
+    function sendArguments(arg_) {
+        //Event obligatorio a implementar			
+        dispatchEventClient('sendArguments', arg_); // Envía los argumentos																
+    }
+function getArguments() {
+        alert("argumenyto");
+        var arg = document.getElementById("argumentos").value;
+        alert("AGUMENTOS " + arg);
+        dispatchEventClient('sendArguments', arg);
+    }
+    function ObtieneArgumentosParaFirmaDesdeLaWeb() {
+        alert("argumentos de web");
+        document.getElementById("signedDocument").href = "#";
+        //documentName_=str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        //documentName_=documentName_.substring(0, 40)+".pdf";
+        var JEFE = "116632800";
+        var SUB_JEFE = "120199900";
+        var docAFirmar = $("#docAFirmar").val();
+        var documentName = $("#docAFirmar").val();
+        if (documentName.includes("/")) {
+            documentName = docAFirmar.split("/")[0];
+        }
+        var docId = $("#docId").val();
+        var type = $("#type").val();
+        alert("AKY");
+        var user = "";
+        var opcion = $("#cbo_Opcion").val();
+        var posxy = "";
+
+
+        /*referencia
+         ---tamaño de pagina pdf----
+         init-x=50
+         w=595 ,H=840
+         ----tamaño de firma-----
+         w=155, H=63
+         */
+        alert("final");
+        if (opcion === 'CP') {
+            var isUserPrioriza = $("#isUserPrioriza").val();
+            posxy = user === JEFE ? "60-10" : user === SUB_JEFE ? "235-10" : isUserPrioriza === "SI" ? "410-10" : "410-10";//posicion de firmas:jefe/subjefe/sectorista
+        } else if (opcion === 'CA') {
+            posxy = user === JEFE ? "50-10" : user === SUB_JEFE ? "235-10" : "410-10";//posicion de firma:jefe/subjefe/sectorista
+        } else if (opcion === 'DJ') {
+            posxy = user === JEFE ? "60-10" : user === SUB_JEFE ? "120-10" : "350-10";//posicion de firma:jefe/subjefe/sectorista
+        } else if (opcion === 'ID') {
+            posxy = user === JEFE ? "60-550" : user === SUB_JEFE ? "120-550" : "350-550";//posicion de firma:jefe/subjefe/sectorista
+        } else if (opcion === 'NM') {
+            posxy = user === JEFE ? "60-300" : user === SUB_JEFE ? "120-300" : "350-300";//posicion de firma:jefe/subjefe/sectorista
+        }
+        $.post("ReFirmaController?method=postArguments", {
+            type: type, //W:web doc individual; W7z:en lote(docs.7z)
+            documentName: documentName,
+            docAFirmar: docAFirmar,
+            docId: docId,
+            opcion: opcion,
+            posxy: posxy
+        }, function (data, status) {
+            alert(data + " " + status);
+            document.getElementById("argumentos").value = data;
+            alert(data);
+            getArguments();
+        });
+    }
+
+    function ObtieneArgumentosParaFirmaDesdeArchivoLocal() {
+        alert("obtiene argumentos");
+        document.getElementById("signedDocument").href = "#";
+        $.get("ReFirmaController?method=getArguments", {}, function (data, status) {
+            documentName_ = data;
+            //Obtiene argumentos
+            $.post("../Controller?method=postArguments", {
+                type: "L",
+                documentName: documentName_
+            }, function (data, status) {
+                //  alert("Data: " + data + "\nStatus: " + status);
+                document.getElementById("argumentos").value = data;
+                getArguments();
+            });
+        });
+    }
+
+    function MiFuncionOkWeb() {
+        alert("Funcion OK");
+        alert("Documento firmado desde una URL correctamente.");
+        //document.getElementById("signedDocument").href = "controller/getFile.php?documentName=" + documentName_;
+        eject_actualizarEstadoDocFirmado();
+    }
+
+    function MiFuncionOkLocal() {
+        alert("Documento firmado desde la PC correctamente.");
+        document.getElementById("signedDocument").href = "../controller/getFile.php?documentName=" + documentName_;
+    }
+
+    function MiFuncionCancel() {
+        alert("El proceso de firma digital fue cancelado.");
+        document.getElementById("signedDocument").href = "#";
+        if ($("#docAFirmar").val().includes(".7z")) {
+            eliminarZipTemporal();
+        }
+    }
+    
+    function fn_firmarDocumentos() {
+        var rowindexes = $('#div_GrillaPrincipal').jqxGrid('getselectedrowindexes');
+        if (rowindexes.length === 0) {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: 'Seleccione el documento a firmar',
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+            return;
+        }
+        var boundrows = $('#div_GrillaPrincipal').jqxGrid('getboundrows');
+        var opcion = $("#cbo_Opcion").val();
+        var modoReporte = "";
+        var reporte = "";
+        if (opcion === 'CP') {
+            reporte = "EJE0004";
+        } else if (opcion === 'CA') {
+            reporte = "EJE0011";
+        } else if (opcion === 'DJ') {
+            reporte = "EJE0014";
+            if (user === "116632800") { //jefe no firma este doc
+                alert("Usted no puede firmar este documento");
+                return;
+            }
+        } else if (opcion === 'IDP') {
+            reporte = "EJE0028";
+        } else if (opcion === 'NM') {
+            reporte = "EJE0022";
+        }
+        // var url = '../Reportes?reporte=' + reporte + '&periodo=' + periodo + '&presupuesto=' + presupuesto + '&unidadOperativa=param1' + '&codigo=pama2' + '&codigo2=param3';
+        var items = '';
+        var ids = '';
+        for (var i = 0; i < rowindexes.length; i++) {
+            var row = boundrows[rowindexes[i]];
+            //ids +=  row.codigo + "-" + row.myid + "|";
+            ids += row.codigo + "|";
+            items += row.codigo + '-' + row.estado + '|';
+            if (row.yaFirme === "SI") {
+                alert("El documento " + row.codigo + " ya ha sido firmado");
+                return;
+            }
+            if (row.cfirma_estado_desc === "RECHAZADO") {
+                alert("Error, el documento " + row.codigo + " ha sido rechazado");
+                return;
+            }
+        }
+        $.confirm({
+            title: 'AVISO DEL SISTEMA',
+            content: 'Est\u00E1s seguro de firmar los documento?',
+            theme: 'material',
+            animation: 'zoom',
+            closeAnimation: 'zoom',
+            type: 'blue',
+            typeAnimated: true,
+            buttons: {
+                aceptar: {
+                    text: 'Aceptar',
+                    btnClass: 'btn-primary',
+                    keys: ['enter', 'shift'],
+                    action: function () {
+                        //-----generamos los pdf's---
+                        $.ajax({
+                            url: 'GenerarArchivoRefirma',
+                            type: 'GET',
+                            data: {
+                                act: 'generarArchivoAFirmar',
+                                reporte: reporte,
+                                periodo: $("#cbo_Periodo").val(),
+                                fuenteFinanciamiento: $("#cbo_FuenteFinanciamiento").val(),
+                                items: items,
+                                tipoReporte: opcion
+                            },
+                            success: function (response) {
+                                var json = jQuery.parseJSON(response);
+                                if (json.result === "1") {
+                                    $("#ids").val(ids);
+                                    $("#docId").val(items);
+                                    var fileNameToSig = json.fileNameToSig;
+                                    alert(fileNameToSig);
+                                    $("#type").val(fileNameToSig.includes(".7z") ? "ep-7z" : "ep-pdf");
+                                    if (fileNameToSig.includes("SIGNED")) {
+                                        fileNameToSig = fileNameToSig.replace("SIGNED", "");
+                                        //fileNameToSig = fileNameToSig + "/epsig";//para jalar desde la carpeta de firmados
+                                        if (opcion === 'CP') {
+                                            modoReporte = "CertificadoPresupuestalFirmado";
+                                        } else if (opcion === 'CA') {
+                                            modoReporte = "CompromisoAnualFirmado";
+                                        } else if (opcion === 'DJ') {
+                                            modoReporte = "DeclaracionJuradaFirmado";
+                                        } else if (opcion === 'IDP') {
+                                            modoReporte = "InformeDisponibilidadPresupuestalFirmado";
+                                        } else {
+                                            modoReporte = "ep";
+                                        }
+                                        // fileNameToSig = fileNameToSig + "/" + modoReporte; //jalará de carpeta firmados
+                                    } else {
+                                        if (opcion === 'CP') {
+                                            modoReporte = "CertificadoPresupuestalTemporal";
+                                        } else if (opcion === 'CA') {
+                                            modoReporte = "CompromisoAnualTemporal";
+                                        } else if (opcion === 'DJ') {
+                                            modoReporte = "DeclaracionJuradaTemporal";
+                                        } else if (opcion === 'IDP') {
+                                            modoReporte = "InformeDisponibilidadPresupuestalTemporal";
+                                        } else {
+                                            modoReporte = "ep";
+                                        }
+                                        // fileNameToSig = fileNameToSig + "/" + modoReporte; //jalará de carpeta sin firmar
+                                    }
+                                    $("#docAFirmar").val(fileNameToSig);
+                                    initInvoker('W');
+                                } else {
+                                    alert("Error al generar el archivo pdf");
+                                }
+                            },
+                            error: function (e) {
+                            }
+                        });
+                    }
+                },
+                cancelar: function () {
+                    return;
+                }
+            }
+        });
+    }
+    function eject_actualizarEstadoDocFirmado() {
+        alert("actualizad");
+        var periodo = $("#cmbcperi_codigo").val();
+        var presupuesto = $("#cbo_FuenteFinanciamiento").val();
+        var estado = $("#cmbEstado").val();
+        var mode = $("#cbo_Opcion").val();
+        var itemsDocs = $("#docId").val();
+        var ids = $("#ids").val();
+        $.ajax({
+            url: '../TradiController',
+            type: 'post',
+            data: {
+                act: 'actualizarEstadoFirmadoEP',
+                periodo: periodo,
+                presupuesto: presupuesto,
+                itemsDocs: itemsDocs, /*row.nremi_codigo,*/
+                ids: ids,
+                selev_usuario_emisor: $('#txtusrLogin', window.parent.document).val(),
+                mode: mode
+            },
+            success: function (response) {
+                var json = jQuery.parseJSON(response);
+                if (json.result >= 1) {
+                    lisDocumentosEjecucion();
+                    if ($("#docAFirmar").val().includes(".7z")) {
+                        ejec_eliminarZipTemporal();//esto ya funcion 
+                    }
+                } else {
+                    alert("Error al actualizar el estado de Firmado");
+                }
+                $("#divFirmarLoading").addClass("d-none");
+                $("#btn_aceptarFirma").removeClass("d-none");
+            },
+            error: function () {
+                $("#divFirmarLoading").addClass("d-none");
+            }
+        });
+
+    }
+    function ejec_eliminarZipTemporal() {
+        alert("zip");
+        var docAFirmar = $("#docAFirmar").val();
+        if (docAFirmar.includes("/")) {
+            docAFirmar = docAFirmar.split("/")[0];
+        }
+        $.ajax({
+            url: '../TradiController',
+            type: 'post',
+            data: {
+                act: 'eliminarZipTemporal',
+                itemNameDocs: $("#docAFirmar").val(),
+                opcion: $("#cbo_Opcion").val(),
+                destino: 'ep'
+            },
+            success: function (response) {
+                var json = jQuery.parseJSON(response);
+                if (json.result === "1") {
+                    console.log("Doc " + $("#docAFirmar").val() + " eliminado");
+                } else {
+
+                }
+            },
+            error: function () {
+            }
+        });
+    }
+    function fn_CargarBusqueda() {
+        msg = "";
+        msg += fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        msg += fn_validaCombos('#cbo_FuenteFinanciamiento', "Seleccione la Fuente de Financiamiento.");
+        msg += fn_validaCombos('#cbo_Estado', "Seleccione el Estado.");
+        msg += fn_validaCombos('#cbo_Opcion', "Seleccione la Opcion.");
+        if (msg === "") {
+            //PARA CARGAR LOS ELEMENTOS DE LA GRILLA
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: "codigo", type: "string"},
+                    {name: "certificado", type: "string"},
+                    {name: "anexo", type: "string"},
+                    {name: "concepto", type: "string"},
+                    {name: "documento", type: "string"},
+                    {name: "fecha", type: "date"},
+                    {name: "importe", type: "number"},
+                    {name: "tipoCambio", type: "number"},
+                    {name: "extranjera", type: "number"},
+                    {name: "estado", type: "string"},
+                    {name: "tipo", type: "string"},
+                    {name: "yaFirme", type: "string"},
+                    {name: "sectorista", type: "string"},
+                    {name: "digital", type: "string"},
+                    {name: "archivo", type: "string"}
+                ],
+                id: 'codigo',
+                url: "FirmaDigital",
+                data: {mode: $('#cbo_Opcion').val(), codigo: $('#cbo_Periodo').val(), codigo1: $('#cbo_FuenteFinanciamiento').val(), codigo2: $('#cbo_Estado').val()}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+            if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+</script>
+<div style="border: none;" id='div_Titulo'>
+    <div class="jqx-hideborder">FIRMA DIGITAL</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr>
+                        <td class="Titulo">Periodo : </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Fte. Financ. : </td>
+                        <td>
+                            <select id="cbo_FuenteFinanciamiento" name="cbo_FuenteFinanciamiento">
+                                <span th:each="fuente : ${session.objFuenteFinanciamiento}">
+                                    <option th:value="${fuente.codigo}"><span th:text="${fuente.descripcion}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Estado : </td>
+                        <td>
+                            <select id="cbo_Estado" name="cbo_Estado">
+                                <option value="PE" selected="selected">PENDIENTE</option>
+                                <option value="SJ">FIRMADO</option>
+                            </select>
+                        </td>
+                        <td class="Titulo">Opcion : </td>
+                        <td>
+                            <select id="cbo_Opcion" name="cbo_Opcion">
+                                <option value="0" selected="selected">Seleccione</option>
+                                <option value="CP">PENDIENTE</option>                                
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit" /></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div style="display: none">
+    <a href="#" id="signedDocument">Doc Firmado</a>
+    <input type="text" id="argumentos"/>
+    <input type="text" id="docAFirmar"/>
+    <input type="text" id="ids"/>
+    <input type="text" id="docId"/>
+    <input type="text" id="type"/>
+</div>

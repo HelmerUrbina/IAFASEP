@@ -1,0 +1,608 @@
+<script>
+    var codigo = null;
+    var mode = null;
+    var msg = "";
+    $(document).ready(function () {        
+        $("#div_Titulo").jqxExpander({ width: '100%'});
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 65),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            showtoolbar: true,
+            editable: false,
+            rendertoolbar: function (toolbar) {
+                // ADICIONAMOS BOTONES A LA BARRA DE ESTADOS
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' th:src='@{images/Botones/nuevo42.gif' width=18 height=18 /><span style='margin-left: 4px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/pauf42.gif' th:src='@{images/Botones/pauf42.gif' width=18 height=18/><span style='margin-left: 4px; position: relative; top: -3px;'> </span></div>");
+                var ButtonRecargar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/refresh42.gif' th:src='@{images/Botones/refresh42.gif' width=18 height=18/><span style='margin-left: 4px; position: relative; top: -3px;'> </span></div>");
+                var ButtonSalir = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/exit42.gif' th:src='@{images/Botones/exit42.gif' width=18 height=18/><span style='margin-left: 4px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                container.append(ButtonRecargar);
+                container.append(ButtonSalir);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 30, height: 22});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 30, height: 22});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonRecargar.jqxButton({width: 30, height: 22});
+                ButtonRecargar.jqxTooltip({position: 'bottom', content: "Recargar"});
+                ButtonSalir.jqxButton({width: 30, height: 22});
+                ButtonSalir.jqxTooltip({position: 'bottom', content: "Salir de la Pantalla"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON NUEVO
+                ButtonNuevo.click(function (event) {
+                    mode = 'I';
+                    codigo = '0';
+                    $("#txt_CIP").val('');
+                    $("#txt_CIP").jqxInput({disabled: false});
+                    $("#txt_Paterno").val('');
+                    $("#txt_Materno").val('');
+                    $("#txt_Nombres").val('');
+                    $("#cbo_AreaLaboral").jqxDropDownList('setContent', 'Seleccione');
+                    $("#txt_cargo").val('');
+                    $("#txt_Telefono").jqxMaskedInput('clearValue');
+                    $("#txt_Correo").val('');
+                    $("#cbo_Rol").jqxDropDownList('setContent', 'Seleccione');
+                    $("#div_Autorizacion").jqxCheckBox({checked: false});
+                    $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.8});
+                    $('#div_VentanaPrincipal').jqxWindow('open');
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'Usuario');
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON RECARGAR
+                ButtonRecargar.click(function (event) {
+                    fn_Refrescar();
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON SALIR
+                ButtonSalir.click(function (event) {
+                    fn_MenuPrincipal();
+                });
+            },
+            columns: [
+                {text: 'USUARIO', dataField: 'usuario', width: '10%', align: 'center', cellsAlign: 'center'},
+                {text: 'AP. PATERNO', dataField: 'paterno', width: '15%', align: 'center'},
+                {text: 'AP. MATERNO', dataField: 'materno', width: '15%', align: 'center'},
+                {text: 'NOMBRES', dataField: 'nombres', width: '12%', align: 'center'},
+                {text: 'ÁREA LABORAL', dataField: 'areaLaboral', filtertype: 'checkedlist', width: '12%', align: 'center', cellsAlign: 'center'},
+                {text: 'CARGO', dataField: 'cargo', width: '9%', align: 'center', cellsAlign: 'center'},
+                {text: 'ROL', dataField: 'rol', filtertype: 'checkedlist', width: '5%', align: 'center', cellsAlign: 'center'},
+                {text: 'TELEFONO', dataField: 'telefono', width: '6%', align: 'center', cellsAlign: 'center'},
+                {text: 'CORREO', dataField: 'correo', width: '10%', align: 'center', cellsAlign: 'center'},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '6%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 180, height: 147, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (codigo === null || codigo === '') {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            } else {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    mode = 'U';
+                    fn_EditarRegistro();
+                    $("#txt_CIP").jqxInput({disabled: true});
+                } else if ($.trim($(opcion).text()) === "Activar") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Activar este Usuario!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'A';
+                                    fn_GrabarDatos();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Desactivar") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Desactivar este Usuario!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'D';
+                                    fn_GrabarDatos();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Opciones") {
+                    fn_UsuarioOpciones();
+                } else if ($.trim($(opcion).text()) === "Resetear Contraseña") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea resetear la Contraseña!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'R';
+                                    fn_GrabarDatos();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Opción NO VALIDA!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['usuario'];
+            $("#txt_CIP").val(codigo);
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 450;
+                var alto = 365;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cancelar'),
+                    initContent: function () {
+                        $("#txt_CIP").jqxInput({placeHolder: "CIP", width: 250, height: 25, minLength: 2, maxLength: 25});
+                        $("#txt_Paterno").jqxInput({placeHolder: "APELLIDO PATERNO", width: 300, height: 25, minLength: 2, maxLength: 200});
+                        $("#txt_Materno").jqxInput({placeHolder: "APELLIDO MATERNO", width: 300, height: 25, minLength: 2, maxLength: 200});
+                        $("#txt_Nombres").jqxInput({placeHolder: "NOMBRES", width: 300, height: 25, minLength: 2, maxLength: 200});
+                        $("#cbo_AreaLaboral").jqxDropDownList({width: 300, height: 25, dropDownWidth: 400, promptText: "Seleccione"});
+                        $("#txt_Cargo").jqxInput({placeHolder: "CARGO", width: 300, height: 25, minLength: 2, maxLength: 100});
+                        $("#txt_Telefono").jqxMaskedInput({mask: '###-###-###', width: 250, height: 25});
+                        $("#txt_Correo").jqxInput({placeHolder: "CORREO", width: 300, height: 25, minLength: 2, maxLength: 200});
+                        $("#cbo_Rol").jqxDropDownList({width: 300, height: 25, dropDownWidth: 300, promptText: "Seleccione"});
+                        $("#div_Autorizacion").jqxCheckBox({width: 120, height: 25});
+                        $('#btn_Cancelar').jqxButton({width: '65px', height: 30});
+                        $('#btn_Guardar').jqxButton({width: '65px', height: 30});
+                        $('#btn_Guardar').on('click', function () {
+                            $('#frm_Usuario').jqxValidator('validate');
+                        });
+                        $('#frm_Usuario').jqxValidator({
+                            rules: [
+                                {input: '#txt_CIP', message: 'Ingrese el CIP!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Paterno', message: 'Ingrese el Apellido Paterno!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Materno', message: 'Ingrese el Apellido Materno!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Nombres', message: 'Ingrese el Nombre Completo!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Correo', message: 'Ingrese el Correo Electronico!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Correo', message: 'Correo Electronico invalido!', action: 'keyup', rule: 'email'},
+                                {input: '#txt_Telefono', message: 'Ingrese el Nro de Celular!', action: 'valuechanged, blur', rule: 'phone'},
+                                {input: '#txt_Cargo', message: 'Ingrese el Cargo!', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_Usuario').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatos();
+                            }
+                        });
+                    }
+                });
+                ancho = 500;
+                alto = 595;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaDetalle').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarPermisos'),
+                    initContent: function () {
+                        $('#div_OpcionesUsuario').jqxTree({width: 488, height: 500, hasThreeStates: true, checkboxes: true});
+                        $('#div_OpcionesUsuario').css('visibility', 'visible');
+                        $('#btn_CancelarPermisos').jqxButton({width: '65px', height: 30});
+                        $('#btn_GuardarPermisos').jqxButton({width: '65px', height: 30});
+                        $('#btn_GuardarPermisos').on('click', function () {
+                            fn_GrabarOpciones();
+                        });
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_Refrescar();
+            fn_cargarComboAjax("#cbo_AreaLaboral", {mode: 'areaLaboral'});
+            fn_cargarComboAjax("#cbo_Rol", {mode: 'rol'});
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_Refrescar() {
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: 'usuario', type: "string"},
+                {name: 'areaLaboral', type: "string"},
+                {name: 'rol', type: "string"},
+                {name: 'brigada', type: "string"},
+                {name: 'paterno', type: "string"},
+                {name: 'materno', type: "string"},
+                {name: 'nombres', type: "string"},
+                {name: 'correo', type: "string"},
+                {name: 'telefono', type: "string"},
+                {name: 'cargo', type: "string"},
+                {name: 'estado', type: "string"}
+            ],
+            id: 'usuario',
+            url: "Usuarios",
+            data: {mode: 'G'}
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+        $("#div_GrillaPrincipal").jqxGrid('clearselection');
+    }
+    //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+    function fn_EditarRegistro() {
+        $.ajax({
+            type: "GET",
+            url: "Usuarios",
+            data: {mode: mode, codigo: codigo},
+            success: function (data) {
+                var dato = JSON.parse(data);
+                $("#txt_CIP").val(dato.usuario);
+                $("#txt_Paterno").val(dato.paterno);
+                $("#txt_Materno").val(dato.materno);
+                $("#txt_Nombres").val(dato.nombres);
+                $("#cbo_AreaLaboral").jqxDropDownList('selectItem', dato.areaLaboral);
+                $("#txt_Cargo").val(dato.cargo);
+                $("#txt_Telefono").val(dato.telefono);
+                $("#txt_Correo").val(dato.correo);
+                $("#cbo_Rol").jqxDropDownList('selectItem', dato.rol);
+                if (dato.autorizacion === 1) {
+                    $("#div_Autorizacion").jqxCheckBox({checked: true});
+                }
+            }
+        });
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+    }
+    //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+    function fn_GrabarDatos() {
+        var cip = $("#txt_CIP").val();
+        var paterno = $("#txt_Paterno").val();
+        var materno = $("#txt_Materno").val();
+        var nombres = $("#txt_Nombres").val();
+        var areaLaboral = $("#cbo_AreaLaboral").val();
+        var cargo = $("#txt_Cargo").val();
+        var telefono = $("#txt_Telefono").val();
+        var correo = $("#txt_Correo").val();
+        var autorizacion = 0;
+        var rol = $("#cbo_Rol").val();
+        if ($("#div_Autorizacion").jqxCheckBox('checked') === true) {
+            autorizacion = 1;
+        }
+        $.ajax({
+            type: "GET",
+            url: "IduUsuarios",
+            data: {mode: mode, codigo: cip, password: '', areaLaboral: areaLaboral,
+                rol: rol, paterno: paterno, materno: materno,
+                nombres: nombres, correo: correo, telefono: telefono, cargo: cargo, autorizacion: autorizacion, lista: ''},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente!!',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaPrincipal').jqxWindow('close');
+                                    fn_Refrescar();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    //OPCIONES DEL USUARIO
+    function fn_UsuarioOpciones() {
+        $.ajax({
+            type: "GET",
+            url: "Usuarios",
+            data: {mode: 'M'},
+            success: function (data) {
+                data = data.replace("[", "");
+                var fila = data.split("[");
+                var data = new Array();
+                for (i = 1; i < fila.length; i++) {
+                    var columna = fila[i];
+                    var datos = columna.split("+++");
+                    while (datos[3].indexOf(']') > 0) {
+                        datos[3] = datos[3].replace("]", "");
+                    }
+                    while (datos[3].indexOf(',') > 0) {
+                        datos[3] = datos[3].replace(",", "");
+                    }
+                    while (datos[3].indexOf('"') > 0) {
+                        datos[3] = datos[3].replace('"', '');
+                    }
+                    var row = {id: datos[0],
+                        parentid: datos[1],
+                        text: datos[3],
+                        value: datos[0]};
+                    data.push(row);
+                    var mod = {id: datos[1],
+                        parentid: -1,
+                        text: datos[2],
+                        value: datos[1]};
+                    data.push(mod);
+                }
+                var source = {
+                    datatype: "json",
+                    datafields: [
+                        {name: 'id'},
+                        {name: 'parentid'},
+                        {name: 'text'},
+                        {name: 'value'}
+                    ],
+                    id: 'id',
+                    localdata: data
+                };
+                var dataAdapter = new $.jqx.dataAdapter(source);
+                dataAdapter.dataBind();
+                var records = dataAdapter.getRecordsHierarchy('id', 'parentid', 'items', [{name: 'text', map: 'label'}]);
+                $('#div_OpcionesUsuario').jqxTree({source: records});
+                $('#div_OpcionesUsuario').jqxTree('expandAll');
+                $.ajax({
+                    type: "GET",
+                    url: "Usuarios",
+                    data: {mode: 'MU', codigo: codigo},
+                    success: function (data) {
+                        if (data.length > 2) {
+                            data = data.replace("[", "");
+                            data = data.replace("]", "");
+                            data = data.replaceAll('"', '');
+                            var fila = data.split(",");
+                            for (i = 0; i < fila.length; i++) {
+                                var dato = "#" + fila[i].trim();
+                                $("#div_OpcionesUsuario").jqxTree('checkItem', $(dato)[0], true);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        $('#div_VentanaDetalle').jqxWindow({isModal: true, modalOpacity: 0.8});
+        $('#div_VentanaDetalle').jqxWindow('open');
+    }
+    function fn_GrabarOpciones() {
+        var lista = new Array();
+        var items = $('#div_OpcionesUsuario').jqxTree('getCheckedItems');
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            lista.push(item.id);
+        }
+        $.ajax({
+            type: "GET",
+            url: "IduUsuarios",
+            data: {mode: 'O', codigo: codigo, areaLaboral: 0, rol: 0, brigada: 0,
+                lista: JSON.stringify(lista).replaceAll('"', '').replaceAll('[', '').replaceAll(']', ''),
+                paterno: null, materno: null, nombres: null, correo: null, telefono: null, cargo: null,
+                autorizacion: 0, password: null},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente!!',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaDetalle').jqxWindow('close');
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+</script>
+<div id='div_Titulo' style="border: none;">
+    <div class="jqx-hideborder">LISTADOS DE USUARIOS</div>
+    <div>
+        <div id="div_Detalle" class="maincen"></div>
+    </div>
+</div>
+<div id="div_GrillaPrincipal"></div>
+<div id="div_VentanaPrincipal" style="display: none">
+    <div>
+        <span style="float: left">DATOS DEL USUARIO</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_Usuario" name="frm_Usuario" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+                <tr>
+                    <td class="inputlabel">CIP : </td>
+                    <td><input class="text-input" id="txt_CIP" name="txt_CIP" style="text-transform: uppercase;"/></td> 
+                </tr>
+                <tr>
+                    <td class="inputlabel">Apellido Paterno : </td>
+                    <td><input class="text-input" id="txt_Paterno" name="txt_paterno" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Apellido Materno : </td>
+                    <td><input class="text-input" id="txt_Materno" name="txt_materno" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Nombres : </td>
+                    <td><input class="text-input" id="txt_Nombres" name="txt_nombres" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Área Laboral : </td>
+                    <td>
+                        <select id="cbo_AreaLaboral" name="cbo_AreaLaboral">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td> 
+                </tr>
+                <tr>
+                    <td class="inputlabel">Cargo : </td>
+                    <td><input class="text-input" id="txt_Cargo" name="txt_Cargo" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Celular : </td>
+                    <td><div id="txt_Telefono"></div></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Correo : </td>
+                    <td><input class="text-input" id="txt_Correo" name="txt_Correo" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Rol : </td>
+                    <td>
+                        <select id="cbo_Rol" name="cbo_Rol">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td> 
+                </tr>
+                <tr>
+                    <td class="inputlabel">Autorización : </td>
+                    <td><div id='div_Autorizacion'></div></td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="2">
+                        <div>
+                            <input type="button" id="btn_Guardar"  value="Guardar" style="margin-right: 20px"/>
+                            <input type="button" id="btn_Cancelar" value="Cancelar" style="margin-right: 20px"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<div id="div_VentanaDetalle" style="display: none">
+    <div>
+        <span style="float: left">SELECCIONE LAS OPCIONES DEL USUARIO</span>
+    </div>
+    <div style="overflow: hidden">
+        <div id='div_OpcionesUsuario'></div>
+        <div class="Summit">
+            <input type="button" id="btn_GuardarPermisos"  value="Guardar" style="margin-right: 20px;margin-top: 10px"/>
+            <input type="button" id="btn_CancelarPermisos" value="Cancelar" style="margin-right: 20px"/>
+        </div>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display: none;'>
+    <ul>
+        <li style="font-weight: bold;">Editar</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: blue;">Activar</li>
+        <li style="font-weight: bold; color: brown;">Desactivar</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: olive;">Opciones</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: gray;">Resetear Contraseña</li>
+    </ul>
+</div>

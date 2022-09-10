@@ -1,0 +1,1348 @@
+<script type="text/javascript">
+    var codigo = null;
+    var detalle = null;
+    var estado = null;
+    var mode = null;
+    var tipoSolicitud = null;
+    var indiceDetalle = -1;
+    var modeDetalle = null;
+    var tipoCertificado = null;
+    var reporte = null;
+    var cobertura = null;
+    var archivo = '';
+    $(document).ready(function () {
+        $("#div_Titulo").jqxExpander({ width: '100%'});
+        $("#cbo_Periodo").jqxComboBox({ autoOpen: true, promptText: "Seleccione", width: 100, dropDownWidth: 150, height: 25});
+        $("#cbo_FuenteFinanciamiento").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 300, dropDownWidth: 450, height: 25});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_FuenteFinanciamiento').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (rowdata['estado'] === "ANULADA") {
+                return "RowAnulado";
+            }
+            if (datafield === "codigo" || datafield === "certificado" || datafield === "tipoCambio") {
+                return "RowBold";
+            }
+            if (datafield === "anexoCertificado") {
+                return "RowGreen";
+            }
+            if (datafield === "importe" && rowdata['importe'] >= 0.0) {
+                return "RowBlue";
+            }
+            if (datafield === "importe" && rowdata['importe'] < 0.0) {
+                return "RowRed";
+            }
+            if (datafield === "extranjera") {
+                return "RowBrown";
+            }
+        };
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 100),
+            rowdetails: true,
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            showstatusbar: true,
+            showtoolbar: true,
+            showaggregates: true,
+            statusbarheight: 25,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                // Appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonReporte = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                container.append(ButtonReporte);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 36, height: 34});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonReporte.jqxButton({width: 36, height: 34});
+                ButtonReporte.jqxTooltip({position: 'bottom', content: "Reportes"});
+                // Adicionar un Nuevo Registro en la Cabecera.
+                ButtonNuevo.click(function (event) {
+                    tipoSolicitud = 'CE';
+                    mode = 'I';
+                    fn_NuevoCab('');
+                });
+                //EXPORTAR A EXCEL
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'CertificadoPresupuestal');
+                });
+                //ABRIR LOS REPORTES
+                ButtonReporte.click(function (event) {
+                    $('#div_Reportes').jqxWindow({isModal: true, modalOpacity: 0.5});
+                    $('#div_Reportes').jqxWindow('open');
+                });
+            },
+            rowDetailsTemplate: {rowdetails: "<div id='grid' style='margin: 3px;'></div>", rowdetailsheight: 320, rowdetailshidden: true},
+            columns: [
+                {text: 'CERTIFICADO', dataField: 'certificado', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'CONCEPTO', dataField: 'concepto', width: '29%', align: 'center', cellclassname: cellclass},
+                {text: 'DOCU. REFERENCIA', dataField: 'documento', width: '15%', align: 'center', cellclassname: cellclass, aggregates: [{'<b>Totales : </b>':
+                                    function () {
+                                        return "";
+                                    }}]},
+                {text: 'FECHA', datafield: 'fecha', filtertype: 'date', width: '7%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'IMPORTE', dataField: 'importe', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                {text: 'T/CAMBIO', dataField: 'tipoCambio', width: '4%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass},
+                {text: 'EXTRANJERA', dataField: 'extranjera', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                {text: 'TIPO', dataField: 'tipo', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ANEXO', dataField: 'anexo', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL
+        var alto = 175;
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: alto, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // handle context menu clicks.
+        $('#div_GrillaPrincipal').on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                if (parseInt(event.args.originalEvent.clientY) > 600) {
+                    scrollTop = scrollTop - alto;
+                }
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        $('#div_ContextMenu').on('itemclick', function (event) {
+            var opcion = event.args;
+            if (codigo === null || codigo === '') {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            } else if (estado !== 'ANULADO') {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    mode = 'U';
+                    fn_EditarCab();
+                } else if ($.trim($(opcion).text()) === "Anular") {
+                    $.confirm({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: '¿Desea Anular este Registro?',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'orange',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'D';
+                                    $.ajax({
+                                        type: "POST",
+                                        url: "IduCertificadoPresupuestal",
+                                        data: {mode: 'D', periodo: $("#cbo_Periodo").val(), fuenteFinanciamiento: $("#cbo_FuenteFinanciamiento").val(), certificado: codigo,
+                                            tipoSolicitud: '', anexoCertificado: 0, documento: '', pacProcesos: '', concepto: '', observacion: '', fecha: new Date().toLocaleDateString(),
+                                            tipoMoneda: 0, tipoCambio: 0, detalle: ''},
+                                        success: function (data) {
+                                            msg = data;
+                                            if (msg === "GUARDO") {
+                                                $.confirm({
+                                                    title: 'AVISO DEL SISTEMA',
+                                                    content: 'Datos procesados correctamente',
+                                                    type: 'green',
+                                                    typeAnimated: true,
+                                                    autoClose: 'cerrarAction|1000',
+                                                    buttons: {
+                                                        cerrarAction: {
+                                                            text: 'Cerrar',
+                                                            action: function () {
+                                                                fn_CargarBusqueda();
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            } else {
+                                                $.alert({
+                                                    theme: 'material',
+                                                    title: 'AVISO DEL SISTEMA',
+                                                    content: msg,
+                                                    animation: 'zoom',
+                                                    closeAnimation: 'zoom',
+                                                    type: 'red',
+                                                    typeAnimated: true
+                                                });
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Cerrar") {
+                    $('#div_VentanaCerrar').jqxWindow({isModal: true});
+                    $('#div_VentanaCerrar').jqxWindow('open');
+                } else if ($.trim($(opcion).text()) === "Ver Anexos") {
+                    if (archivo !== '') {
+                        var extencion = fn_getFileExtension(archivo);
+                        if (extencion.toUpperCase() === 'PDF') {
+                            $('#div_ViewerTituloPDF').html(archivo);
+                            var getUrl = window.location;
+                            var url = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=CertificadoPresupuestal&filename=" + $("#cbo_Periodo").val() + "-" + $("#cbo_FuenteFinanciamiento").val() + "-" + codigo + "-" + archivo;
+                            $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                            $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                            $('#div_Reporte').jqxWindow('open');
+                        } else {
+                            document.location.target = "_blank";
+                            document.location.href = "Descarga?opcion=CertificadoPresupuestal&periodo=" + $("#cbo_Periodo").val() + "&fuenteFinanciamiento=" + $("#cbo_FuenteFinanciamiento").val() + "&codigo=" + codigo + "&documento=" + archivo;
+                        }
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'No existe Archivo a Vizualizar!!!',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                } else if ($.trim($(opcion).text()) === "Ampliaciones") {
+                    if (estado === 'CERRADO' && tipoCertificado === 'CERTIFICADO') {
+                        tipoSolicitud = 'AM';
+                        mode = 'I';
+                        fn_NuevoCab(codigo);
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Debe seleccionar un registro Cerrado y Tipo Certificado.',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                } else if ($.trim($(opcion).text()) === "Rebajas") {
+                    if (estado === 'CERRADO' && tipoCertificado === 'CERTIFICADO') {
+                        tipoSolicitud = 'RE';
+                        mode = 'I';
+                        fn_NuevoCab(codigo);
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Debe seleccionar un registro Cerrado y Tipo Certificado.',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'No puede realizar este Tipo de Operación, Registro Anulado',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'red',
+                    typeAnimated: true
+                });
+            }
+        });
+        //Seleccionar un Registro de la Cabecera
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['certificado'];
+            estado = row['estado'];
+            tipoCertificado = row['tipo'];
+            anexoCertificado = row['anexoCertificado'];
+            archivo = row['archivo'];
+            tipoSolicitud = tipoCertificado.substring(0, 2);
+        });
+        $("#div_GrillaRegistro").jqxGrid({
+            width: '100%',
+            height: '410',
+            pageable: true,
+            columnsresize: true,
+            showstatusbar: true,
+            autoheight: false,
+            autorowheight: false,
+            showtoolbar: true,
+            altrows: true,
+            editable: false,
+            sortable: true,
+            showaggregates: true,
+            statusbarheight: 22,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                // appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevoDetalle = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'></span></div>");
+                var ButtonEditarDetalle = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/edit.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'></span></div>");
+                var ButtonDeteleDetalle = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/delete.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'></span></div>");
+                container.append(ButtonNuevoDetalle);
+                container.append(ButtonEditarDetalle);
+                container.append(ButtonDeteleDetalle);
+                toolbar.append(container);
+                ButtonNuevoDetalle.jqxButton({width: 36, height: 34});
+                ButtonNuevoDetalle.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonEditarDetalle.jqxButton({width: 36, height: 34});
+                ButtonEditarDetalle.jqxTooltip({position: 'bottom', content: "Editar Registro"});
+                ButtonDeteleDetalle.jqxButton({width: 36, height: 34});
+                ButtonDeteleDetalle.jqxTooltip({position: 'bottom', content: "Eliminar Registro"});
+                // add new row.
+                ButtonNuevoDetalle.click(function (event) {
+                    modeDetalle = 'I';
+                    $("#cbo_Resolucion").jqxDropDownList('clear');
+                    $("#cbo_TareaPresupuestal").jqxDropDownList('clear');
+                    $("#cbo_ClasificadorPresupuestal").jqxDropDownList('clear');
+                    if (tipoSolicitud === 'RE') {
+                        fn_cargarComboAjax("#cbo_Resolucion", {mode: 'resolucionCertificadoRE', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: $("#txt_AnexoCertificado").val()});
+                    } else {
+                        fn_cargarComboAjax("#cbo_Resolucion", {mode: 'resolucionCertificado', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val()});
+                    }
+                    $('#div_Importe').val(0);
+                    $('#div_MonedaExtranjera').val(0);
+                    $("#cbo_Resolucion").jqxDropDownList({disabled: false});
+                    $("#cbo_TareaPresupuestal").jqxDropDownList({disabled: false});
+                    $("#cbo_ClasificadorPresupuestal").jqxDropDownList({disabled: false});
+                    $('#div_VentanaDetalle').jqxWindow({isModal: true, modalOpacity: 0.9});
+                    $('#div_VentanaDetalle').jqxWindow('open');
+                });
+                ButtonEditarDetalle.click(function (event) {
+                    modeDetalle = 'U';
+                    if (indiceDetalle >= 0) {
+                        var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                        $("#cbo_Resolucion").jqxDropDownList({disabled: true});
+                        $("#cbo_Resolucion").jqxDropDownList('setContent', dataRecord.resolucion);
+                        $("#cbo_TareaPresupuestal").jqxDropDownList('clear');
+                        $("#cbo_TareaPresupuestal").jqxDropDownList('setContent', dataRecord.tarea);
+                        $("#cbo_TareaPresupuestal").jqxDropDownList({disabled: true});
+                        $("#cbo_ClasificadorPresupuestal").jqxDropDownList('selectItem', dataRecord.detalle.substring(3 + dataRecord.detalle.lastIndexOf("---"), dataRecord.detalle.length));
+                        $("#cbo_ClasificadorPresupuestal").jqxDropDownList({disabled: true});
+                        $('#div_Importe').val(dataRecord.importe);
+                        $('#div_MonedaExtranjera').val(dataRecord.extranjera);
+                        $('#div_VentanaDetalle').jqxWindow({isModal: true, modalOpacity: 0.9});
+                        $('#div_VentanaDetalle').jqxWindow('open');
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'SELECCIONE UN REGISTRO',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                });
+                // delete selected row.
+                ButtonDeteleDetalle.click(function (event) {
+                    modeDetalle = 'D';
+                    if (indiceDetalle >= 0) {
+                        var rowid = $("#div_GrillaRegistro").jqxGrid('getrowid', indiceDetalle);
+                        $("#div_GrillaRegistro").jqxGrid('deleterow', rowid);
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'SELECCIONE UN REGISTRO',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                    fn_verTotal();
+                });
+            },
+            columns: [
+                {text: 'N°', sortable: false, filterable: false, editable: false, groupable: false, draggable: false, resizable: false,
+                    datafield: '', align: 'center', columntype: 'number', width: '4%', pinned: true, cellsrenderer: function (row, column, value) {
+                        return "<div style='margin-top: 7px; text-align: center;'>" + (value + 1) + "</div>";
+                    }
+                },
+                {text: 'TAREA', datafield: 'tarea', width: "30%", align: 'center'},
+                {text: 'CADENA', datafield: 'clasificador', width: "33%", align: 'center'},
+                {text: 'IMPORTE', dataField: 'importe', width: "15%", align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                {text: 'EXTRANJERA', dataField: 'extranjera', width: "12%", align: 'center', cellsAlign: 'right', cellsFormat: 'f2', cellclassname: cellclass, aggregates: ['sum']},
+                {text: 'RESOLUCION', datafield: 'resolucion', width: "20%", align: 'center'}
+            ]
+        });
+        $("#div_GrillaRegistro").on('rowselect', function (event) {
+            indiceDetalle = event.args.rowindex;
+            var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+            if (tipoSolicitud === 'RE')
+                fn_cargarComboAjax("#cbo_ClasificadorPresupuestal", {mode: 'clasificadorPresupuestalCertificadoRE', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: $("#txt_AnexoCertificado").val(), codigo4: fn_extraerDatos(dataRecord.resolucion, ':'), codigo5: fn_extraerDatos(dataRecord.tarea, ':')});
+            else
+                fn_cargarComboAjax("#cbo_ClasificadorPresupuestal", {mode: 'clasificadorPresupuestalCertificado', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: fn_extraerDatos(dataRecord.resolucion, ':'), codigo4: fn_extraerDatos(dataRecord.tarea, ':')});
+        });
+        //Crea los Elementos de las Ventanas
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //Inicia los Valores de Ventana de la Cabecera
+                var posicionX, posicionY;
+                var ancho = 800;
+                var alto = 680;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cancelar'),
+                    initContent: function () {
+                        $("#txt_Certificado").jqxInput({width: 130, height: 22, disabled: true});
+                        $("#txt_AnexoCertificado").jqxInput({width: 130, height: 22, disabled: true});
+                        $("#div_Fecha").jqxDateTimeInput({culture: 'es-PE', animationType: 'fade', width: 150, height: 22});
+                        $("#cbo_PACProcesos").jqxDropDownList({animationType: 'fade', width: 670, dropDownWidth: 750, height: 22});
+                        $("#cbo_TipoMoneda").jqxDropDownList({animationType: 'fade', width: 200, dropDownWidth: 250, height: 22});
+                        $('#cbo_TipoMoneda').on('change', function () {
+                            fn_verTipoMoneda();
+                        });
+                        $("#div_TipoCambio").jqxNumberInput({width: 80, height: 22, digits: 3, decimalDigits: 3, disabled: true});
+                        $("#txt_DocumentoReferencia").jqxInput({placeHolder: "Ingrese Documento de Referencia", width: 670, height: 22, minLength: 1});
+                        $("#txt_Concepto").jqxInput({placeHolder: "Ingrese detalle de la Solicitud", width: 670, height: 22, minLength: 1});
+                        $("#txt_Observacion").jqxInput({placeHolder: "Ingrese las Observaciones", width: 670, height: 22, minLength: 1});
+                        $("#div_TotalNacional").jqxNumberInput({width: 150, height: 22, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $("#div_TotalExtranjera").jqxNumberInput({width: 150, height: 22, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $('#btn_Cancelar').jqxButton({width: 36, height: 32});
+                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Guardar').jqxButton({width: 36, height: 32});
+                        $('#btn_Guardar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_Guardar').on('click', function (event) {
+                            $('#frm_Certificado').jqxValidator('validate');
+                        });
+                        $('#frm_Certificado').jqxValidator({
+                            rules: [
+                                {input: '#txt_DocumentoReferencia', message: 'Ingrese el Documento de Referencia!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Concepto', message: 'Ingrese el Detalle!', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_Certificado').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatos();
+                            }
+                        });
+                    }
+                });
+                //Inicia los Valores de Ventana del Detalle
+                ancho = 600;
+                alto = 190;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaDetalle').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarDetalle'),
+                    initContent: function () {
+                        $("#cbo_Resolucion").jqxDropDownList({animationType: 'fade', placeHolder: "Seleccione", width: 480, dropDownWidth: 550, height: 22});
+                        $('#cbo_Resolucion').on('change', function () {
+                            if (tipoSolicitud === 'RE')
+                                fn_cargarComboAjax("#cbo_TareaPresupuestal", {mode: 'tareaPresupuestalCertificadoRE', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: $("#txt_AnexoCertificado").val(), codigo4: $("#cbo_Resolucion").val()});
+                            else
+                                fn_cargarComboAjax("#cbo_TareaPresupuestal", {mode: 'tareaPresupuestalCertificado', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: $("#cbo_Resolucion").val()});
+                        });
+                        $("#cbo_TareaPresupuestal").jqxDropDownList({animationType: 'fade', placeHolder: "Seleccione", width: 480, dropDownWidth: 600, height: 22});
+                        $('#cbo_TareaPresupuestal').on('change', function () {
+                            if (tipoSolicitud === 'RE')
+                                fn_cargarComboAjax("#cbo_ClasificadorPresupuestal", {mode: 'clasificadorPresupuestalCertificadoRE', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: $("#txt_AnexoCertificado").val(), codigo4: $("#cbo_Resolucion").val(), codigo5: $("#cbo_TareaPresupuestal").val()});
+                            else
+                                fn_cargarComboAjax("#cbo_ClasificadorPresupuestal", {mode: 'clasificadorPresupuestalCertificado', codigo: $("#cbo_Periodo").val(), codigo2: $("#cbo_FuenteFinanciamiento").val(), codigo3: $("#cbo_Resolucion").val(), codigo4: $("#cbo_TareaPresupuestal").val()});
+                        });
+                        $("#cbo_ClasificadorPresupuestal").jqxDropDownList({animationType: 'fade', placeHolder: "Seleccione", width: 480, dropDownWidth: 600, height: 22});
+                        $("#div_Importe").jqxNumberInput({width: 150, height: 22, max: 999999999, digits: 9, decimalDigits: 2});
+                        $("#div_MonedaExtranjera").jqxNumberInput({width: 150, height: 22, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $('#div_MonedaExtranjera').on('textchanged', function (event) {
+                            fn_verTipoCambio();
+                        });
+                        $('#btn_CancelarDetalle').jqxButton({width: 36, height: 32});
+                        $('#btn_CancelarDetalle').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_GuardarDetalle').jqxButton({width: 36, height: 32});
+                        $('#btn_GuardarDetalle').jqxTooltip({position: 'bottom', content: "Añadir"});
+                        $('#btn_GuardarDetalle').on('click', function (event) {
+                            var resolucion = $("#cbo_Resolucion").jqxDropDownList('getSelectedItem');
+                            var tarea = $("#cbo_TareaPresupuestal").jqxDropDownList('getSelectedItem');
+                            var cadenaGasto = $("#cbo_ClasificadorPresupuestal").jqxDropDownList('getSelectedItem');
+                            var msg = "";
+                            if (msg === "")
+                                msg = fn_validaSaldo();
+                            if (msg === "" && modeDetalle === 'I') {
+                                msg = fn_validaDetalle(resolucion.value, tarea.value, cadenaGasto.value);
+                            }
+                            if (msg === "" && modeDetalle === 'U') {
+                                var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                                msg = fn_validaDetalle(fn_extraerDatos(dataRecord.resolucion, ":"), fn_extraerDatos(dataRecord.tarea, ":"),
+                                        dataRecord.detalle.substring(3 + dataRecord.detalle.lastIndexOf("---"), dataRecord.detalle.length));
+                            }
+                            if (msg === "") {
+                                if (modeDetalle === 'I') {
+                                    var row = {detalle: resolucion.value + "---" + tarea.value + "---" + cadenaGasto.value,
+                                        tarea: fn_extraerDatos(tarea.label, 'S/'), clasificador: fn_extraerDatos(cadenaGasto.label, 'S/'),
+                                        importe: parseFloat($("#div_Importe").jqxNumberInput('decimal')),
+                                        extranjera: parseFloat($("#div_MonedaExtranjera").jqxNumberInput('decimal')),
+                                        resolucion: fn_extraerDatos(resolucion.label, 'S/')};
+                                    $("#div_GrillaRegistro").jqxGrid('addrow', null, row);
+                                }
+                                if (modeDetalle === 'U') {
+                                    var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                                    var row = {detalle: dataRecord.detalle, tarea: dataRecord.tarea, clasificador: dataRecord.clasificador,
+                                        importe: parseFloat($("#div_Importe").jqxNumberInput('decimal')), extranjera: parseFloat($("#div_MonedaExtranjera").jqxNumberInput('decimal')),
+                                        resolucion: dataRecord.resolucion};
+                                    var rowID = $('#div_GrillaRegistro').jqxGrid('getrowid', indiceDetalle);
+                                    $('#div_GrillaRegistro').jqxGrid('updaterow', rowID, row);
+                                }
+                                modeDetalle = null;
+                                fn_verTotal();
+                                $("#div_VentanaDetalle").jqxWindow('hide');
+                            } else {
+                                $.alert({
+                                    theme: 'material',
+                                    title: 'AVISO DEL SISTEMA',
+                                    content: msg,
+                                    animation: 'zoom',
+                                    closeAnimation: 'zoom',
+                                    type: 'red',
+                                    typeAnimated: true
+                                });
+                            }
+                        });
+                    }
+                });
+                ancho = 500;
+                alto = 120;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                //ventana cerrar CERTIFICADO PRESUPUESTAL
+                $('#div_VentanaCerrar').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarCerrar'),
+                    initContent: function () {
+                        $("#txt_Archivo").jqxInput({placeHolder: "Seleccione el Documento", width: 400, height: 22, minLength: 1});
+                        $('#btn_CancelarCerrar').jqxButton({width: 36, height: 32});
+                        $('#btn_CancelarCerrar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_GuardarCerrar').jqxButton({width: 36, height: 32});
+                        $('#btn_GuardarCerrar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_GuardarCerrar').on('click', function (event) {
+                            fn_GuardarCerrar();
+                        });
+                    }
+                });
+                /**/
+                ancho = 400;
+                alto = 220;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_Reportes').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CerrarImprimir'),
+                    initContent: function () {
+                        $("#div_EJE0001").jqxRadioButton({width: 200, height: 20});
+                        $('#div_EJE0001').on('checked', function (event) {
+                            reporte = 'EJE0004';
+                        });
+                        $("#div_EJE0002").jqxRadioButton({width: 200, height: 20});
+                        $('#div_EJE0002').on('checked', function (event) {
+                            reporte = 'EJE0004';
+                        });
+                        $("#div_EJE0003").jqxRadioButton({width: 200, height: 20});
+                        $('#div_EJE0003').on('checked', function (event) {
+                            reporte = 'EJE0005';
+                        });
+                        $("#div_EJE0004").jqxRadioButton({width: 200, height: 20});
+                        $('#div_EJE0004').on('checked', function (event) {
+                            reporte = 'EJE0007';
+                        });
+                        $("#div_EJE0005").jqxRadioButton({width: 200, height: 20});
+                        $('#div_EJE0005').on('checked', function (event) {
+                            reporte = 'EJE0039';
+                        });
+                        $('#btn_CerrarImprimir').jqxButton({width: 36, height: 32});
+                        $('#btn_CerrarImprimir').jqxTooltip({position: 'bottom', content: "Cerrar"});
+                        $('#btn_Imprimir').jqxButton({width: 36, height: 32});
+                        $('#btn_Imprimir').jqxTooltip({position: 'bottom', content: "Imprimir"});
+                        $('#btn_Imprimir').on('click', function (event) {
+                            var msg = "";
+                            switch (reporte) {
+                                case "EJE0001":
+                                    if (codigo === null)
+                                        msg += "Seleccione la Solicitud de Credito Presupuestario.<br>";
+                                    break;
+                                case "EJE0002":
+                                    if (codigo === null)
+                                        msg += "Seleccione la Solicitud de Credito Presupuestario.<br>";
+                                    if (tipoCertificado !== 'CERTIFICADO')
+                                        msg += "Seleccione la S.C.P. Tipo CERTIFICADO.<br>";
+                                    break;
+                                case "EJE0003":
+                                    if (codigo === null)
+                                        msg += "Seleccione la Solicitud de Credito Presupuestario.<br>";
+                                    if (tipoCertificado !== 'CERTIFICADO')
+                                        msg += "Seleccione la S.C.P. Tipo CERTIFICADO.<br>";
+                                    break;
+                                case "EJE0004":
+                                    if (codigo !== null && tipoCertificado !== 'CERTIFICADO')
+                                        msg += "Seleccione la S.C.P. Tipo CERTIFICADO.<br>";
+                                    break;
+                                case "EJE0005":
+                                    break;
+                                case "EJE0039":
+                                    codigo = cobertura;
+                                    codigo = codigo.substr(0, codigo.indexOf("-"));
+                                    if (codigo === null)
+                                        msg += "Seleccione la Solicitud de Credito Presupuestario.<br>";
+                                    if (tipoCertificado !== 'CERTIFICADO')
+                                        msg += "Seleccione la S.C.P. Tipo CERTIFICADO.<br>";
+                                    break;
+                                case "EJE0006":
+                                    codigo = cobertura;
+                                    codigo = codigo.substr(0, codigo.indexOf("-"));
+                                    if (codigo === null)
+                                        msg += "Seleccione la Solicitud de Credito Presupuestario.<br>";
+                                    if (!autorizacion)
+                                        msg += "Usuario no Autorizado para este Tipo de Reporte.<br>";
+                                    break;
+                                case "EJE0007":
+                                    codigo = cobertura;
+                                    codigo = codigo.substr(0, codigo.indexOf("-"));
+                                    if (codigo === null)
+                                        msg += "Seleccione la Solicitud de Credito Presupuestario.<br>";
+                                    if (!autorizacion)
+                                        msg += "Usuario no Autorizado para este Tipo de Reporte.<br>";
+                                    break;
+                                default:
+                                    msg += "Debe selecciona una opción.<br>";
+                                    break;
+                            }
+                            if (msg === "") {
+                                $('#div_ViewerTituloPDF').html(reporte);
+                                var url = 'Reporte?reporte=' + reporte + '&periodo=' + $("#cbo_Periodo").val() + '&fuenteFinanciamiento=' + $("#cbo_FuenteFinanciamiento").val() + "&codigo=" + codigo + "&codigo2=" + codigo;
+                                $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                                $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                                $('#div_Reporte').jqxWindow('open');
+                            } else {
+                                $.alert({
+                                    theme: 'material',
+                                    title: 'AVISO DEL SISTEMA',
+                                    content: msg,
+                                    animation: 'zoom',
+                                    closeAnimation: 'zoom',
+                                    type: 'red',
+                                    typeAnimated: true
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            return {
+                init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_CargarBusqueda();
+            fn_cargarComboAjax("#cbo_TipoMoneda", {mode: 'monedas'});
+        });
+    });
+    //Funcion para Insertar un Nuevo Registro.
+    function fn_NuevoCab(certificado) {
+        $('#div_GrillaRegistro').jqxGrid('clear');
+        $.ajax({
+            type: "GET",
+            url: "CertificadoPresupuestal",
+            data: {mode: 'N', periodo: $("#cbo_Periodo").val(), fuenteFinanciamiento: $("#cbo_FuenteFinanciamiento").val()},
+            success: function (data) {
+                $('#txt_Certificado').val(JSON.parse(data));
+            }
+        });
+        if (tipoSolicitud === 'CE') {
+            $('#txt_AnexoCertificado').val('0');
+        } else {
+            $('#txt_AnexoCertificado').val(certificado);
+        }
+        $('#txt_DocumentoReferencia').val('');
+        $('#txt_Concepto').val('');
+        $('#txt_Observacion').val('');
+        $("#cbo_TipoMoneda").jqxDropDownList('selectItem', '1');
+        $('#div_TipoCambio').val(0);
+        if (tipoSolicitud === 'CE')
+            detalle = 'CERTIFICACIÓN';
+        if (tipoSolicitud === 'AM')
+            detalle = 'AMPLACION';
+        if (tipoSolicitud === 'RE')
+            detalle = 'REBAJA';
+        $('#div_VentanaPrincipal').jqxWindow({title: 'CERTIFICADO DE CREDITO PRESUPUESTAL - ' + detalle});
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.9});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+    }
+    //Funcion de Refrescar o Actulizar los datos de la Grilla.
+    function fn_EditarCab() {
+        if (estado !== 'ANULADA') {
+            $.ajax({
+                type: "GET",
+                url: "CertificadoPresupuestal",
+                data: {mode: 'U', periodo: $("#cbo_Periodo").val(), fuenteFinanciamiento: $("#cbo_FuenteFinanciamiento").val(), codigo: codigo, tipsol: 'CE'},
+                success: function (data) {
+                    var dato = JSON.parse(data);
+                    $('#txt_Certificado').val(dato.certificado);
+                    $('#txt_AnexoCertificado').val(dato.anexo);
+                    $("#div_Fecha").jqxDateTimeInput('setDate', new Date(dato.fecha));
+                    $('#txt_DocumentoReferencia').val(dato.documento);
+                    $('#txt_Concepto').val(dato.concepto);
+                    $('#txt_Observacion').val(dato.observacion);
+                    $('#div_GrillaRegistro').jqxGrid('clear');
+                    $("#cbo_TipoMoneda").jqxDropDownList('selectItem', dato.tipoMoneda);
+                    $('#div_TipoCambio').val(dato.tipoCambio);
+                    fn_CargarBusquedaDetalle(codigo);
+                }
+            });
+            $('#div_VentanaPrincipal').jqxWindow({isModal: true});
+            $('#div_VentanaPrincipal').jqxWindow('open');
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: 'No se puede realizar la Operacion, \nRegistro ANULADO!!',
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+    function fn_verTipoMoneda() {
+        var codmon = $("#cbo_TipoMoneda").val();
+        if (codmon === '1') {
+            $('#div_MonedaExtranjera').val("0");
+            $('#div_TipoCambio').val("0");
+            $('#div_TipoCambio').jqxNumberInput({disabled: true});
+            $('#div_MonedaExtranjera').jqxNumberInput({disabled: true});
+            $('#div_Importe').jqxNumberInput({disabled: false});
+            $('#div_Importe').jqxNumberInput('focus');
+        } else {
+            $('#div_Importe').jqxNumberInput({disabled: true});
+            $('#div_TipoCambio').jqxNumberInput({disabled: false});
+            $('#div_MonedaExtranjera').jqxNumberInput({disabled: false});
+            $('#div_TipoCambio').jqxNumberInput('focus');
+        }
+    }
+    function fn_verTipoCambio() {
+        var tipoMoneda = $("#cbo_TipoMoneda").val();
+        var tipoCambio = $("#div_TipoCambio").val();
+        var extranjera = $("#div_MonedaExtranjera").val();
+        tipoCambio = parseFloat(tipoCambio);
+        extranjera = parseFloat(extranjera);
+        var importe = extranjera * tipoCambio;
+        if (tipoMoneda !== '01') {
+            if (isNaN(importe))
+                importe = '0';
+            importe = Math.round(importe * 100) / 100;
+            $('#div_Importe').val(importe);
+        }
+    }
+    function fn_validaSaldo() {
+        var cadena = $("#cbo_ClasificadorPresupuestal").val();
+        if (cadena.length !== 0) {
+            var saldo = $("#cbo_ClasificadorPresupuestal").jqxDropDownList('getSelectedItem');
+            saldo = saldo.label;
+            var importe = parseFloat($("#div_Importe").jqxNumberInput('decimal'));
+            var monto = "";
+            var len = 0;
+            len = saldo.length;
+            var pos = saldo.indexOf('S/');
+            monto = saldo.substring(pos + 3, len);
+            monto = fn_reemplazarTodo(monto, ',', '');
+            monto = parseFloat(monto);
+            if (modeDetalle === 'U') {
+                var dataRecord = $("#div_GrillaRegistro").jqxGrid('getrowdata', indiceDetalle);
+                monto = monto + parseFloat(dataRecord.importe);
+            }
+            if (importe > monto) {
+                return "No puede ingresar un importe superior a S/ " + monto + ". Revise!!!";
+            } else if (importe === parseFloat('0')) {
+                return "No puede ingresar un importe Cero. Revise!!!";
+            } else {
+                return "";
+            }
+        } else {
+            return "Seleccione la Cadena de Gasto";
+        }
+    }
+    //FUNCION PARA VALIDAR QUE NO SE REPITAN LOS REGISTROS DEL DETALLE
+    function fn_validaDetalle(resolucion, tarea, clasificador) {
+        var cadena = resolucion + "---" + tarea + "---" + clasificador;
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        if (modeDetalle === 'I') {
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.detalle.trim() === cadena) {
+                    return "Los Datos que desea registrar ya existen, Revise!!";
+                }
+            }
+        }
+        if (modeDetalle === 'U') {
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (i !== indiceDetalle && row.detalle.trim() === cadena) {
+                    return "Los Datos que desea registrar ya existen, Revise!!";
+                }
+            }
+        }
+        return "";
+    }
+    //FUNCION PARA OBTENER LA SUMATORIA TOTAL DEL DETALLE
+    function fn_verTotal() {
+        var totalNacional, totalExtranjera;
+        totalNacional = totalExtranjera = 0.0;
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            totalNacional += parseFloat(row.importe);
+            totalExtranjera += parseFloat(row.extranjera);
+        }
+        $("#div_TotalNacional").val(Math.round(parseFloat(totalNacional) * 100) / 100);
+        $("#div_TotalExtranjera").val(Math.round(parseFloat(totalExtranjera) * 100) / 100);
+    }
+    function fn_CargarBusqueda() {
+        msg = "";
+        msg += fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        msg += fn_validaCombos('#cbo_FuenteFinanciamiento', "Seleccione la Fuente de Financiamiento.");
+        if (msg === "") {
+            //PARA CARGAR LOS ELEMENTOS DE LA GRILLA
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: "solicitud", type: "string"},
+                    {name: "certificado", type: "string"},
+                    {name: "anexo", type: "string"},
+                    {name: "concepto", type: "string"},
+                    {name: "documento", type: "string"},
+                    {name: "fecha", type: "date"},
+                    {name: "importe", type: "number"},
+                    {name: "tipoCambio", type: "number"},
+                    {name: "extranjera", type: "number"},
+                    {name: "estado", type: "string"},
+                    {name: "tipo", type: "string"},
+                    {name: "nroSolicitud", type: "string"},
+                    {name: "sectorista", type: "string"},
+                    {name: "priorizacion", type: "string"},
+                    {name: "archivo", type: "string"}
+                ],
+                id: 'certificado',
+                url: "CertificadoPresupuestal",
+                data: {mode: 'G', periodo: $('#cbo_Periodo').val(), fuenteFinanciamiento: $('#cbo_FuenteFinanciamiento').val()},
+                async: false
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            //PARA LA GRILLA DEL DETALLE 
+            var sourceDetalle = {
+                dataType: "json",
+                datafields: [
+                    {name: "certificado", type: "string"},
+                    {name: "detalle", type: "string"},
+                    {name: "resolucion", type: "string"},
+                    {name: "tarea", type: "string"},
+                    {name: "clasificador", type: "string"},
+                    {name: "importe", type: "number"},
+                    {name: "extranjera", type: "number"}
+                ],
+                id: 'codigo',
+                url: "CertificadoPresupuestal",
+                data: {mode: 'GD', periodo: $('#cbo_Periodo').val(), fuenteFinanciamiento: $('#cbo_FuenteFinanciamiento').val()},
+                async: false
+            };
+            var dataDetalleAdapter = new $.jqx.dataAdapter(sourceDetalle, {autoBind: true});
+            var nested = dataDetalleAdapter.records;
+            var nestedGrids = new Array();
+            // create nested grid.
+            var initRowDetails = function (index, parentElement, gridElement, record) {
+                var id = record.uid.toString();
+                var grid = $($(parentElement).children()[0]);
+                nestedGrids[index] = grid;
+                var filtergroup = new $.jqx.filter();
+                var filterValue = id;
+                var filterCondition = 'equal';
+                var filter = filtergroup.createfilter('stringfilter', filterValue, filterCondition);
+                // fill the orders depending on the id.
+                var ordersbyid = [];
+                for (var m = 0; m < nested.length; m++) {
+                    var result = filter.evaluate(nested[m]["certificado"]);
+                    if (result)
+                        ordersbyid.push(nested[m]);
+                }
+                var sourceNested = {
+                    datafields: [
+                        {name: "certificado", type: "string"},
+                        {name: "detalle", type: "string"},
+                        {name: "resolucion", type: "string"},
+                        {name: "tarea", type: "string"},
+                        {name: "clasificador", type: "string"},
+                        {name: "importe", type: "number"},
+                        {name: "extranjera", type: "number"}
+                    ],
+                    id: 'codigo',
+                    localdata: ordersbyid
+                };
+                var nestedGridAdapter = new $.jqx.dataAdapter(sourceNested);
+                if (grid !== null) {
+                    grid.jqxGrid({
+                        source: nestedGridAdapter,
+                        width: '97%',
+                        height: 300,
+                        pageable: true,
+                        filterable: true,
+                        autoshowfiltericon: true,
+                        columnsresize: true,
+                        showaggregates: true,
+                        showfilterrow: true,
+                        showstatusbar: true,
+                        statusbarheight: 20,
+                        columns: [
+                            {text: 'RESOLUCIÓN', datafield: 'resolucion', filtertype: 'checkedlist', width: '25%', align: 'center'},
+                            {text: 'TAREA', datafield: 'tarea', filtertype: 'checkedlist', width: '25%', align: 'center'},
+                            {text: 'CADENA', datafield: 'clasificador', filtertype: 'checkedlist', width: '30%', align: 'center', aggregates: [{'<b>Totales : </b>':
+                                                function () {
+                                                    return  "";
+                                                }}]},
+                            {text: 'IMPORTE', dataField: 'importe', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', aggregates: ['sum']},
+                            {text: 'EXTRANJERA', dataField: 'extranjera', width: '10%', align: 'center', cellsAlign: 'right', cellsFormat: 'f2', aggregates: ['sum']}
+                        ]
+                    });
+                }
+            };
+            $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter, initRowDetails: initRowDetails});
+            if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    function fn_CargarBusquedaDetalle(certificado) {
+        //PARA CARGAR LOS ELEMENTOS DE LA GRILLA
+        $('#div_GrillaRegistro').jqxGrid('clearselection');
+        var sourceDetalle = {
+            dataType: "json",
+            datafields: [
+                {name: "certificado", type: "string"},
+                {name: "detalle", type: "string"},
+                {name: "resolucion", type: "string"},
+                {name: "tarea", type: "string"},
+                {name: "clasificador", type: "string"},
+                {name: "importe", type: "number"},
+                {name: "extranjera", type: "number"}
+            ],
+            id: 'codigo',
+            url: "CertificadoPresupuestal",
+            data: {mode: 'GC', periodo: $('#cbo_Periodo').val(), fuenteFinanciamiento: $('#cbo_FuenteFinanciamiento').val(), codigo: certificado},
+            async: false
+        };
+        var dataDetalleAdapter = new $.jqx.dataAdapter(sourceDetalle);
+        $("#div_GrillaRegistro").jqxGrid({source: dataDetalleAdapter});
+    }
+    function fn_GrabarDatos() {
+        var msg = "";
+        var msg = "";
+        var lista = new Array();
+        var result;
+        var rows = $('#div_GrillaRegistro').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            result = row.detalle + "---" + row.importe + "---" + row.extranjera;
+            lista.push(result);
+        }
+        if (lista.length === 0)
+            msg += "Ingrese el Detalle del Certificado <br>";
+        if (msg === "") {
+            $.ajax({
+                type: "POST",
+                url: "IduCertificadoPresupuestal",
+                data: {mode: mode, periodo: $("#cbo_Periodo").val(), fuenteFinanciamiento: $("#cbo_FuenteFinanciamiento").val(), certificado: $('#txt_Certificado').val(),
+                    tipoSolicitud: tipoSolicitud, anexoCertificado: $("#txt_AnexoCertificado").val(), documento: $("#txt_DocumentoReferencia").val(),
+                    pacProcesos: $("#cbo_PACProcesos").val(), concepto: $("#txt_Concepto").val(), observacion: $("#txt_Observacion").val(), fecha: $('#div_Fecha').val(),
+                    tipoMoneda: $("#cbo_TipoMoneda").val(), tipoCambio: $("#div_TipoCambio").val(), detalle: lista.toString()},
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        $('#div_VentanaPrincipal').jqxWindow('close');
+                                        fn_CargarBusqueda();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+    function fn_GrabarCertificado(nroSIAF) {
+        $.ajax({
+            type: "POST",
+            url: "IduCertificadoPresupuestal",
+            data: {mode: mode, periodo: $("#cbo_Periodo").val(), fuenteFinanciamiento: $("#cbo_FuenteFinanciamiento").val(), nroCertificado: codigo, solicitudCredito: nroSIAF},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    fn_CargarBusqueda();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    function fn_GuardarCerrar() {
+        var fichero = $("#txt_Archivo").val();
+        if (fichero !== '') {
+            var formData = new FormData(document.getElementById("frm_SolicitudCerrar"));
+            formData.append("mode", "C");
+            formData.append("periodo", $("#cbo_Periodo").val());
+            formData.append("fuenteFinanciamiento", $("#cbo_FuenteFinanciamiento").val());
+            formData.append("certificado", codigo);
+            $.ajax({
+                type: "POST",
+                url: "IduCertificadoPresupuestalCerrar",
+                data: formData,
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $('#div_VentanaCerrar').jqxWindow('close');
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        fn_CargarBusqueda();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Debe seleccionar el archivo con la documentacion sustentatoria\n PROCESO CANCELADO!!!.",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+</script>
+<div style="border: none;" id='div_Titulo'>
+    <div class="jqx-hideborder">EJECUCIÓN PRESUPUESTAL</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr>
+                        <td class="Titulo">Periodo : </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Fte. Financ. : </td>
+                        <td>
+                            <select id="cbo_FuenteFinanciamiento" name="cbo_FuenteFinanciamiento">
+                                <span th:each="fuente : ${session.objFuenteFinanciamiento}">
+                                    <option th:value="${fuente.codigo}"><span th:text="${fuente.descripcion}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit" /></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaPrincipal" style="display: none;">
+    <div>
+        <span style="float: left">SOLICITUD DE CERTIFICADO DE CREDITO PRESUPUESTAL</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_Certificado" name="frm_Certificado" method="post" >
+            <table width="100%" border="0">
+                <tr>
+                    <td class="inputlabel">N&deg; Solicitud : </td>
+                    <td><input type="text" id="txt_Certificado" name="txt_Certificado"/></td>
+                    <td class="inputlabel">Solicitud : </td>
+                    <td><input type="text" id="txt_AnexoCertificado" name="txt_AnexoCertificado"/></td>
+                    <td class="inputlabel">Fecha : </td>
+                    <td ><div id="div_Fecha"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">PAC Procesos : </td>
+                    <td colspan="5">
+                        <select id="cbo_PACProcesos" name="cbo_PACProcesos">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Doc. Ref. : </td>
+                    <td colspan="5"><input type="text" id="txt_DocumentoReferencia" name="txt_DocumentoReferencia" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr> 
+                    <td class="inputlabel">Concepto : </td>
+                    <td colspan="5"><input type="text" id="txt_Concepto" name="txt_Concepto" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Observaci&oacute;n : </td>
+                    <td colspan="5"><input type="text" id="txt_Observacion" name="txt_Observacion" style="text-transform: uppercase;"/></td>
+                </tr> 
+                <tr>
+                    <td class="inputlabel">Tipo Moneda : </td>
+                    <td>
+                        <select id="cbo_TipoMoneda" name="cbo_TipoMoneda">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                    <td class="inputlabel">Tipo Cambio : </td>
+                    <td><div id="div_TipoCambio"></div></td>
+                </tr> 
+                <tr>
+                    <td class="inputlabel">TOTAL S/ : </td>
+                    <td><div id="div_TotalNacional"></div></td>
+                    <td class="inputlabel">TOTAL ME : </td>
+                    <td><div id="div_TotalExtranjera"></div></td>
+                </tr> 
+                <tr>
+                    <td colspan="6">
+                        <div id="div_GrillaRegistro"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="6">
+                        <div>
+                            <div id="btn_Guardar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                            <div id="btn_Cancelar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>            
+            <div id='div_VentanaDetalle' style='display: none;'>
+                <div>
+                    <span style="float: left">DETALLE DE SOLICITUD DE CERTIFICADO DE CREDITO PRESUPUESTAL</span>
+                </div>
+                <div style="overflow: hidden">
+                    <table width="100%" border="0">
+                        <tr>
+                            <td class="inputlabel">Resoluci&oacute;n : </td>
+                            <td colspan="3">
+                                <select id="cbo_Resolucion" name="cbo_Resolucion">
+                                    <option value="0">Seleccione</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Tarea : </td>
+                            <td colspan="3">
+                                <select id="cbo_TareaPresupuestal" name="cbo_TareaPresupuestal">
+                                    <option value="0">Seleccione</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Clasificador : </td>
+                            <td colspan="3">
+                                <select id="cbo_ClasificadorPresupuestal" name="cbo_ClasificadorPresupuestal">
+                                    <option value="0">Seleccione</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="inputlabel">Importe S/ : </td>
+                            <td><div id="div_Importe"></div></td>
+                            <td class="inputlabel">Extranjera : </td>
+                            <td><div id="div_MonedaExtranjera"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="Summit" colspan="4">
+                                <div>
+                                    <div id="btn_GuardarDetalle" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/add.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                                    <div id="btn_CancelarDetalle" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="div_VentanaCerrar" style="display: none">
+    <div>
+        <span style="float: left">CERRAR SOLICITUD DE CERTIFICADO DE CREDITO PRESUPUESTAL</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_SolicitudCerrar" name="frm_SolicitudCerrar" enctype="multipart/form-data" action="javascript:fn_GuardarCerrar();" method="post">
+            <table width="100%" border="0">
+                <tr>
+                    <td class="inputlabel">Anexos : </td>
+                    <td>
+                        <input type="file" id="txt_Archivo" name="txt_Archivo" style="text-transform: uppercase;" accept="application/pdf"/>
+                    </td> 
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="2">
+                        <div>
+                            <div id="btn_GuardarCerrar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+                            <div id="btn_CancelarCerrar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<div id="div_Reportes" style="display: none;">
+    <div>
+        <span style="float: left">LISTADO DE REPORTES</span>
+    </div>
+    <div style="overflow: hidden">
+        <div id='div_EJE0001'>Memorando de Certificación</div>
+        <div id='div_EJE0002'>Control de Solicitud</div>
+        <div id='div_EJE0003'>Listado de Compromisos Anuales</div>
+        <div id='div_EJE0004'>Certificados vs Compromiso Anual</div>
+        <div id='div_EJE0005'>Avance Presupuestal del Certificado</div>
+        <div class="Summit">
+            <div id="btn_Imprimir" style="display: inline-block; margin-left: 5px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            <div id="btn_CerrarImprimir" style="display: inline-block; margin-left: 5px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+        </div>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display: none;'>
+    <ul>
+        <li style="font-weight: bold;">Editar</li>
+        <li style="font-weight: bold;">Anular</li>
+        <li type='separator'></li>
+        <li style="color: blue; font-weight: bold;">Cerrar</li>
+        <li type='separator'></li>
+        <li style="color: green; font-weight: bold;">Ampliaciones</li>
+        <li style="color: green; font-weight: bold;">Rebajas</li>
+        <li type='separator'></li>
+        <li style="color: maroon;font-weight: bold;">Ver Anexos</li>
+    </ul>
+</div>

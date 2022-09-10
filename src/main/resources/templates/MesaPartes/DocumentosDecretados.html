@@ -1,0 +1,520 @@
+<script>
+    var codigo = null;
+    var decreto = null;
+    var estado = null;
+    var archivo = null;
+    var mode = null;
+    var tipo = 'E';
+    var msg = null;
+    $(document).ready(function () {
+        $("#div_Titulo").jqxExpander({width: '100%'});
+        $("#cbo_Periodo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 100, dropDownWidth: 150, height: 25});
+        $("#txt_Usuario").jqxInput({width: 350, height: 25, disabled: true});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $("#txt_Usuario").val('[[${session.usuario.paterno}]]' + " " + '[[${session.usuario.materno}]]' + ", " + '[[${session.usuario.nombres}]]');
+        //ESTILOS A LAS CELDAS DE LA GRILLA 
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (datafield === "numero" || datafield === "codigo") {
+                return "RowBold";
+            }
+            if (datafield === "institucion" || datafield === "usuarioResponsable") {
+                return "RowPurple";
+            }
+            if (datafield === "asunto" || datafield === "usuarioDecreta") {
+                return "RowBlue";
+            }
+        };
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 95),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            showtoolbar: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonExportar);
+                toolbar.append(container);
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'Documentos Decretados');
+                });
+            },
+            columns: [
+                {text: 'DECRETO', dataField: 'numero', width: '5%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'institucion', filtertype: 'checkedlist', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'DOCUMENTO', dataField: 'numeroDocumento', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'FEC. DOC', datafield: 'fecha', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'ASUNTO', dataField: 'asunto', width: '20%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'FIRMA', dataField: 'postFirma', width: '14%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'COMENTARIO', dataField: 'comentario', width: '20%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'PRIORIDAD', dataField: 'prioridad', filtertype: 'checkedlist', width: '6%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FOLIOS', dataField: 'folios', width: '4%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        //DEFINIMOS CAMPOS DE LA GRILLA DE DETALLE
+        $("#div_GrillaDetalle").jqxGrid({
+            width: '100%',
+            height: 370,
+            pageable: true,
+            columnsresize: true,
+            altrows: false,
+            editable: false,
+            statusbarheight: 25,
+            autoheight: false,
+            autorowheight: false,
+            sortable: true,
+            columns: [
+                {text: 'DECRETADO POR', datafield: 'usuarioDecreta', width: '25%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'RESPONSABLE', datafield: 'usuarioResponsable', width: '25%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'COMENTARIO', datafield: 'descripcion', width: '25%', align: 'center', cellsAlign: 'left'},
+                {text: 'PRIORIDAD', datafield: 'prioridad', width: '15%', align: 'center', cellsAlign: 'center'},
+                {text: 'DECRETADO', datafield: 'fecha', width: '11%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'RECIBIDO', datafield: 'fechaRecepcion', width: '11%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'ESTADO', datafield: 'estado', width: '10%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL 
+        var alto = 120;
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: alto, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                if (parseInt(event.args.originalEvent.clientY) > 500) {
+                    scrollTop = scrollTop - alto;
+                }
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL      
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if ($.trim($(opcion).text()) === "Ver Documento") {
+                if (archivo !== null && archivo !== '') {
+                    var extencion = fn_getFileExtension(archivo);
+                    if (extencion.toUpperCase() === 'PDF') {
+                        $('#div_ViewerTituloPDF').html(archivo);
+                        var getUrl = window.location;
+                        var url = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=MesaPartes&filename=" + $("#cbo_Periodo").val() + "-" + tipo + "-" + codigo + "-" + archivo;
+                        $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                        $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                        $('#div_Reporte').jqxWindow('open');
+                    } else {
+                        document.location.target = "_blank";
+                        document.location.href = "../Descarga?opcion=MesaParte&periodo=" + $('#cbo_Periodo').val() + "&codigo=" + $('#cbo_Tipo').val() + "-" + codigo + "&documento=" + archivo;
+                    }
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No existe Archivo a Vizualizar!!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            } else if ($.trim($(opcion).text()) === "Recibido") {
+                $.confirm({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: '¿Desea recibir el documento?',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true,
+                    buttons: {
+                        aceptar: {
+                            text: 'Aceptar',
+                            btnClass: 'btn-primary',
+                            keys: ['enter', 'shift'],
+                            action: function () {
+                                mode = 'R';
+                                fn_GrabarDatos();
+                            }
+                        },
+                        cancelar: function () {
+                        }
+                    }
+                });
+            } else if ($.trim($(opcion).text()) === "Sub Decreto") {
+                if (estado === 'RECIBIDO') {
+                    mode = 'I';
+                    fn_subDecreto();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: "No puede sub decretar, debe cambiar el estado a recibido.",
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'orange',
+                        typeAnimated: true
+                    });
+                }
+            } else if ($.trim($(opcion).text()) === "Seguimiento Decreto") {
+                fn_SeguimientoDecreto();
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: "No hay Opción a mostrar",
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['numero'];
+            decreto = row['mes'];
+            estado = row['estado'];
+            archivo = row['digital'];
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 550;
+                var alto = 275;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cancelar'),
+                    initContent: function () {
+                        $("#cbo_Prioridad").jqxDropDownList({animationType: 'fade', width: 200, height: 22, dropDownWidth: 350});
+                        $("#cbo_AreaLaboral").jqxDropDownList({animationType: 'fade', width: 400, height: 22, dropDownWidth: 450});
+                        $('#cbo_AreaLaboral').on('change', function () {
+                            fn_cargarComboAjax("#cbo_Usuario", {mode: 'usuarioAreaLaboral', codigo: $("#cbo_AreaLaboral").val()});
+                        });
+                        $("#cbo_Usuario").jqxDropDownList({animationType: 'fade', width: 400, height: 22, dropDownWidth: 450});
+                        $("#cbo_TipoDecretos").jqxDropDownList({animationType: 'fade', checkboxes: true, width: 440, height: 22, dropDownWidth: 500});
+                        $("#txt_Comentario").jqxInput({placeHolder: "Ingrese un Comentario", height: 80, width: 440, minLength: 1});
+                        $('#btn_Cancelar').jqxButton({width: 36, height: 32});
+                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Guardar').jqxButton({width: 36, height: 32});
+                        $('#btn_Guardar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_Guardar').on('click', function () {
+                            msg = "";
+                            msg += fn_validaCombos('#cbo_Prioridad', "Seleccione la Prioridad.");
+                            msg += fn_validaCombos('#cbo_AreaLaboral', "Seleccione el Area Laboral.");
+                            msg += fn_validaCombos('#cbo_Usuario', "Seleccione el Usuario Responsable.");
+                            msg += fn_validaCombos('#cbo_TipoDecretos', "Seleccione los Tipos de Decretos.");
+                            if (msg === "") {
+                                $('#frm_SubDecreto').jqxValidator('validate');
+                            } else {
+                                $.alert({
+                                    theme: 'material',
+                                    title: 'Aviso del Sistema',
+                                    content: msg,
+                                    type: 'blue',
+                                    animation: 'zoom',
+                                    closeAnimation: 'zoom',
+                                    typeAnimated: true,
+                                    boxWidth: '50%'
+                                });
+                            }
+                        });
+                        $('#frm_SubDecreto').jqxValidator({
+                            rules: [
+                                {input: '#txt_Comentario', message: 'Ingrese un comentatio', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_SubDecreto').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatos();
+                            }
+                        });
+                    }
+                });
+                //INICIALIZAMOS LOS VALORES DE LA VENTANA DE DETALLE
+                ancho = 850;
+                alto = 465;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaDetalle').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cerrar'),
+                    initContent: function () {
+                        $('#btn_Cerrar').jqxButton({width: 36, height: 32});
+                        $('#btn_Cerrar').jqxTooltip({position: 'bottom', content: "Cerrar"});
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_CargarBusqueda();
+            fn_cargarComboAjax("#cbo_AreaLaboral", {mode: 'areaLaboral'});
+            fn_cargarComboAjax("#cbo_TipoDecretos", {mode: 'tipoDecretos'});
+            fn_cargarComboAjax("#cbo_Prioridad", {mode: 'prioridades'});
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_CargarBusqueda() {
+        //PARA CARGAR LOS ELEMENTOS DE LA GRILLA
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: 'numero', type: "string"},
+                {name: 'mes', type: "string"},
+                {name: 'numeroDocumento', type: "string"},
+                {name: 'asunto', type: "string"},
+                {name: 'institucion', type: "string"},
+                {name: 'prioridad', type: "string"},
+                {name: 'fecha', type: "date"},
+                {name: 'estado', type: "string"},
+                {name: 'postFirma', type: "string"},
+                {name: 'legajos', type: "number"},
+                {name: 'folios', type: "string"},
+                {name: 'usuarioResponsable', type: "string"},
+                {name: 'referencia', type: "string"},
+                {name: 'codigoUsuario', type: "string"},
+                {name: 'comentario', type: "string"},
+                {name: 'digital', type: "string"}
+            ],
+            id: 'codigo',
+            url: "Decreto",
+            data: {mode: 'L', periodo: $('#cbo_Periodo').val(), codigo: '[[${session.usuario.usuario}]]'}
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+        if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+            $('#div_GrillaPrincipal').jqxGrid('clearselection');
+    }
+    //FUNCION PARA DECRETAR DOCUMENTACION
+    function fn_subDecreto() {
+        decreto = 0;
+        $("#cbo_AreaLaboral").jqxDropDownList('setContent', 'Seleccione');
+        $("#cbo_Usuario").jqxDropDownList('setContent', 'Seleccione');
+        $("#cbo_Prioridad").jqxDropDownList('setContent', 'Seleccione');
+        $("#cbo_TipoDecretos").jqxDropDownList('uncheckAll');
+        $("#txt_Comentario").val('');
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+    }
+    //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+    function fn_GrabarDatos() {
+        var usuarioEmision = '[[${session.usuario.usuario}]]';
+        var prioridad = $("#cbo_Prioridad").val();
+        var area = $("#cbo_AreaLaboral").val();
+        var usuario = $("#cbo_Usuario").val();
+        var comentario = $("#txt_Comentario").val();
+        var tipoDecretos = $("#cbo_TipoDecretos").jqxDropDownList('getCheckedItems');
+        var result = "";
+        var listFinal = '';
+        var lista = new Array();
+        $.each(tipoDecretos, function (index) {
+            result = this.value;
+            lista.push(result);
+        });
+        listFinal = JSON.stringify(lista).replaceAll('"', '').replaceAll('[', '').replaceAll(']', '');
+        $.ajax({
+            type: "POST",
+            url: "IduMesaPartesDecreto",
+            data: {mode: mode, periodo: $('#cbo_Periodo').val(), tipo: tipo, numero: codigo, decreto: decreto,
+                usuarioEmision: usuarioEmision, prioridad: prioridad, area: area,
+                usuario: usuario, comentario: comentario, tipoDecretos: listFinal},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaPrincipal').jqxWindow('close');
+                                    fn_CargarBusqueda();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    //FUNCION PARA VER EL SEGUIMIENTO DEL DECRETO
+    function fn_SeguimientoDecreto() {
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: "decreto", type: "number"},
+                {name: "usuarioDecreta", type: "string"},
+                {name: "usuarioResponsable", type: "string"},
+                {name: "prioridad", type: "string"},
+                {name: "descripcion", type: "string"},
+                {name: "fecha", type: "date"},
+                {name: "fechaRecepcion", type: "date"},
+                {name: "estado", type: "string"}
+            ],
+            id: 'codigo',
+            url: "Decreto",
+            data: {mode: 'S', tipo: tipo, periodo: $('#cbo_Periodo').val(), codigo: codigo}
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        $("#div_GrillaDetalle").jqxGrid({source: dataAdapter});
+        if ($('#div_GrillaDetalle').jqxGrid('getselectedrowindex') >= 0)
+            $('#div_GrillaDetalle').jqxGrid('clearselection');
+        $('#div_VentanaDetalle').jqxWindow({isModal: true});
+        $('#div_VentanaDetalle').jqxWindow('open');
+    }
+</script>
+<div  id='div_Titulo' style="border: none;">
+    <div class="jqx-hideborder">CONSULTA DE DOCUMENTOS DECRETADOS</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr>
+                        <td class="Titulo">Periodo : </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Usuario : </td>
+                        <td><input type="text" id="txt_Usuario" name="txt_Usuario" style='text-transform:uppercase;'/></td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit" /></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaPrincipal" style="display: none;">
+    <div>
+        <span style="float: left;">SUB DECRETAR DOCUMENTACIÓN</span>
+    </div>
+    <div style="overflow: hidden;">
+        <form id="frm_SubDecreto" name="frm_SubDecreto" method="post">
+            <table width="100%" border="0">
+                <tr>
+                    <td class="inputlabel">Prioridad : </td>
+                    <td>
+                        <select id="cbo_Prioridad" name="cbo_Prioridad">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Area : </td>
+                    <td>
+                        <select id="cbo_AreaLaboral" name="cbo_AreaLaboral">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Usuario : </td>
+                    <td>
+                        <select id="cbo_Usuario" name="cbo_Usuario">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Decretos : </td>
+                    <td>
+                        <select id="cbo_TipoDecretos" name="cbo_TipoDecretos">
+                            <option value="0">Seleccione</option>  
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Comentario : </td>
+                    <td><textarea id="txt_Comentario" name="txt_Comentario" style="text-transform: uppercase;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="2">
+                        <div>
+                            <div id="btn_Guardar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                            <div id="btn_Cancelar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>  
+        </form>
+    </div>
+</div>
+<div id="div_VentanaDetalle" style="display: none">
+    <div>
+        <span style="float: left">SEGUIMIENTO DE LA DOCUMENTACIÓN</span>
+    </div>
+    <div style="overflow: hidden">
+        <table width="100%" border="0" >
+            <tr>
+                <td><div id="div_GrillaDetalle"> </div></td>  
+            </tr>
+            <tr>
+                <td class="Summit">
+                    <div>
+                        <div id="btn_Cerrar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display:none;'>
+    <ul>
+        <li style="font-weight: bold">Recibido</li>
+        <li style="font-weight: bold">Ver Documento</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: brown">Sub Decreto</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: blue">Seguimiento Decreto</li>
+    </ul>
+</div>
