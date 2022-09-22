@@ -89,7 +89,6 @@ public class CombosController {
                 new Gson().toJson(combosService.getClasificadorPresupuestalCertificadoPresupuestal(codigo, Utiles.checkNum(codigo2), codigo3, Utiles.checkNum(codigo4)));
             case "clasificadorPresupuestalCertificadoRE" ->
                 new Gson().toJson(combosService.getClasificadorPresupuestalCertificadoPresupuestalRebaja(codigo, Utiles.checkNum(codigo2), codigo3, Utiles.checkNum(codigo4), Utiles.checkNum(codigo5)));
-
             default ->
                 "ERROR";
         };
