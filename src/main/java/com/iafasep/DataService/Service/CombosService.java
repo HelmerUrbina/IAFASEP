@@ -71,5 +71,17 @@ public interface CombosService {
     public List<BeanCombos> getClasificadorPresupuestalCertificadoPresupuestal(String periodo, Integer fuenteFinanciamiento, Integer resolucion, Integer tareaPresupuestal);
 
     public List<BeanCombos> getClasificadorPresupuestalCertificadoPresupuestalRebaja(String periodo, Integer fuenteFinanciamiento, Integer certificado, Integer resolucion, Integer tareaPresupuestal);
-
+    
+    public List<BeanCombos> getFuenteByProgramacion();
+    
+    public List<BeanCombos> getTareaByProgramacion(String periodo, Integer fuente);
+    
+    public List<BeanCombos> getAnioByProgramacion(String periodo);
+    
+    public List<BeanCombos> getClasificadorProgByPeriodoFuenteTarea(String periodo, Integer fuente, Integer tarea);
+    
+    public List<BeanCombos> getunidadMedida();
+    
+    public List<BeanCombos> getItemByUnidadMedida();
+    
 }

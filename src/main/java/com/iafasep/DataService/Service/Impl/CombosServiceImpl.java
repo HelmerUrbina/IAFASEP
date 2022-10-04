@@ -171,4 +171,34 @@ public class CombosServiceImpl implements CombosService {
         return combosDAO.geClasificadorPresupuestalCertificadoPresupuestalRebaja(periodo, fuenteFinanciamiento, certificado, resolucion, tareaPresupuestal);
     }
 
+    @Override
+    public List<BeanCombos> getFuenteByProgramacion() {
+        return combosDAO.getFuenteByProgramacion();
+    }
+
+    @Override
+    public List<BeanCombos> getTareaByProgramacion(String periodo, Integer fuente) {
+        return combosDAO.getTareaByProgramacion(periodo, fuente);
+    }
+
+    @Override
+    public List<BeanCombos> getAnioByProgramacion(String periodo) {
+        return combosDAO.getAnioByProgramacion(periodo);
+    }
+
+    @Override
+    public List<BeanCombos> getClasificadorProgByPeriodoFuenteTarea(String periodo, Integer fuente, Integer tarea) {
+        return combosDAO.getClasificadorProgByPeriodoFuenteTarea(periodo,fuente,tarea);
+    }
+
+    @Override
+    public List<BeanCombos> getunidadMedida() {
+        return combosDAO.getunidadMedida();
+    }
+
+    @Override
+    public List<BeanCombos> getItemByUnidadMedida() {
+        return combosDAO.getItemByUnidadMedida();
+    }
+
 }

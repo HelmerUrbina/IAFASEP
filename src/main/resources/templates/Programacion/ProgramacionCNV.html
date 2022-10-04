@@ -1,0 +1,658 @@
+<script>
+    var modeCNV = null;
+    var codigo = null;
+    var itemGlobal = 0;
+    var clasificadorGlobal = 0;
+    console.log(periodoGlobal);
+    console.log(fuenteGlobal);
+    console.log(tareaGlobal);
+    console.log('principal -> '+eventoPrincipal);
+    console.log('final -> '+eventoFinal);
+    console.log('nivel -> '+nivel);
+    $(document).ready(function () {
+        //DEFINIMOS LOS ESTILOS DE LAS GRILLAS
+//        var cellclass = function (row, datafield, value, rowdata) {
+//            if (datafield === "total" || datafield === "totalDemandaGlobal") {
+//                return "RowBold";
+//            }
+//            if (datafield === "precio") {
+//                return "RowBlue";
+//            }
+//            if (datafield === "cantidad") {
+//                return "RowBrown";
+//            }
+//            if (datafield === "demandaGlobal") {
+//                return "RowPurple";
+//            }
+//        };
+        //PARA LA GRILLA DE LA CABECERA
+        $("#div_GrillaCNV").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 90),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            showtoolbar: true,
+            statusbarheight: 25,
+            rendertoolbar: function (toolbar) {
+                // appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var addButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var reloadButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/refresh.gif' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var exportButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonReporte = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(addButton);
+                container.append(reloadButton);
+                container.append(exportButton);
+                container.append(ButtonReporte);
+                toolbar.append(container);
+                addButton.jqxButton({width: 30, height: 22});
+                addButton.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                reloadButton.jqxButton({width: 30, height: 22});
+                reloadButton.jqxTooltip({position: 'bottom', content: "Actualiza Pantalla"});
+                exportButton.jqxButton({width: 30, height: 22});
+                exportButton.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonReporte.jqxButton({width: 30, height: 22});
+                ButtonReporte.jqxTooltip({position: 'bottom', content: "Reporte"});
+                // Adicionar un Nuevo Registro en la Cabecera.
+                addButton.click(function (event) {
+                    modeCNV = 'I';
+                    codigo = 0;
+                    itemGlobal = 0;
+                    clasificadorGlobal = 0;
+                    fn_cargarComboAjax("#cbo_Clasificador", {mode: 'clasificadorProgByPeriodoFuenteTarea', codigo: periodoGlobal, codigo2: fuenteGlobal, codigo3: tareaGlobal});
+                    
+                    $("#cbo_Clasificador").jqxDropDownList('setContent', "Seleccione");
+                    $("#cbo_Clasificador").jqxDropDownList({disabled: false});
+                    $("#div_unidad").val('');
+                    $("#txt_Item").val('');
+                    $("#txt_Item").jqxInput({disabled: false});
+                    $('#div_Precio').val(0);
+                    
+                    $('#div_DemandaGA').val(0);
+                    $('#div_DemandaGB').val(0);
+                    $('#div_DemandaGC').val(0);
+                    
+                    $('#div_CantidadA').val(0);
+                    $('#div_CantidadB').val(0);
+                    $('#div_CantidadC').val(0);
+                    
+                    $('#div_TotalA').val(0);
+                    $('#div_TotalB').val(0);
+                    $('#div_TotalC').val(0);
+                    
+                    $('#div_SaldoA').val(0);
+                    $('#div_SaldoB').val(0);
+                    $('#div_SaldoC').val(0);
+            
+                    $('#div_VentanaCNV').jqxWindow({isModal: true, modalOpacity: 0.8});
+                    $('#div_VentanaCNV').jqxWindow('open');
+                });
+                // Recarga la Data en la Grilla
+                reloadButton.click(function (event) {
+                    fn_RefrescarCNV();
+                });
+                //export to excel
+                exportButton.click(function (event) {
+                    $("#div_GrillaCNV").jqxGrid('exportdata', 'xls', 'CNVListadoInsumos');
+                });
+                //reporte
+                ButtonReporte.click(function (event) {
+//                    $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.9});
+//                    $('#div_Reporte').jqxWindow('open');
+                });
+            },
+            columns: [{
+                    text: 'N°', sortable: false, filterable: false, editable: false,
+                    groupable: false, draggable: false, resizable: false, align: 'center',
+                    datafield: '', columntype: 'number', width: '3%', pinned: true,
+                    cellsrenderer: function (row, column, value) {
+                        return "<div style='margin: 6px; text-align: center;'>" + (value + 1) + "</div>";
+                    }
+                },
+                {text: 'CLASIFICADOR', dataField: 'clasificadorPresupuestal', columngroup: 'Titulo', filtertype: 'checkedlist', width: '10%', align: 'center', cellsAlign: 'left'},
+                {text: 'UNIDAD MEDIDA', dataField: 'unidadMedida', columngroup: 'Titulo', width: '10%', align: 'center', cellsAlign: 'center'},
+                {text: 'ITEM', dataField: 'item', columngroup: 'Titulo', filtertype: 'checkedlist', width: '15%', align: 'center', cellsAlign: 'left'},
+                {text: 'PRECIO', dataField: 'precio', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'CANTIDAD A', dataField: 'cantidadA', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'TOTAL A', dataField: 'totalA', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'CANTIDAD B', dataField: 'cantidadB', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'TOTAL B', dataField: 'totalB', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'CANTIDAD C', dataField: 'cantidadC', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'TOTAL C', dataField: 'totalC', columngroup: 'Titulo', width: '8%', align: 'center', cellsAlign: 'center'},
+                {text: 'ESTADO', dataField: 'estado', columngroup: 'Titulo', filtertype: 'checkedlist', width: '6%', align: 'center', cellsAlign: 'center'}
+            ],
+            columngroups: [
+                {text: '<strong>LISTADO DE INSUMOS</strong>', name: 'Titulo', align: 'center'}
+            ]
+        });
+        // create context menu
+        var contextMenu = $("#div_ContextMenuCNV").jqxMenu({width: 200, height: 88, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaCNV").on('contextmenu', function () {
+            return false;
+        });
+        // handle context menu clicks.
+        $("#div_GrillaCNV").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaCNV").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        $("#div_ContextMenuCNV").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (eventoFinal !== null || eventoFinal === '') {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    modeCNV = 'U';
+                    fn_EditarCNV();
+                } else if ($.trim($(opcion).text()) === "Anular") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Anular este registro!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    modeCNV = 'D';
+                                    fn_GrabarDatosFinal();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "<-- Regresar") {
+                    fn_RegresarSecundarioCNV();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No hay Opcion a Mostar',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'orange',
+                        typeAnimated: true
+                    });
+                }
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'red',
+                    typeAnimated: true
+                });
+            }
+        });
+        //Seleccionar un Registro de la Cabecera
+        $("#div_GrillaCNV").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaCNV").jqxGrid('getrowdata', args.rowindex);
+            console.log(row)
+            codigo = row['codigo'];
+            const codigoArray = codigo.split('-');
+            itemGlobal = codigoArray[0];
+            clasificadorGlobal = codigoArray[1];
+            
+            $("#cbo_Clasificador").jqxDropDownList('setContent', row['clasificadorPresupuestal']);
+            $("#cbo_Clasificador").jqxDropDownList({disabled: true});
+            $("#txt_Item").val(row['item']);
+            $("#txt_Item").jqxInput({disabled: true});
+            $("#div_unidad").val(row['unidadMedida']);
+            $('#div_Precio').val(row['precio']);
+            
+            $('#div_DemandaGA').val(row['demandaA']);
+            $('#div_DemandaGB').val(row['demandaB']);
+            $('#div_DemandaGC').val(row['demandaC']);
+                    
+            $('#div_CantidadA').val(row['cantidadA']);
+            $('#div_CantidadB').val(row['cantidadB']);
+            $('#div_CantidadC').val(row['cantidadC']);
+
+            $('#div_TotalA').val(row['totalA']);
+            $('#div_TotalB').val(row['totalB']);
+            $('#div_TotalC').val(row['totalC']);
+
+            $('#div_SaldoA').val(row['saldoA']);
+            $('#div_SaldoB').val(row['saldoB']);
+            $('#div_SaldoC').val(row['saldoC']);
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 800;
+                var alto = 280;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaCNV').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarFinal'),
+                    initContent: function () {
+                        $("#cbo_Clasificador").jqxDropDownList({animationType: 'fade', width: 550, dropDownWidth: 450, height: 25});
+                        $('#cbo_Clasificador').on('change', function () {
+                            const saldos = $('#cbo_Clasificador').val().split(",");
+                            $('#div_SaldoA').val(saldos[1]);
+                            $('#div_SaldoB').val(saldos[2]);
+                            $('#div_SaldoC').val(saldos[3]);
+                        });
+                        
+                        
+                        var sourceItem = {
+                            datatype: "json",
+                            datafields: [
+                                {name: 'codigo'},
+                                {name: 'descripcion'}
+                            ],
+                            url: "CombosAjax",
+                            data: {mode: 'itemByUnidadMedida'}
+                        };
+                        var dataAdapterItem = new $.jqx.dataAdapter(sourceItem);
+                        $("#txt_Item").jqxInput({width: 550, height: 22, placeHolder: "SELECCIONE ITEM", searchMode: 'startswithignorecase', source: dataAdapterItem, minLength: 1, items: 15, displayMember: "descripcion", valueMember: "codigo", dropDownWidth: 650, popupZIndex: 99999});
+                        $('#txt_Item').on('select', function (event) {
+                            if (event.args) {                                
+                                var item = event.args.item;
+                                if (item) {
+                                    const itemD = item.value.split(",");
+                                    itemGlobal = itemD[0];
+                                    $('#div_unidad').val(itemD[1]);
+                                }
+                            }
+                        });
+                        $("#div_unidad").jqxInput({placeHolder: "UNIDAD MEDIDA", width: 380, height: 25, minLength: 2, maxLength: 200, disabled: true});
+                        $("#div_Precio").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        $('#div_Precio').on('textchanged', function (event) {
+                            fn_VerTotalA();
+                            fn_VerTotalB();
+                            fn_VerTotalC();
+                        });
+                        
+                        $("#div_CantidadA").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        $('#div_CantidadA').on('textchanged', function (event) {
+                            fn_VerTotalA();
+                        });
+                        $("#div_CantidadB").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        $('#div_CantidadB').on('textchanged', function (event) {
+                            fn_VerTotalB();
+                        });
+                        $("#div_CantidadC").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        $('#div_CantidadC').on('textchanged', function (event) {
+                            fn_VerTotalC();
+                        });
+                        
+                        $("#div_TotalA").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $("#div_TotalB").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $("#div_TotalC").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        
+                        $("#div_DemandaGA").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        $("#div_DemandaGB").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        $("#div_DemandaGC").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2});
+                        
+                        $("#div_SaldoA").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $("#div_SaldoB").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        $("#div_SaldoC").jqxNumberInput({width: 120, height: 25, max: 999999999, digits: 9, decimalDigits: 2, disabled: true});
+                        
+                        $('#btn_CancelarFinal').jqxButton({width: '65px', height: 25});
+                        $('#btn_GuardarFinal').jqxButton({width: '65px', height: 25});
+                        $('#btn_GuardarFinal').on('click', function (event) {
+                            fn_GrabarDatosCNV();
+                        });
+                    }
+                });
+//                ancho = 400;
+//                alto = 105;
+//                posicionX = ($(window).width() / 2) - (ancho / 2);
+//                posicionY = ($(window).height() / 2) - (alto / 2);
+//                $('#div_ReporteCNV').jqxWindow({
+//                    position: {x: posicionX, y: posicionY},
+//                    width: ancho, height: alto, resizable: false,
+//                    cancelButton: $('#btn_CerrarImprimir'),
+//                    initContent: function () {
+//                        $("#div_PROG0001").jqxRadioButton({width: 200, height: 20});
+//                        $('#div_PROG0001').on('checked', function (event) {
+//                            reporte = 'PROG0013';
+//                        });
+//                        $("#div_PROG0002").jqxRadioButton({width: 200, height: 20});
+//                        $('#div_PROG0002').on('checked', function (event) {
+//                            reporte = 'PROG0002';
+//                        });
+//                        $('#btn_CerrarImprimir').jqxButton({width: '65px', height: 25});
+//                        $('#btn_Imprimir').jqxButton({width: '65px', height: 25});
+//                        $('#btn_Imprimir').on('click', function (event) {
+//                            var msg = "";
+//                            switch (reporte) {
+//                                case "PROG0002":
+//                                    break;
+//                                case "PROG0013":
+//                                    break;
+//                                default:
+//                                    msg += "Debe selecciona una opción.<br>";
+//                                    break;
+//                            }
+//                            if (msg === "") {
+//                                var url = 'Reportes?reporte=' + reporte + '&periodo=' + periodo + '&fuenteFinanciamiento=' + fuente + '&tareaPresupuestal=' + tarea + '&codigo=' + codigo;
+//                                window.open(url, '_blank');
+//                            } else {
+//                                $.alert({
+//                                    theme: 'material',
+//                                    title: 'AVISO DEL SISTEMA',
+//                                    content: msg,
+//                                    animation: 'zoom',
+//                                    closeAnimation: 'zoom',
+//                                    type: 'red',
+//                                    typeAnimated: true
+//                                });
+//                            }
+//                        });
+//                    }
+//                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_RefrescarCNV();
+            
+            var demandaGlobal = 'Demanda G. '
+            var cantidad = 'Cantidad '
+            $('#DemandaGA').text(demandaGlobal+(parseInt(periodoGlobal))+' : ');
+            $('#DemandaGB').text(demandaGlobal+(parseInt(periodoGlobal)+1)+' : ');
+            $('#DemandaGC').text(demandaGlobal+(parseInt(periodoGlobal)+2)+' : ');
+            $('#CantidadA').text(cantidad+(parseInt(periodoGlobal))+' : ');
+            $('#CantidadB').text(cantidad+(parseInt(periodoGlobal)+1)+' : ');
+            $('#CantidadC').text(cantidad+(parseInt(periodoGlobal)+2)+' : ');
+            
+        });
+        //FUNCION PARA REFRESCAR LA PANTALLA
+        function fn_RefrescarCNV() {
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: 'codigo', type: "string"},
+                    {name: 'item', type: "string"},
+                    {name: 'clasificadorPresupuestal', type: "string"},
+                    {name: 'unidadMedida', type: "string"},
+                    {name: 'precio', type: "string"},
+                    {name: 'cantidadA', type: "string"},
+                    {name: 'cantidadB', type: "string"},
+                    {name: 'cantidadC', type: "string"},
+                    {name: 'totalA', type: "string"},
+                    {name: 'totalB', type: "string"},
+                    {name: 'totalC', type: "string"},
+                    {name: 'demandaA', type: "string"},
+                    {name: 'demandaB', type: "string"},
+                    {name: 'demandaC', type: "string"},
+                    {name: 'saldoA', type: "string"},
+                    {name: 'saldoB', type: "string"},
+                    {name: 'saldoC', type: "string"},
+                    {name: 'estado', type: "string"}
+                ],
+                id: 'codigo',
+                url: "ProgramacionCNVDetalle",
+                data: {mode: 'G', periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal, eventoPrincipal: eventoPrincipal, eventoFinal: eventoFinal}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaCNV").jqxGrid({source: dataAdapter});
+        }
+        //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+        function fn_EditarCNV() {
+            $('#div_VentanaCNV').jqxWindow({isModal: true, modalOpacity: 0.8});
+            $('#div_VentanaCNV').jqxWindow('open');
+        }
+        //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+        function fn_GrabarDatosCNV() {
+            var vali=0;
+            
+            if($('#div_TotalA').val()>$('#div_SaldoA').val() || 
+                    $('#div_TotalB').val()>$('#div_SaldoB').val() || 
+                    $('#div_TotalC').val()>$('#div_SaldoC').val() ){    
+                vali=1;
+            }
+            if(itemGlobal===0 ){    
+                vali=2;
+            }
+            if($("#cbo_Clasificador").val()==='' ){    
+                vali=3;
+            }
+            
+            if(vali === 0){
+                var clasificadorFinal = clasificadorGlobal;
+                if(modeCNV === 'I'){
+                    const clasificador = $("#cbo_Clasificador").val().split(',');
+                    clasificadorFinal = clasificador[0];
+                }
+                
+                var item = itemGlobal;
+                var precio = $("#div_Precio").val();
+                var jsonContcat = $("#div_CantidadA").val()+'-'+$("#div_CantidadA").val()+','+
+                                  $("#div_CantidadB").val()+'-'+$("#div_CantidadB").val()+','+
+                                  $("#div_CantidadC").val()+'-'+$("#div_CantidadC").val();
+                var json = {mode: modeCNV, periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal,
+                            eventoPrincipal: eventoPrincipal, eventoFinal: eventoFinal,item: item,
+                            clasificador: clasificadorFinal, precio: precio, json: jsonContcat};
+                console.log(json);
+            $.ajax({
+                type: "GET",
+                url: "IduProgramacionCNV",
+                data: {mode: modeCNV, periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal,
+                            eventoPrincipal: eventoPrincipal, eventoFinal: eventoFinal,item: item,
+                            clasificador: clasificadorFinal, precio: precio, json: jsonContcat},
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente!!',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        $('#div_VentanaCNV').jqxWindow('close');
+                                        fn_RefrescarCNV();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+            }else {
+                var periodotext = parseInt(periodoGlobal);
+                var texto = 'SELECCION UN CLASIFICADOR'
+                if(vali === 2){
+                    texto = 'SELECCION UN ITEM'
+                }else if(vali === 1){
+                    texto = 'LOS IMPORTES SOBRE PASAN EL SALDO DISPONIBLE<br/>'+
+                           'Total '+(periodotext) +' S/'+($('#div_SaldoA').val()-$('#div_TotalA').val())+'<br/>'+
+                           'Total '+(periodotext+1)+' S/'+($('#div_SaldoB').val()-$('#div_TotalB').val())+'<br/>'+
+                           'Total '+(periodotext+2)+' S/'+($('#div_SaldoC').val()-$('#div_TotalC').val());
+                }
+                
+                $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: texto,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+            }
+        }
+        function fn_VerTotalA() {
+            var total = (parseFloat($("#div_Precio").val())) * (parseFloat($("#div_CantidadA").val()));
+            $("#div_TotalA").val(parseFloat(total).toFixed(2));
+        }
+        function fn_VerTotalB() {
+            var total = (parseFloat($("#div_Precio").val())) * (parseFloat($("#div_CantidadB").val()));
+            $("#div_TotalB").val(parseFloat(total).toFixed(2));
+        }
+        function fn_VerTotalC() {
+            var total = (parseFloat($("#div_Precio").val())) * (parseFloat($("#div_CantidadC").val()));
+            $("#div_TotalC").val(parseFloat(total).toFixed(2));
+        }
+        function fn_RegresarSecundarioCNV() {
+            console.log('alsjndlad')
+                var $contenidoAjax = $('#div_GrillaCNV').html('<img src="images/Fondos/cargando.gif">');
+                $.ajax({
+                    type: "GET",
+                    url: "ProgramacionEventoPrincipal",
+                    data: {mode: 'programacionEventoFinal'},
+                    success: function (data) {
+                        $contenidoAjax.html(data);
+                    }
+                });
+//            if (nivel === 0) {
+//                fn_RefrescarFinal();
+//            } else {
+//                $("#div_GrillaCNV").remove();
+//                $("#div_VentanaCNV").remove();
+//                $("#div_ContextMenuCNV").remove();
+//                $("#div_ReporteCNV").remove();
+//                $("#div_GrillaEventoSecundario").remove();
+//                $("#div_VentanaEventoSecundario").remove();
+//                $("#div_ContextMenuEventoSecundario").remove();
+//                $("#div_ReporteEventoSecundario").remove();
+//                var $contenidoAjax = $('#div_CNV').html('<img src="images/Fondos/cargando.gif">');
+//                $.ajax({
+//                    type: "GET",
+//                    url: "ProgramacionEventoPrincipal",
+//                    data: {mode: 'programacionEventoSecundario'},
+//                    success: function (data) {
+//                        $contenidoAjax.html(data);
+//                    }
+//                });
+//            }
+        }
+    });
+</script>
+<div id="div_CNV">
+    <div id="div_GrillaCNV"></div>
+    <div id="div_VentanaCNV" style="display: none">
+        <div>
+            <span style="float: left">REGISTRO DE INSUMOS</span>
+        </div>
+        <div style="overflow: hidden">
+            <form id="frm_CNV" name="frm_CNV" method="post" >
+                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td class="inputlabel">Clasificador : </td>
+                        <td colspan="5"><select id="cbo_Clasificador" name="cbo_Clasificador">
+                                <option value="0">Seleccione</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel">Item : </td>
+                        <td colspan="5"><input type="text" id="txt_Item" name="txt_Item" autocomplete="off"/></td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel">Unidad Medida : </td>
+                        <td colspan="5"><input type="text" class="text-input" id="div_unidad" name="div_unidad" style="text-transform: uppercase;"/></td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel">Precio : </td>
+                        <td colspan="5"><div id="div_Precio"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel" id="DemandaGA" ></td>
+                        <td><div id="div_DemandaGA"></div></td>
+                        <td class="inputlabel" id="DemandaGB" ></td>
+                        <td><div id="div_DemandaGB"></div></td>
+                        <td class="inputlabel" id="DemandaGC" ></td>
+                        <td><div id="div_DemandaGC"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel" id="CantidadA" ></td>
+                        <td><div id="div_CantidadA"></div></td>
+                        <td class="inputlabel" id="CantidadB" ></td>
+                        <td><div id="div_CantidadB"></div></td>
+                        <td class="inputlabel" id="CantidadC" ></td>
+                        <td><div id="div_CantidadC"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel" >Total :</td>
+                        <td><div id="div_TotalA"></div></td>
+                        <td class="inputlabel" >Total :</td>
+                        <td><div id="div_TotalB"></div></td>
+                        <td class="inputlabel" >Total :</td>
+                        <td><div id="div_TotalC"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="inputlabel">Saldo :</td>
+                        <td><div id="div_SaldoA"></div></td>
+                        <td class="inputlabel">Saldo :</td>
+                        <td><div id="div_SaldoB"></div></td>
+                        <td class="inputlabel">Saldo :</td>
+                        <td><div id="div_SaldoC"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="Summit" colspan="6">
+                            <div>
+                                <input type="button" id="btn_GuardarFinal"  value="Guardar" style="margin-right: 20px"/>
+                                <input type="button" id="btn_CancelarFinal" value="Cancelar" style="margin-right: 20px"/> 
+                            </div>
+                        </td>
+                    </tr>
+                </table>  
+            </form>
+        </div>
+    </div>
+    <div id='div_ContextMenuCNV' style='display: none; '>
+        <ul>
+            <li style="color: blue; font-weight: bold;">Editar</li>
+            <li style="color: brown; font-weight: bold;">Anular</li>
+            <li type='separator'></li>
+            <li><-- Regresar</li>
+        </ul>
+    </div>
+    <div id="div_ReporteCNV" style="display: none">
+<!--        <div>
+            <span style="float: left">LISTADO DE REPORTES</span>
+        </div>
+        <div style="overflow: hidden">
+            <div id='div_PROG0001'>Resumen</div>
+            <div id='div_PROG0002'>CNV</div>
+            <div class="Summit">
+                <input type="submit" id="btn_Imprimir" name="btn_Imprimir" value="Ver" style="margin-right: 20px"/>
+                <input type="button" id="btn_CerrarImprimir" name="btn_CerrarImprimir" value="Cerrar" style="margin-right: 20px"/>
+            </div>
+        </div>-->
+    </div>
+</div>

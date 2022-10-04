@@ -26,6 +26,7 @@ public interface ProgramacionMultiAnualDAO extends JpaRepository<BeanProgramacio
     @Query(nativeQuery = true, value = "SELECT ROWNUM CONTADOR,\n" +
                                         "       NTAREA_PRESUPUESTAL_CODIGO TAREA_CODIGO,\n" +
                                         "       PK_UTIL.FUN_TAREA_PRESUPUESTAL_ABREVIATURA(NTAREA_PRESUPUESTAL_CODIGO) TAREA,\n" +
+//                                        "       PK_UTIL.FUN_TAREA_PRESUPUESTAL_ABRE(NTAREA_PRESUPUESTAL_CODIGO) TAREA,\n" +
                                         "       CANIO_REGISTRO ANIO,\n" +
                                         "       NPROGRAMACION_MULTIANUAL_IMPOR PROGRAMADO,\n" +
                                         "       COALESCE(PK_UTIL.FUN_PROGRAMACION_MULTI_DET(CPERIODO_CODIGO,CANIO_REGISTRO,NFUENTE_FINANCIAMIENTO_CODIGO,NTAREA_PRESUPUESTAL_CODIGO),0) DETALLE,\n" +
