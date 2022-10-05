@@ -1,0 +1,1101 @@
+<script>
+    var codigo = null;
+    var mode = null;
+    var msg = "";
+    var mode2 = null;
+    var select2 = null;
+    var ubigeoGlobal = null;
+    var tareaGlobal = null;
+    var clasificadorGlobal = null;
+    var titleprog = "PROG. ";
+    var titledetalle = "DETALLE ";
+    var titlesaldo = "SALDO ";
+    var dataLocal = [];
+    var saldo1=0;
+    var saldo2=0;
+    var saldo3=0;
+    var importUpdate1 = 0;
+    var importUpdate2 = 0;
+    var importUpdate3 = 0;
+//    var columns = null;
+    $(document).ready(function () {        
+        $("#div_Titulo").jqxExpander({width: '100%'});
+        
+        $("#cbo_Periodo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 120, height: 25});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $('#cbo_Periodo').on('change', function () {
+            fn_Refrescar();
+        });
+        
+        $("#cbo_FuenteFinanciamiento").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 300, dropDownWidth: 300, height: 25});
+        $('#cbo_FuenteFinanciamiento').on('change', function () {
+            fn_Refrescar();
+        });
+        
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 65),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            showtoolbar: true,
+            editable: false,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                // ADICIONAMOS BOTONES A LA BARRA DE ESTADOS
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 36, height: 34});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON NUEVO
+                ButtonNuevo.click(function (event) {
+                    mode = 'I';
+                    codigo = '0';
+                    var titleImpor = 'IMPORTE ';
+                    var titleMeta = 'META ';
+                    var periodoCmb = parseInt($("#cbo_Periodo").val());
+                    
+                    $("#cbo_TareaPresupuestal").jqxDropDownList('clear');
+                    fn_cargarComboAjax("#cbo_TareaPresupuestal", {mode: 'tareasPresupuestales'});
+                    $("#cbo_TareaPresupuestal").jqxDropDownList({disabled: false});
+                    $("#cbo_Departamento").jqxDropDownList('clear');
+                    fn_cargarComboAjax("#cbo_Departamento", {mode: 'departamentos'});
+                    $("#cbo_Departamento").jqxDropDownList({disabled: false});
+                    $("#cbo_Provincia").jqxDropDownList('clear');
+                    $("#cbo_Provincia").jqxDropDownList({disabled: false});
+                    $("#cbo_Distrito").jqxDropDownList('clear');
+                    $("#cbo_Distrito").jqxDropDownList({disabled: false});
+                    
+                    $('#labelImport1').text(titleImpor+periodoCmb+' : ');
+                    $('#labelMeta1').text(titleMeta+periodoCmb+' : ');
+                    $('#labelImport2').text(titleImpor+(periodoCmb+1)+' : ');
+                    $('#labelMeta2').text(titleMeta+(periodoCmb+1)+' : ');
+                    $('#labelImport3').text(titleImpor+(periodoCmb+2)+' : ');
+                    $('#labelMeta3').text(titleMeta+(periodoCmb+2)+' : ');
+                    
+                    $("#txt_Import1").val(0);
+                    $("#txt_Meta1").val(0);
+                    $("#txt_Import2").val(0);
+                    $("#txt_Meta2").val(0);
+                    $("#txt_Import3").val(0);
+                    $("#txt_Meta3").val(0);
+                    
+                    $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.8});
+                    $('#div_VentanaPrincipal').jqxWindow('open');
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+//                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'Periodos');
+                });
+            },
+            columns : [
+                {text: 'TAREA', dataField: 'tarea', width: '20%', align: 'center', cellsAlign: 'center'},
+                {text: titleprog+("202..") , dataField: 'progracion1', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titledetalle+("202..") , dataField: 'detalle1', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titlesaldo+("202..") , dataField: 'saldo1', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titleprog+("202.."+1) , dataField: 'progracion2', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titledetalle+("202.."+1) , dataField: 'detalle2', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titlesaldo+("202.."+1) , dataField: 'saldo2', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titleprog+("202.."+2) , dataField: 'progracion3', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titledetalle+("202.."+2) , dataField: 'detalle3', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: titlesaldo+("202.."+2) , dataField: 'saldo3', width: '8%', align: 'center', cellsAlign: 'right'},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        
+        $("#div_GrillaDetalle").jqxGrid({
+            width: '100%',
+            height: 380,
+            pageable: true,
+            columnsresize: true,
+            showtoolbar: true,
+            altrows: false,
+            editable: false,
+            autoheight: false,
+            autorowheight: false,
+            sortable: true,
+            rendertoolbar: function (toolbar) {
+                // appends buttons to the status bar.
+                var containerRegistro = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevoRegistro = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=18 height=18/><span style='margin-left: 2px; position: relative; top: -3px;'></span></div>");
+                var ButtonEditarRegistro = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/edit.png' width=18 height=18/><span style='margin-left: 2px; position: relative; top: -3px;'></span></div>");
+                var ButtonEliminaRegistro = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/delete.png' width=18 height=18/><span style='margin-left: 2px; position: relative; top: -3px;'></span></div>");
+                containerRegistro.append(ButtonNuevoRegistro);
+                containerRegistro.append(ButtonEditarRegistro);
+                containerRegistro.append(ButtonEliminaRegistro);
+                toolbar.append(containerRegistro);
+                ButtonNuevoRegistro.jqxButton({width: 30, height: 22});
+                ButtonNuevoRegistro.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonEditarRegistro.jqxButton({width: 30, height: 22});
+                ButtonEditarRegistro.jqxTooltip({position: 'bottom', content: "Editar Registro"});
+                ButtonEliminaRegistro.jqxButton({width: 30, height: 22});
+                ButtonEliminaRegistro.jqxTooltip({position: 'bottom', content: "Eliminar Registro"});
+                // add new row.
+                ButtonNuevoRegistro.click(function (event) {
+                    mode2='I';
+                    select2=0;
+                    $("#cbo_Clasificador").jqxDropDownList('clear');
+                    fn_cargarComboAjax("#cbo_Clasificador", {mode: 'clasificadorPresupuestalByPeriodoTareaPresupuestal', 
+                                                     codigo: $("#cbo_Periodo").val(), codigo2: tareaGlobal});
+                    $("#cbo_Clasificador").jqxDropDownList('setContent', 'Seleccione');
+                    $("#cbo_Clasificador").jqxDropDownList({disabled: false});
+                    
+                    $("#txt_Import1DetalleAsig").val('');
+                    $("#txt_Import2DetalleAsig").val('');
+                    $("#txt_Import3DetalleAsig").val('');
+                    
+                    //se calculara el saldo que resta de las cantidades de importe
+                    $("#txt_Saldo1DetalleAsig").val(''+saldo1);
+                    $("#txt_Saldo1DetalleAsig").jqxNumberInput({disabled: true});
+                    $("#txt_Saldo2DetalleAsig").val(''+saldo2);
+                    $("#txt_Saldo2DetalleAsig").jqxNumberInput({disabled: true});
+                    $("#txt_Saldo3DetalleAsig").val(''+saldo3);
+                    $("#txt_Saldo3DetalleAsig").jqxNumberInput({disabled: true});
+                    
+                    $('#div_VentanaDetalleAsig').jqxWindow({isModal: true});
+                    $('#div_VentanaDetalleAsig').jqxWindow('open');
+                    
+                    $('#div_GrillaDetalle').jqxGrid('clearselection');
+                });
+                // edit new row.
+                ButtonEditarRegistro.click(function (event) {
+                    if (select2 !== 0 || parseInt($('#div_GrillaDetalle').jqxGrid('getselectedrowindex')) !== -1) {
+                        mode2 = 'U';
+                        importUpdate1 = $("#txt_Import1DetalleAsig").val();
+                        importUpdate2 = $("#txt_Import2DetalleAsig").val();
+                        importUpdate3 = $("#txt_Import3DetalleAsig").val();
+                        saldo1 = saldo1+ parseInt($("#txt_Import1DetalleAsig").val());
+                        saldo2 = saldo2+ parseInt($("#txt_Import2DetalleAsig").val());
+                        saldo3 = saldo3+ parseInt($("#txt_Import3DetalleAsig").val());
+                        $("#txt_Saldo1DetalleAsig").val(saldo1);
+                        $("#txt_Saldo1DetalleAsig").jqxNumberInput({disabled: true});
+                        $("#txt_Saldo2DetalleAsig").val(saldo2);
+                        $("#txt_Saldo2DetalleAsig").jqxNumberInput({disabled: true});
+                        $("#txt_Saldo3DetalleAsig").val(saldo3);
+                        $("#txt_Saldo3DetalleAsig").jqxNumberInput({disabled: true});
+                        $('#div_VentanaDetalleAsig').jqxWindow({isModal: true});
+                        $('#div_VentanaDetalleAsig').jqxWindow('open');
+                        $('#div_GrillaDetalle').jqxGrid('clearselection');
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'DEBE SELECCIONAR UN REGISTRO',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'orange',
+                            typeAnimated: true
+                        });
+                    }
+                });
+                // desactiva selected row.
+                ButtonEliminaRegistro.click(function (event) {
+                    if (select2 !== 0 || parseInt($('#div_GrillaDetalle').jqxGrid('getselectedrowindex')) !== -1) {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Desea Eliminar este Registro!',
+                            theme: 'material',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true,
+                            buttons: {
+                                aceptar: {
+                                    text: 'Aceptar',
+                                    btnClass: 'btn-primary',
+                                    keys: ['enter', 'shift'],
+                                    action: function () {
+                                        mode2='D';
+                                        fn_GrabarDatosDetalleClasificador();
+                                        $('#div_GrillaDetalle').jqxGrid('clearselection');
+                                    }
+                                },
+                                cancelar: function () {
+                                    $('#div_GrillaDetalle').jqxGrid('clearselection');
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'DEBE SELECCIONAR UN REGISTRO',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'orange',
+                            typeAnimated: true
+                        });
+                    }
+                });
+            },
+            columns: [
+                {text: 'CLASIFICADOR', datafield: 'clasificador', width: '40%', align: 'center', cellsAlign: 'left'},
+                {text: 'IMPORTE 202..1', datafield: 'importe1', width: '20%', align: 'center', cellsAlign: 'center'},
+                {text: 'IMPORTE 202..2', datafield: 'importe2', width: '20%', align: 'center', cellsAlign: 'center'},
+                {text: 'IMPORTE 202..3', datafield: 'importe3', width: '20%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        
+        // DEFINIMOS EL MENU CONTEXTUAL
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 180, height: 140, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (codigo === null || codigo === '') {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            } else {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    mode = 'U';
+                    fn_EditarRegistro();
+                }else if ($.trim($(opcion).text()) === "Ingresar Detalle") {
+                    dataLocal=[];
+                    select2=0;
+                    mode2 = null;
+                    var titleImpor = 'IMPORTE ';
+                    var periodoCmb = parseInt($("#cbo_Periodo").val());
+                    $('#labelImport1Detalle').text(titleImpor+periodoCmb+' : ');
+                    $('#labelImport2Detalle').text(titleImpor+(periodoCmb+1)+' : ');
+                    $('#labelImport3Detalle').text(titleImpor+(periodoCmb+2)+' : ');
+                    $('#div_VentanaDetalle').jqxWindow({isModal: true});
+                    $('#div_VentanaDetalle').jqxWindow('open');
+                    var titleImpor = 'IMPORTE ';
+                    var titleSaldo = 'SALDO S/. ';
+                    var periodoCmb = parseInt($("#cbo_Periodo").val());
+                    $('#labelImport1DetalleAsig').text(titleImpor+periodoCmb+' : ');
+                    $('#labelSaldo1Detalle').text(titleSaldo+periodoCmb+' : ');
+                    $('#labelImport2DetalleAsig').text(titleImpor+(periodoCmb+1)+' : ');
+                    $('#labelSaldo2Detalle').text(titleSaldo+(periodoCmb+1)+' : ');
+                    $('#labelImport3DetalleAsig').text(titleImpor+(periodoCmb+2)+' : ');
+                    $('#labelSaldo3Detalle').text(titleSaldo+(periodoCmb+2)+' : ');
+                    fn_RefrescarDetalle();
+                    if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                        $('#div_GrillaPrincipal').jqxGrid('clearselection');
+                }else if ($.trim($(opcion).text()) === "Activar") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Activar esta Programación!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'A';
+                                    fn_GrabarDatos();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Desactivar") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Desactivar esta Programación!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'D';
+                                    fn_GrabarDatos();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Opción NO VALIDA!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            console.log(row);
+            codigo = row.tareaCodigo;
+            ubigeoGlobal = row.ubigeo;
+            tareaGlobal = row.tareaCodigo;
+            $("#cbo_TareaPresupuestal").jqxDropDownList('setContent', row.tarea.trim());
+            $("#cbo_TareaPresupuestal").jqxDropDownList({disabled: true});
+            $("#cbo_Departamento").jqxDropDownList('setContent', row.departamento.trim());
+            $("#cbo_Departamento").jqxDropDownList({disabled: true});
+            $("#cbo_Provincia").jqxDropDownList('setContent', row.provincia.trim());
+            $("#cbo_Provincia").jqxDropDownList({disabled: true});
+            $("#cbo_Distrito").jqxDropDownList('setContent', row.distrito.trim());
+            $("#cbo_Distrito").jqxDropDownList({disabled: true});
+            $("#txt_Import1").val(row.progracion1);
+            $("#txt_Meta1").val(row.meta1);
+            $("#txt_Import2").val(row.progracion2);
+            $("#txt_Meta2").val(row.meta2);
+            $("#txt_Import3").val(row.progracion3);
+            $("#txt_Meta3").val(row.meta3);
+            
+            $("#txt_tareaDetalle").val(row.tarea);
+            $("#txt_tareaDetalle").jqxInput({disabled: true});
+            $("#txt_Import1Detalle").val(row.progracion1);
+            $("#txt_Import1Detalle").jqxInput({disabled: true});
+            $("#txt_Import2Detalle").val(row.progracion2);
+            $("#txt_Import2Detalle").jqxInput({disabled: true});
+            $("#txt_Import3Detalle").val(row.progracion3);
+            $("#txt_Import3Detalle").jqxInput({disabled: true});
+            
+        });
+        
+        $("#div_GrillaDetalle").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaDetalle").jqxGrid('getrowdata', args.rowindex);
+            select2 = 1;
+            console.log(row);
+            clasificadorGlobal = row.clasificadorCodigo;
+            $("#cbo_Clasificador").jqxDropDownList('setContent', row.clasificador);
+            $("#cbo_Clasificador").jqxDropDownList({disabled: true});
+            $("#txt_Import1DetalleAsig").val(row.importe1);
+            $("#txt_Import2DetalleAsig").val(row.importe2);
+            $("#txt_Import3DetalleAsig").val(row.importe3);
+            
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 600;
+                var alto = 260;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cancelar'),
+                    initContent: function () {
+                        $("#cbo_TareaPresupuestal").jqxDropDownList({theme: theme, autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 200, height: 20});
+                        $("#cbo_Departamento").jqxDropDownList({theme: theme, autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 200, height: 20});
+                        $('#cbo_Departamento').on('select', function (event) {
+                            $("#cbo_Provincia").jqxDropDownList('clear');
+                            fn_cargarComboAjax("#cbo_Provincia", {mode: 'provincias', 
+                                                                 codigo: $("#cbo_Departamento").val()});
+                            $("#cbo_Provincia").jqxDropDownList('setContent', 'Seleccione');
+                            $("#cbo_Distrito").jqxDropDownList('clear');
+                            $("#cbo_Distrito").jqxDropDownList('setContent', 'Seleccione');
+                        });
+                        $("#cbo_Provincia").jqxDropDownList({theme: theme, autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 200, height: 20});
+                        $('#cbo_Provincia').on('select', function (event) {
+                            $("#cbo_Distrito").jqxDropDownList('clear');
+                            fn_cargarComboAjax("#cbo_Distrito", {mode: 'ubigeo', 
+                                                                 codigo: $("#cbo_Departamento").val(),codigo2: $("#cbo_Provincia").val()});
+                            $("#cbo_Distrito").jqxDropDownList('setContent', 'Seleccione');
+                        });
+                        $("#cbo_Distrito").jqxDropDownList({theme: theme, autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 200, height: 20});
+                        $("#txt_Import1").jqxNumberInput({width: 150, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Meta1").jqxNumberInput({width: 150, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Import2").jqxNumberInput({width: 150, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Meta2").jqxNumberInput({width: 150, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Import3").jqxNumberInput({width: 150, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Meta3").jqxNumberInput({width: 150, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $('#btn_Cancelar').jqxButton({width: 36, height: 32});
+                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Guardar').jqxButton({width: 36, height: 32});
+                        $('#btn_Guardar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_Guardar').on('click', function () {
+                            fn_GrabarDatos();
+//                            $('#frm_Periodos').jqxValidator('validate');
+                        });
+//                        $('#frm_Periodos').jqxValidator({
+//                            rules: [
+//                                {input: '#txt_Periodo', message: 'Ingrese el Periodo!', action: 'keyup, blur', rule: 'required'},
+//                                {input: '#txt_Periodo', message: 'Ingrese Solo Numeros!', action: 'keyup, blur', rule: 'number'},
+//                                {input: '#txt_Abreviatura', message: 'Ingrese la Abreviatura del Período!', action: 'keyup, blur', rule: 'required'},
+//                                {input: '#txt_Descripcion', message: 'Ingrese la Descripción del Período!', action: 'keyup, blur', rule: 'required'}
+//                            ]
+//                        });
+//                        $('#frm_Periodos').jqxValidator({
+//                            onSuccess: function () {
+//                                fn_GrabarDatos();
+//                            }
+//                        });
+                    }
+                });
+                var ancho = 600;
+                var alto = 570;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaDetalle').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarDetalle'),
+                    initContent: function () {
+                        $("#txt_tareaDetalle").jqxInput({placeHolder: "TAREA", width: 450, height: 25, minLength: 2, maxLength: 200});
+                        $("#txt_Import1Detalle").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Import2Detalle").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Import3Detalle").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $('#btn_CancelarDetalle').jqxButton({width: 36, height: 32});
+                        $('#btn_CancelarDetalle').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_GuardarDetalle').jqxButton({width: 36, height: 32});
+                        $('#btn_GuardarDetalle').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_GuardarDetalle').on('click', function () {
+                            fn_GrabarDatosDetalle();
+                        });
+                    }
+                });
+                
+                var ancho = 700;
+                var alto = 200;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaDetalleAsig').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarDetalleAsig'),
+                    initContent: function () {
+                        $("#cbo_Clasificador").jqxDropDownList({width: 300, height: 25, dropDownWidth: 300, promptText: "Seleccione"});
+                        $("#txt_Import1DetalleAsig").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Import2DetalleAsig").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Import3DetalleAsig").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Saldo1DetalleAsig").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Saldo2DetalleAsig").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $("#txt_Saldo3DetalleAsig").jqxNumberInput({width: 230, height: 25, max: 9999999999, digits: 15, decimalDigits: 0, inputMode: 'simple'});
+                        $('#btn_CancelarDetalleAsig').jqxButton({width: 36, height: 32});
+                        $('#btn_CancelarDetalleAsig').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_CancelarDetalleAsig').on('click', function () {
+                            select2=0;
+                            if(mode2 === 'U'){
+                                saldo1 = saldo1- parseInt(importUpdate1);
+                                saldo2 = saldo2- parseInt(importUpdate2);
+                                saldo3 = saldo3- parseInt(importUpdate3);
+                            }
+                        });
+                        $('#btn_GuardarDetalleAsig').jqxButton({width: 36, height: 32});
+                        $('#btn_GuardarDetalleAsig').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_GuardarDetalleAsig').on('click', function () {
+                            fn_GrabarDatosDetalleClasificador();
+                        });
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_Refrescar();
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_Refrescar() {
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: 'tareaCodigo', type: "string"},
+                {name: 'tarea', type: "string"},
+                {name: 'progracion1', type: "string"},
+                {name: 'detalle1', type: "string"},
+                {name: 'saldo1', type: "string"},
+                {name: 'meta1', type: "string"},
+                {name: 'progracion2', type: "string"},
+                {name: 'detalle2', type: "string"},
+                {name: 'saldo2', type: "string"},
+                {name: 'meta2', type: "string"},
+                {name: 'progracion3', type: "string"},
+                {name: 'detalle3', type: "string"},
+                {name: 'saldo3', type: "string"},
+                {name: 'meta3', type: "string"},
+                {name: 'estado', type: "string"},
+                {name: 'ubigeo', type: "string"},
+                {name: 'departamento', type: "string"},
+                {name: 'provincia', type: "string"},
+                {name: 'distrito', type: "string"}
+            ],
+            id: 'codigo',
+            url: "Programacion",
+            data: {mode: 'G', codigo: $("#cbo_FuenteFinanciamiento").val(), codigo2: $("#cbo_Periodo").val()}
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+//        var periodoCmb = parseInt($("#cbo_Periodo").val());
+//        var columns = [
+//                {text: 'TAREA', dataField: 'tarea', width: '20%', align: 'center', cellsAlign: 'center'},
+//                {text: titleprog+ periodoCmb , dataField: 'progracion1', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titledetalle+ periodoCmb , dataField: 'detalle1', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titlesaldo+ ++periodoCmb , dataField: 'saldo1', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titleprog+ periodoCmb , dataField: 'progracion2', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titledetalle+ periodoCmb , dataField: 'detalle2', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titlesaldo+ ++periodoCmb , dataField: 'saldo2', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titleprog+ periodoCmb , dataField: 'progracion3', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titledetalle+ periodoCmb , dataField: 'detalle3', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: titlesaldo+ periodoCmb , dataField: 'saldo3', width: '8%', align: 'center', cellsAlign: 'right'},
+//                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'center'}
+//            ];        
+        $("#div_GrillaPrincipal").jqxGrid('clearselection');
+        $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+//        $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter, columns: columns});
+        
+    }
+    
+    function fn_RefrescarDetalle(){
+        if(dataLocal.length===0){
+            saldo1=parseInt($('#txt_Import1Detalle').val());
+            saldo2=parseInt($('#txt_Import2Detalle').val());
+            saldo3=parseInt($('#txt_Import3Detalle').val());
+        }
+        
+        if(mode2 === null){
+            console.log({mode: 'D', codigo: $('#cbo_FuenteFinanciamiento').val(), codigo2: $('#cbo_Periodo').val(), codigo3: tareaGlobal});
+            $.ajax({
+                type: "GET",
+                url: "Programacion",
+                data: {mode: 'D', codigo: $('#cbo_FuenteFinanciamiento').val(), codigo2: $('#cbo_Periodo').val(), codigo3: tareaGlobal},
+                success: function (data) {
+                    dataLocal = JSON.parse(data);
+                    for (var i = 0; i < dataLocal.length; i++) {
+                        saldo1=saldo1-parseInt(dataLocal[i].importe1);
+                        saldo2=saldo2-parseInt(dataLocal[i].importe2);
+                        saldo3=saldo3-parseInt(dataLocal[i].importe3);
+                    }
+                    source = {
+                        dataType: "json",
+                        datafields: [
+                            {name: 'clasificadorCodigo', type: "string"},
+                            {name: 'clasificador', type: "string"},
+                            {name: 'importe1', type: "string"},
+                            {name: 'importe2', type: "string"},
+                            {name: 'importe3', type: "string"}
+                        ],
+                        id: 'clasificadorCodigo',
+                        localdata: dataLocal
+                    };
+                    var dataAdapter = new $.jqx.dataAdapter(source);
+                    $("#div_GrillaDetalle").jqxGrid({source: dataAdapter});
+                    $('#div_GrillaDetalle').jqxGrid('clearselection');
+                    
+                }
+            });
+            
+        }else {
+        
+            source = {
+                    dataType: "json",
+                    datafields: [
+                        {name: 'clasificadorCodigo', type: "string"},
+                        {name: 'clasificador', type: "string"},
+                        {name: 'importe1', type: "string"},
+                        {name: 'importe2', type: "string"},
+                        {name: 'importe3', type: "string"}
+                    ],
+                    id: 'clasificadorCodigo',
+                    localdata: dataLocal
+                };
+                var dataAdapter = new $.jqx.dataAdapter(source);
+                $("#div_GrillaDetalle").jqxGrid({source: dataAdapter});
+                $('#div_GrillaDetalle').jqxGrid('clearselection');
+          }  
+            
+    }
+    
+    
+    //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+    function fn_EditarRegistro() {
+        var titleImpor = 'IMPORTE ';
+        var titleMeta = 'META ';
+        var periodoCmb = parseInt($("#cbo_Periodo").val());
+        $('#labelImport1').text(titleImpor+periodoCmb+' : ');
+        $('#labelMeta1').text(titleMeta+periodoCmb+' : ');
+        $('#labelImport2').text(titleImpor+(periodoCmb+1)+' : ');
+        $('#labelMeta2').text(titleMeta+(periodoCmb+1)+' : ');
+        $('#labelImport3').text(titleImpor+(periodoCmb+2)+' : ');
+        $('#labelMeta3').text(titleMeta+(periodoCmb+2)+' : ');
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+        if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+    }
+    //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+    function fn_GrabarDatos() {
+        var tarea = $("#cbo_TareaPresupuestal").val();
+        var ubigeo = $("#cbo_Distrito").val();
+        var cant1 = $("#txt_Import1").val()+"/"+$("#txt_Meta1").val();
+        var cant2 = $("#txt_Import2").val()+"/"+$("#txt_Meta2").val();
+        var cant3 = $("#txt_Import3").val()+"/"+$("#txt_Meta3").val();
+        var cantF = cant1+","+cant2+","+cant3;
+        if(mode !== 'I'){
+            tarea = codigo;
+            ubigeo = ubigeoGlobal;
+            if(mode !== 'U'){
+                var cantF = "0/0,0/0,0/0";
+            }
+        }
+        
+        var data = {mode: mode, periodo: $("#cbo_Periodo").val(), fuente: $("#cbo_FuenteFinanciamiento").val(),
+                    tarea: tarea, ubigeo: ubigeo, cant: cantF};
+        console.log(data);        
+        $.ajax({
+            type: "POST",
+            url: "IduProgramacion",
+            data: data,
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente!!',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaPrincipal').jqxWindow('close');
+                                    fn_Refrescar();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    
+        function fn_GrabarDatosDetalle() {
+        var rows = $('#div_GrillaDetalle').jqxGrid('getrows');
+        var listFinal ='';
+        if(rows.length !== 0){
+            var lista = [];
+            var cmbPeriodo = parseInt($("#cbo_Periodo").val());
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var result = row.clasificadorCodigo+"-"+row.importe1+"-"+cmbPeriodo+","+row.clasificadorCodigo+"-"+row.importe2+"-"+(cmbPeriodo+1)
+                             +","+row.clasificadorCodigo+"-"+row.importe3+"-"+(cmbPeriodo+2);
+                lista.push(result);
+            }
+
+            listFinal = JSON.stringify(lista).replaceAll('"', '').replaceAll('[', '').replaceAll(']', '');
+        }
+        var data = {periodo: $("#cbo_Periodo").val(), fuente: $("#cbo_FuenteFinanciamiento").val(),
+                    tarea: tareaGlobal, cant: listFinal};
+        console.log(data);        
+        $.ajax({
+            type: "POST",
+            url: "IduProgramacionDetalle",
+            data: data,
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente!!',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaDetalle').jqxWindow('close');
+                                    fn_Refrescar();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    
+    function fn_GrabarDatosDetalleClasificador(){
+        var json = null;
+        
+        if(mode2 === 'I'){
+           var vali=0; 
+           for(var i=0 ; i < dataLocal.length ; i++){
+                if(dataLocal[i].clasificadorCodigo === $('#cbo_Clasificador').val()){
+                    vali=1;
+                   break; 
+                }
+            }
+            if($('#txt_Import1DetalleAsig').val()>$('#txt_Saldo1DetalleAsig').val() || 
+                    $('#txt_Import2DetalleAsig').val()>$('#txt_Saldo2DetalleAsig').val() || 
+                    $('#txt_Import3DetalleAsig').val()>$('#txt_Saldo3DetalleAsig').val() ){    
+                vali=2;
+            }
+            
+            if($('#cbo_Clasificador').val()==='' ){    
+                vali=3;
+            }
+            
+           if(vali === 0){
+                saldo1=saldo1-parseInt($('#txt_Import1DetalleAsig').val());
+                saldo2=saldo2-parseInt($('#txt_Import2DetalleAsig').val());
+                saldo3=saldo3-parseInt($('#txt_Import3DetalleAsig').val());
+                json     = { 
+                             clasificadorCodigo: $('#cbo_Clasificador').val(),
+                             clasificador: $('#cbo_Clasificador').text(),
+                             importe1: $('#txt_Import1DetalleAsig').val(),
+                             importe2: $('#txt_Import2DetalleAsig').val(),
+                             importe3: $('#txt_Import3DetalleAsig').val()
+                             
+                         } 
+                 dataLocal[dataLocal.length] = json;  
+                 $('#div_VentanaDetalleAsig').jqxWindow('close');
+                 fn_RefrescarDetalle();
+           } else{
+                var texto = 'ESTE CLASIFICADOR YA ESTA INGRESADO';
+                if(vali===2){
+                    texto = 'LOS IMPORTES SOBRE PASAN EL SALDO DISPONIBLE<br/>'+
+                           $('#labelSaldo1Detalle').text().replaceAll('S/.','')+' S/'+($('#txt_Saldo1DetalleAsig').val()-$('#txt_Import1DetalleAsig').val())+'<br/>'+
+                           $('#labelSaldo2Detalle').text().replaceAll('S/.','')+' S/'+($('#txt_Saldo2DetalleAsig').val()-$('#txt_Import2DetalleAsig').val())+'<br/>'+
+                           $('#labelSaldo3Detalle').text().replaceAll('S/.','')+' S/'+($('#txt_Saldo3DetalleAsig').val()-$('#txt_Import3DetalleAsig').val());
+                }else if(vali===3){
+                    texto = 'DEBE SELECCIONAR UNA CLASIFICACIÓN'
+                }
+                $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: texto,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+           }
+           
+        }else if (mode2 === 'U'){
+            var vali=0; 
+//            if($('#txt_Import1DetalleAsig').val()>(saldo1+importUpdate1) || 
+//                    $('#txt_Import2DetalleAsig').val()>(saldo2+importUpdate2) || 
+//                    $('#txt_Import3DetalleAsig').val()>(saldo3+importUpdate3) ){    
+//                vali=2;
+//            }
+            if($('#txt_Import1DetalleAsig').val()>(saldo1) || 
+                    $('#txt_Import2DetalleAsig').val()>(saldo2) || 
+                    $('#txt_Import3DetalleAsig').val()>(saldo3) ){    
+                vali=2;
+            }
+            
+            if(vali === 0){
+//                saldo1=(saldo1+importUpdate1)-parseInt($('#txt_Import1DetalleAsig').val());
+//                saldo2=(saldo2+importUpdate2)-parseInt($('#txt_Import2DetalleAsig').val());
+//                saldo3=(saldo3+importUpdate3)-parseInt($('#txt_Import3DetalleAsig').val());
+                saldo1=saldo1-parseInt($('#txt_Import1DetalleAsig').val());
+                saldo2=saldo2-parseInt($('#txt_Import2DetalleAsig').val());
+                saldo3=saldo3-parseInt($('#txt_Import3DetalleAsig').val());
+                json     = { 
+                                 clasificadorCodigo: clasificadorGlobal,
+                                 clasificador: $('#cbo_Clasificador').text(),
+                                 importe1: $('#txt_Import1DetalleAsig').val(),
+                                 importe2: $('#txt_Import2DetalleAsig').val(),
+                                 importe3: $('#txt_Import3DetalleAsig').val()
+                             }
+                for(var i=0 ; i < dataLocal.length ; i++){
+                    if(dataLocal[i].clasificadorCodigo === clasificadorGlobal){
+                       dataLocal[i]=json; 
+                    }
+                }        
+                $('#div_VentanaDetalleAsig').jqxWindow('close');
+                fn_RefrescarDetalle();
+                importUpdate1=0;
+                importUpdate2=0;
+                importUpdate3=0;
+            }else {
+                var text = 'LOS IMPORTES SOBRE PASAN EL SALDO DISPONIBLE<br/>'+
+                           $('#labelSaldo1Detalle').text().replaceAll('S/.','')+' S/'+($('#txt_Saldo1DetalleAsig').val()-$('#txt_Import1DetalleAsig').val())+'<br/>'+
+                           $('#labelSaldo2Detalle').text().replaceAll('S/.','')+' S/'+($('#txt_Saldo2DetalleAsig').val()-$('#txt_Import2DetalleAsig').val())+'<br/>'+
+                           $('#labelSaldo3Detalle').text().replaceAll('S/.','')+' S/'+($('#txt_Saldo3DetalleAsig').val()-$('#txt_Import3DetalleAsig').val());
+                $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: text,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+            }
+           
+        }else {
+            for(var i=0 ; i < dataLocal.length ; i++){
+                if(dataLocal[i].clasificadorCodigo === clasificadorGlobal){
+                    saldo1=saldo1+dataLocal[i].importe1;
+                    saldo2=saldo2+dataLocal[i].importe2;
+                    saldo3=saldo3+dataLocal[i].importe3;
+                   dataLocal.splice(i, 1);
+                   break;
+                }
+            }
+            
+            fn_RefrescarDetalle();
+        }
+        
+    }
+</script>
+<div id='div_Titulo' style="border: none;">
+    <div class="jqx-hideborder">LISTADOS DE PROGRAMACIÓN MULTIANUAL</div>
+    <div>
+                <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr> 
+                        <td class="Titulo">Fte. Financ. : </td>
+                        <td>
+                            <select id="cbo_FuenteFinanciamiento" name="cbo_FuenteFinanciamiento">
+                                <span th:each="fuente : ${session.objFuenteFinanciamiento}">
+                                    <option th:value="${fuente.codigo}"><span th:text="${fuente.descripcion}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Periodo : </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_Refrescar();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit"/></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaPrincipal" style="display: none">
+    <div>
+        <span style="float: left">DATOS DEL PROGRAMACION MULTIANUAL</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_Periodos" name="frm_1" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+                <tr>
+                    <td class="Titulo">TAREA PRES. : </td>
+                    <td colspan="3">
+                        <select id="cbo_TareaPresupuestal" name="cbo_TareaPresupuestal">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="Titulo">DEPARTAMENTO : </td>
+                    <td colspan="3">
+                        <select id="cbo_Departamento" name="cbo_Departamento">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="Titulo">PROVINCIA : </td>    
+                    <td colspan="3">
+                        <select id="cbo_Provincia" name="cbo_Provincia">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="Titulo">DISTRITO : </td>    
+                    <td colspan="3">
+                        <select id="cbo_Distrito" name="cbo_Distrito">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport1"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Import1" name="txt_Import1" /></td>
+                    <td class="inputlabel" id="labelMeta1"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Meta1" name="txt_Meta1" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport2"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Import2" name="txt_Import2" /></td>
+                    <td class="inputlabel" id="labelMeta2"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Meta2" name="txt_Meta2" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport3"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Import3" name="txt_Import3" /></td>
+                    <td class="inputlabel" id="labelMeta3"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Meta3" name="txt_Meta3" /></td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="4">
+                        <div>
+                            <div id="btn_Guardar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                            <div id="btn_Cancelar" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>  
+        </form>
+    </div>
+</div>
+<div id="div_VentanaDetalle" style="display: none">
+    <div>
+        <span style="float: left">DETALLE DE PROGRAMACIÓN MULTIANUL DE GASTOS</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_Periodos" name="frm_2" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+                <tr>
+                    <td class="inputlabel">TAREA : </td>
+                    <td colspan="3"><input type="text" class="text-input" id="txt_tareaDetalle" name="txt_tareaDetalle" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport1Detalle"></td>
+                    <td><input type="text" class="text-input" id="txt_Import1Detalle" name="txt_Import1Detalle" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport2Detalle"></td>
+                    <td><input type="text" class="text-input" id="txt_Import2Detalle" name="txt_Import2Detalle" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport3Detalle"></td>
+                    <td><input type="text" class="text-input" id="txt_Import3Detalle" name="txt_Import3Detalle" /></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><div id="div_GrillaDetalle"> </div></td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="4">
+                        <div>
+                            <div id="btn_GuardarDetalle" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                            <div id="btn_CancelarDetalle" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>  
+        </form>
+    </div>
+</div>
+<div id="div_VentanaDetalleAsig" style="display: none">
+    <div>
+        <span style="float: left">REGISTRO DE PROGRAMACIÓN MULTIANUL DE GASTOS</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_Periodos" name="frm_3" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+                <tr>
+                    <td class="Titulo">CLASIFICADOR : </td>
+                    <td colspan="3">
+                        <select id="cbo_Clasificador" name="cbo_Clasificador">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport1DetalleAsig"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Import1DetalleAsig" name="txt_Import1DetalleAsig" /></td>
+                    <td class="inputlabel" id="labelSaldo1Detalle"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Saldo1DetalleAsig" name="txt_Saldo1DetalleAsig" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport2DetalleAsig"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Import2DetalleAsig" name="txt_Import2DetalleAsig" /></td>
+                    <td class="inputlabel" id="labelSaldo2Detalle"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Saldo2DetalleAsig" name="txt_Saldo2DetalleAsig" /></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel" id="labelImport3DetalleAsig"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Import3DetalleAsig" name="txt_Import3DetalleAsig  " /></td>
+                    <td class="inputlabel" id="labelSaldo3Detalle"></td>
+                    <td colspan="1"><input type="text" class="text-input" id="txt_Saldo3DetalleAsig" name="txt_Saldo3DetalleAsig" /></td>
+                </tr>
+               <tr>
+                    <td class="Summit" colspan="4">
+                        <div>
+                            <div id="btn_GuardarDetalleAsig" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                            <div id="btn_CancelarDetalleAsig" style="display: inline-block; margin-left: 10px;"><img style='position: relative;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>  
+        </form>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display: none;'>
+    <ul>
+        <li style="font-weight: bold;">Editar</li>
+        <li style="font-weight: bold;">Eliminar</li>
+        <li style="font-weight: bold;">Ingresar Detalle</li>
+        <li type='separator'></li>
+        <li style="color: blue; font-weight: bold;">Activar</li>
+        <li style="color: brown; font-weight: bold;">Desactivar</li>
+    </ul>
+</div>

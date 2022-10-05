@@ -89,7 +89,19 @@ public class CombosController {
                 new Gson().toJson(combosService.getClasificadorPresupuestalCertificadoPresupuestal(codigo, Utiles.checkNum(codigo2), codigo3, Utiles.checkNum(codigo4)));
             case "clasificadorPresupuestalCertificadoRE" ->
                 new Gson().toJson(combosService.getClasificadorPresupuestalCertificadoPresupuestalRebaja(codigo, Utiles.checkNum(codigo2), codigo3, Utiles.checkNum(codigo4), Utiles.checkNum(codigo5)));
-
+            case "fuenteByProgramacion" ->
+                new Gson().toJson(combosService.getFuenteByProgramacion());
+            case "tareaByProgramacion" ->
+                new Gson().toJson(combosService.getTareaByProgramacion(codigo, Utiles.checkNum(codigo2)));
+            case "anioByProgramacion" ->
+                new Gson().toJson(combosService.getAnioByProgramacion(codigo));    
+            case "clasificadorProgByPeriodoFuenteTarea" ->
+                new Gson().toJson(combosService.getClasificadorProgByPeriodoFuenteTarea(codigo,Utiles.checkNum(codigo2),codigo3));    
+            case "unidadMedida" ->
+                new Gson().toJson(combosService.getunidadMedida());    
+            case "itemByUnidadMedida" ->
+                new Gson().toJson(combosService.getItemByUnidadMedida());    
+                
             default ->
                 "ERROR";
         };

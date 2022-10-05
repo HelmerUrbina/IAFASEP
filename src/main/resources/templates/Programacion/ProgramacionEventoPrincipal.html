@@ -1,0 +1,387 @@
+<script>
+    var eventoPrincipal = null;
+    var eventoPrincipalNombre = "";
+    var mode = null;
+    var nivel = 0;
+    var niveles = 0;
+    var msg = "";
+    $(document).ready(function () {        
+        $("#div_Titulo").jqxExpander({width: '100%'});
+        
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaEventoPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 65),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            showtoolbar: true,
+            editable: false,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                // ADICIONAMOS BOTONES A LA BARRA DE ESTADOS
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 36, height: 34});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON NUEVO
+                ButtonNuevo.click(function (event) {
+                    mode = 'I';
+                    eventoPrincipal = '0';
+                    $("#txt_EventoPrincipal").val("");
+                    $("#txt_ComentarioPrincipal").val("");
+                    $("#div_Niveles").val(0);
+                    $("#chk_EventoFinal").jqxCheckBox({ checked: false });
+                    $('#div_VentanaEventoPrincipal').jqxWindow({isModal: true, modalOpacity: 0.8});
+                    $('#div_VentanaEventoPrincipal').jqxWindow('open');
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaEventoPrincipal").jqxGrid('exportdata', 'xlsx', 'Eventos Principales');
+                });
+            },
+            columns: [
+                {text: 'CODIGO', dataField: 'eventoPrincipal', width: '10%', align: 'center', cellsAlign: 'center'},
+                {text: 'EVENTO PRINCIPAL', dataField: 'eventoPrincipalNombre', width: '55%', align: 'center', cellsAlign: 'left'},
+                {text: 'NIVELES', dataField: 'niveles', width: '20%', align: 'center', cellsAlign: 'center'},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '15%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL
+        var contextMenu = $("#div_ContextMenuEventoPrincipal").jqxMenu({width: 200, height: 120, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaEventoPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaEventoPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaEventoPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL
+        $("#div_ContextMenuEventoPrincipal").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (eventoPrincipal === null || eventoPrincipal === '') {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            } else {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    mode = 'U';
+                    fn_EditarRegistroPrincipal();
+                } else if ($.trim($(opcion).text()) === "Activar") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Activar este Evento Principal!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'blue',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'A';
+                                    fn_GrabarDatosPrincipal();
+                                }
+                            },
+                            cancelar: function () {
+                                $("#div_GrillaEventoPrincipal").jqxGrid('clearselection');
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Desactivar") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Desactivar este Evento Principal!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    mode = 'D';
+                                    fn_GrabarDatosPrincipal();
+                                }
+                            },
+                            cancelar: function () {
+                                $("#div_GrillaEventoPrincipal").jqxGrid('clearselection');
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "Ver Evento") {
+                    fn_verEventoPrincipal();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Opción NO VALIDA!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaEventoPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaEventoPrincipal").jqxGrid('getrowdata', args.rowindex);
+            console.log(row);
+            eventoPrincipal = row['eventoPrincipal'];
+            eventoPrincipalNombre = row['eventoPrincipalNombre'];
+            niveles = row['niveles'];
+            nivel = row['nivel'];
+            $("#txt_EventoPrincipal").val(eventoPrincipalNombre);
+            $("#txt_ComentarioPrincipal").val(row['eventoPrincipalComentario']);
+            $("#div_Niveles").val(niveles);
+            $("#chk_EventoFinal").jqxCheckBox({ checked: row['isFinal']==='1'?true:false });
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                var posicionX, posicionY;
+                var ancho = 620;
+                var alto = 220;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaEventoPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarEventoPrincipal'),
+                    initContent: function () {
+                        $("#txt_EventoPrincipal").jqxInput({placeHolder: 'INGRESE NOMBRE DEL EVENTO', width: 380, height: 25});
+                        $("#txt_ComentarioPrincipal").jqxInput({placeHolder: "COMENTARIO", width: 500, height: 60, minLength: 2, maxLength: 200});
+                        $("#div_Niveles").jqxNumberInput({width: 100, height: 25, max: 99, digits: 2, decimalDigits: 0, inputMode: 'simple', spinButtons: true});
+                        $("#chk_EventoFinal").jqxCheckBox({height: 25});
+                        $("#chk_EventoFinal").on('change', function (event) {
+                            var checked = event.args.checked;
+                            if (checked) {
+                                $('#div_Niveles').val(0);
+                                $('#div_Niveles').jqxNumberInput({disabled: true});
+                            } else {
+                                $('#div_Niveles').jqxNumberInput({disabled: false});
+                                $('#div_Niveles').jqxNumberInput('focus');
+                            }
+                        });
+                        $('#btn_CancelarEventoPrincipal').jqxButton({width: '65px', height: 30});
+                        $('#btn_GuardarEventoPrincipal').jqxButton({width: '65px', height: 30});
+                        $('#btn_GuardarEventoPrincipal').on('click', function () {
+                            fn_GrabarDatosPrincipal();
+                        });
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_Refrescar();
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_Refrescar() {
+        $("#div_GrillaEventoSecundario").remove();
+        $("#div_VentanaEventoSecundario").remove();
+        $("#div_ContextMenuEventoSecundario").remove();
+        $("#div_ReporteEventoSecundario").remove();
+        
+        $("#div_GrillaEventoFinal").remove();
+        $("#div_VentanaEventoFinal").remove();
+        $("#div_ContextMenuEventoFinal").remove();
+        $("#div_ReporteEventoFinal").remove();
+        
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: 'eventoPrincipal', type: "string"},
+                {name: 'eventoPrincipalNombre', type: "string"},
+                {name: 'eventoPrincipalComentario', type: "string"},
+                {name: 'nivel', type: "string"},
+                {name: 'niveles', type: "string"},
+                {name: 'estado', type: "string"},
+                {name: 'isFinal', type: "string"}
+            ],
+            id: 'eventoPrincipal',
+            url: "ProgramacionEventoPrincipalDetalle",
+            data: {mode: 'G', periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal}
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        $("#div_GrillaEventoPrincipal").jqxGrid({source: dataAdapter});
+        $("#div_GrillaEventoPrincipal").css("display", "block");
+        $("#div_GrillaSecundaria2").css("display", "none");
+        $("#div_GrillaEventoPrincipal").jqxGrid('clearselection');
+        $("#div_GrillaSecundaria2").jqxGrid('clearselection');
+    }
+    //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+     function fn_EditarRegistroPrincipal() {
+        $('#div_VentanaEventoPrincipal').jqxWindow({isModal: true});
+        $('#div_VentanaEventoPrincipal').jqxWindow('open');
+    }
+    //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+    function fn_GrabarDatosPrincipal() {
+        var eventoPrincipalNombre = $("#txt_EventoPrincipal").val();
+        var comentarioPrincipal = $("#txt_ComentarioPrincipal").val();
+        var niveles = $("#div_Niveles").val();
+        var eventoFinal = $("#chk_EventoFinal").jqxCheckBox('checked')===true?'1':'0';
+        var json = {mode: mode, periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal,
+                eventoPrincipal: eventoPrincipal, eventoPrincipalNombre: eventoPrincipalNombre,
+                eventoPrincipalComentario: comentarioPrincipal,
+                nivel: nivel, niveles: niveles, eventoFinal: eventoFinal};
+        console.log(json);    
+        $.ajax({
+            type: "GET",
+            url: "IduProgramacionEventoPrincipal",
+            data: {mode: mode, periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal,
+                    eventoPrincipal: eventoPrincipal, eventoPrincipalNombre: eventoPrincipalNombre,
+                    eventoPrincipalComentario: comentarioPrincipal,
+                    nivel: nivel, niveles: niveles, eventoFinal: eventoFinal,
+                    eventoPrincipalPrincipal: null},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente!!',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaEventoPrincipal').jqxWindow('close');
+                                    fn_Refrescar();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    
+        function fn_verEventoPrincipal() {
+        $("#div_GrillaEventoPrincipal").css("display", "none");
+        $("#div_GrillaSecundaria2").css("display", "block");
+        if (niveles === 0) {
+            var $contenidoAjax = $('#div_GrillaSecundaria2').html('<img src="images/Fondos/cargando.gif">');
+            $.ajax({
+                type: "GET",
+                url: "ProgramacionEventoPrincipal",
+                data: {mode: 'programacionEventoFinal'},
+                success: function (data) {
+                    $contenidoAjax.html(data);
+                }
+            });
+        } else {
+            nivel++;
+            var $contenidoAjax = $('#div_GrillaSecundaria2').html('<img src="images/Fondos/cargando.gif">');
+            $.ajax({
+                type: "GET",
+                url: "ProgramacionEventoPrincipal",
+                data: {mode: 'programacionEventoSecundario'},
+                success: function (data) {
+                    $contenidoAjax.html(data);
+                }
+            });
+        }
+    }
+</script>
+<div id='div_Titulo' style="border: none;">
+    <div>
+        <div id="div_GrillaEventoPrincipal"></div>
+        <div id="div_GrillaSecundaria2"></div>
+    </div>
+</div>
+<div id="div_VentanaEventoPrincipal" style="display: none">
+    <div>
+        <span style="float: left">REGISTRO DE EVENTO PRINCIPAL</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_EventoPrincipal" name="frm_EventoPrincipal" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+                <tr>
+                    <td class="inputlabel">Evento : </td>
+                    <td><input type="text" class="text-input" id="txt_EventoPrincipal" name="txt_EventoPrincipal" style="text-transform: uppercase;"/></td>
+                </tr> 
+                <tr>
+                    <td class="inputlabel">Comentario : </td>
+                    <td>
+                        <textarea id="txt_ComentarioPrincipal" class="text-input" name="txt_ComentarioPrincipal" style="text-transform: uppercase;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel"># Niveles : </td>
+                    <td><div id="div_Niveles"></div></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Ultimo Evento : </td>
+                    <td><div id='chk_EventoFinal'> </div></td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="4">
+                        <div>
+                            <input type="button" id="btn_GuardarEventoPrincipal"  value="Guardar" style="margin-right: 20px"/>
+                            <input type="button" id="btn_CancelarEventoPrincipal" value="Cancelar" style="margin-right: 20px"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>  
+        </form>
+    </div>
+</div>
+<div id='div_ContextMenuEventoPrincipal' style='display: none;'>
+    <ul>
+        <li style="font-weight: bold;">Editar</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: blue;">Activar</li>
+        <li style="font-weight: bold; color: brown;">Desactivar</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold;color: green;">Ver Evento</li>
+    </ul>
+</div>

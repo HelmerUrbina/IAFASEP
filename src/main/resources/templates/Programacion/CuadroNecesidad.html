@@ -1,0 +1,195 @@
+<script>
+    var tareaGlobal = 0;
+    var periodoGlobal = 0;
+    var fuenteGlobal = 0;
+    $(document).ready(function () {        
+        $("#div_Titulo").jqxExpander({width: '100%'});
+        $("#cbo_Periodo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 180, height: 25});
+        $("#cbo_Fuente").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 180, height: 25});
+        
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $('#cbo_Periodo').on('change', function () {
+            fn_RefrescarCuadro();
+        });
+        fn_cargarComboAjax("#cbo_Fuente", {mode: 'fuenteByProgramacion'});
+        $('#cbo_Fuente').on('change', function () {
+            fn_RefrescarCuadro();
+        });
+        
+        
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 65),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            showtoolbar: true,
+            editable: false,
+            toolbarheight: 50,
+            columns: [
+                {text: 'TAREA PRE.', dataField: 'tarea', width: '40%', align: 'center', cellsAlign: 'center'},
+                {text: 'META FISICA', dataField: 'meta', width: '20%', align: 'center', cellsAlign: 'center'},
+                {text: 'TOTAL', dataField: 'total', width: '20%', align: 'center', cellsAlign: 'center'},
+                {text: 'PROGRAMADO', dataField: 'programado', width: '20%', align: 'center', cellsAlign: 'center'}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 30, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL
+                $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (tareaGlobal === null || tareaGlobal === '') {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            } else {
+                if ($.trim($(opcion).text()) === "Crear Eventos") {
+                    fn_verEvento();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Opción NO VALIDA!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            tareaGlobal = row['tareaCodigo'];
+        });
+        $(document).ready(function () {
+//            customButtonsDemo.init();
+//            fn_RefrescarCuadro();
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_RefrescarCuadro() {
+        $("#div_GrillaEventoPrincipal").remove();
+        $("#div_VentanaEventoPrincipal").remove();
+        $("#div_ContextMenuEventoPrincipal").remove();
+        $("#div_GrillaSecundaria2").remove();
+        
+        $("#div_GrillaEventoSecundario").remove();
+        $("#div_VentanaEventoSecundario").remove();
+        $("#div_ContextMenuEventoSecundario").remove();
+        $("#div_ReporteEventoSecundario").remove();
+        
+        $("#div_GrillaEventoFinal").remove();
+        $("#div_VentanaEventoFinal").remove();
+        $("#div_ContextMenuEventoFinal").remove();
+        $("#div_ReporteEventoFinal").remove();
+        
+        $("#div_GrillaCNV").remove();
+        $("#div_VentanaCNV").remove();
+        $("#div_ContextMenuCNV").remove();
+        $("#div_ReporteCNV").remove();
+        
+        var source = {
+            dataType: "json",
+            datafields: [
+                {name: 'tareaCodigo', type: "string"},
+                {name: 'tarea', type: "string"},
+                {name: 'meta', type: "string"},
+                {name: 'total', type: "string"},
+                {name: 'programado', type: "string"}
+            ],
+            id: 'tareaCodigo',
+            url: "ProgramacionEventoPrincipalDetalle",
+            data: {mode: 'T', periodo: $('#cbo_Periodo').val(), fuente: $('#cbo_Fuente').val()}
+        };
+        periodoGlobal = $("#cbo_Periodo").val();
+        fuenteGlobal = $("#cbo_Fuente").val();
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+        $("#div_GrillaPrincipal").css("display", "block");
+        $("#div_GrillaSecundaria").css("display", "none");
+        $("#div_GrillaPrincipal").jqxGrid('clearselection');
+        $("#div_GrillaSecundaria").jqxGrid('clearselection');
+    }
+    
+    
+    function fn_verEvento() {
+        $("#div_GrillaPrincipal").css("display", "none");
+        var $contenidoAjax = $('#div_GrillaSecundaria').html('<img src="images/Fondos/cargando.gif">');
+        $.ajax({
+            type: "GET",
+            url: "ProgramacionEventoPrincipal",
+            data: {mode: 'programacionEventoPrincipal'},
+            success: function (data) {
+                $("#div_GrillaSecundaria").css("display", "block");
+                $contenidoAjax.html(data);
+            }
+        });
+    }
+</script>
+<div id='div_Titulo' style="border: none;">
+    <div class="jqx-hideborder">PROGRAMACIÓN DE CUADRO DE NECESIDAD</div>
+    <div>
+                <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr> 
+                        <td class="Titulo">Periodo: </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Fuente : </td>
+                        <td>
+                            <select id="cbo_Fuente" name="cbo_Fuente">
+                                <option value="0">Seleccione</option>
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_RefrescarCuadro();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit"/></a></td>
+                        <td style="display: none" id="tareaOculta"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+        <div id="div_GrillaSecundaria"></div>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display: none;'>
+    <ul>
+        <li style="font-weight: bold;color: green;">Crear Eventos</li>
+    </ul>
+</div>

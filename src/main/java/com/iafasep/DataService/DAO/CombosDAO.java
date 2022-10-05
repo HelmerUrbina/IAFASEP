@@ -296,5 +296,59 @@ public interface CombosDAO extends CrudRepository<BeanCombos, String> {
             + "GROUP BY NCLASIFICADOR_PRESUPUESTAL_CODIGO "
             + "ORDER BY CODIGO")
     List<BeanCombos> geClasificadorPresupuestalCertificadoPresupuestalRebaja(String periodo, Integer fuenteFinanciamiento, Integer certificado, Integer resolucion, Integer tareaPresupuestal);
+    
+     @Query(nativeQuery = true, value = "SELECT NFUENTE_FINANCIAMIENTO_CODIGO CODIGO,\n" +
+                                    "         PK_UTIL.FUN_FUENTE_FINANCIAMIENTO_ABRE(NFUENTE_FINANCIAMIENTO_CODIGO) DESCRIPCION\n" +
+                                    "    FROM IAFAS_PROG_MULTIANUAL \n" +
+                                    "   WHERE CESTADO_CODIGO = 'AC'\n" +
+                                    "   GROUP BY NFUENTE_FINANCIAMIENTO_CODIGO\n" +
+                                    "   ORDER BY NFUENTE_FINANCIAMIENTO_CODIGO")
+    List<BeanCombos> getFuenteByProgramacion();
+    
+     @Query(nativeQuery = true, value = "SELECT P.NTAREA_PRESUPUESTAL_CODIGO CODIGO,\n" +
+                                        "         T.VTAREA_PRESUPUESTAL_NOMBRE DESCRIPCION\n" +
+                                        "    FROM IAFAS_PROG_MULTIANUAL P\n" +
+                                        "         INNER JOIN IAFAS_TAREA_PRESUPUESTAL T ON T.NTAREA_PRESUPUESTAL_CODIGO = P.NTAREA_PRESUPUESTAL_CODIGO\n" +
+                                        "   WHERE P.CESTADO_CODIGO = 'AC'\n" +
+                                        "     AND P.CPERIODO_CODIGO = ?1\n" +
+                                        "     AND P.NFUENTE_FINANCIAMIENTO_CODIGO = ?2\n" +
+                                        "   GROUP BY P.NTAREA_PRESUPUESTAL_CODIGO ,VTAREA_PRESUPUESTAL_NOMBRE\n" +
+                                        "   ORDER BY P.NTAREA_PRESUPUESTAL_CODIGO")
+    List<BeanCombos> getTareaByProgramacion(String periodo, Integer fuente);
+    
+    @Query(nativeQuery = true, value = "SELECT CANIO_REGISTRO CODIGO,\n" +
+                                        "         CANIO_REGISTRO DESCRIPCION\n" +
+                                        "    FROM IAFAS_PROG_MULTIANUAL \n" +
+                                        "   WHERE CESTADO_CODIGO = 'AC'\n" +
+                                        "     AND CPERIODO_CODIGO = ?1\n" +
+                                        "   GROUP BY CANIO_REGISTRO \n" +
+                                        "   ORDER BY CANIO_REGISTRO")
+    List<BeanCombos> getAnioByProgramacion(String periodo);
+    
+    @Query(nativeQuery = true, value = "SELECT NCLASIFICADOR_PRESUPUESTAL_COD||','||PK_UTIL.FUN_SALDO_PROG_CLASIFICADOR(CPERIODO_CODIGO,NFUENTE_FINANCIAMIENTO_CODIGO,NTAREA_PRESUPUESTAL_CODIGO,NCLASIFICADOR_PRESUPUESTAL_COD) CODIGO,\n" +
+                                        "       PK_UTIL.FUN_CLASIFICADOR_PRESUPUESTAL(NCLASIFICADOR_PRESUPUESTAL_COD) DESCRIPCION\n" +
+                                        "  FROM IAFAS_PROG_MULTIANUAL_DETALLE\n" +
+                                        " WHERE CPERIODO_CODIGO = ?1\n" +
+                                        "   AND NFUENTE_FINANCIAMIENTO_CODIGO = ?2\n" +
+                                        "   AND NTAREA_PRESUPUESTAL_CODIGO = ?3\n" +
+                                        " GROUP BY NCLASIFICADOR_PRESUPUESTAL_COD,CPERIODO_CODIGO,NFUENTE_FINANCIAMIENTO_CODIGO,NTAREA_PRESUPUESTAL_CODIGO,NCLASIFICADOR_PRESUPUESTAL_COD\n" +
+                                        " ORDER BY NCLASIFICADOR_PRESUPUESTAL_COD")
+    List<BeanCombos> getClasificadorProgByPeriodoFuenteTarea(String periodo, Integer fuente, Integer tarea);
+    
+    
+    @Query(nativeQuery = true, value = "SELECT CUNIDAD_MEDIDA_CODIGO CODIGO,\n" +
+                                        "       VUNIDAD_MEDIDA_NOMBRE DESCRIPCION\n" +
+                                        "  FROM IAFAS_UNIDAD_MEDIDA\n" +
+                                        "  WHERE CESTADO_CODIGO = 'AC'\n" +
+                                        "  ORDER BY VUNIDAD_MEDIDA_NOMBRE")
+    List<BeanCombos> getunidadMedida();
+    
+    @Query(nativeQuery = true, value = "SELECT NITEM_CODIGO||','||PK_UTIL.FUN_UNIDAD_MEDIDA_ABRE(CUNIDAD_MEDIDA_CODIGO) CODIGO,\n" +
+                                        "      VITEM_DESCRIPCION DESCRIPCION\n" +
+                                        "  FROM IAFAS_ITEM \n" +
+                                        " WHERE CESTADO_CODIGO = 'AC'\n" +
+                                        " ORDER BY VITEM_DESCRIPCION")
+    List<BeanCombos> getItemByUnidadMedida();
+    
 
 }

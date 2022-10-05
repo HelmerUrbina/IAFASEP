@@ -1,0 +1,429 @@
+<script>
+    var modeSecundario = null;
+    var eventoSecundario = 0;
+    var eventoPadre = 0;
+    $(document).ready(function () {
+        //PARA LA GRILLA DE LA CABECERA
+        $("#div_GrillaEventoSecundario").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 90),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            showtoolbar: true,
+            statusbarheight: 25,
+            rendertoolbar: function (toolbar) {
+                // appends buttons to the status bar.
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var addButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var reloadButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/refresh.gif' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var exportButton = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonReporte = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=24 height=24/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(addButton);
+                container.append(reloadButton);
+                container.append(exportButton);
+                container.append(ButtonReporte);
+                toolbar.append(container);
+                addButton.jqxButton({width: 30, height: 22});
+                addButton.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                reloadButton.jqxButton({width: 30, height: 22});
+                reloadButton.jqxTooltip({position: 'bottom', content: "Actualiza Pantalla"});
+                exportButton.jqxButton({width: 30, height: 22});
+                exportButton.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonReporte.jqxButton({width: 30, height: 22});
+                ButtonReporte.jqxTooltip({position: 'bottom', content: "Reporte"});
+                // Adicionar un Nuevo Registro en la Cabecera.
+                addButton.click(function (event) {
+                    modeSecundario = 'I';
+//                    eventoSecundario = eventoPrincipal;
+                    eventoSecundario = 0;
+                    $('#txt_EventoSecundario').val('');
+                    $('#txt_EventoSecundario').jqxInput('focus');
+                    $('#div_VentanaEventoSecundario').jqxWindow({isModal: true, modalOpacity: 0.8});
+                    $('#div_VentanaEventoSecundario').jqxWindow('open');
+                });
+                // Recarga la Data en la Grilla
+                reloadButton.click(function (event) {
+                    fn_RefrescarSecundario();
+                });
+                //export to excel
+                exportButton.click(function (event) {
+                    $("#div_GrillaEventoSecundario").jqxGrid('exportdata', 'xls', 'CNVEventosSecundarios');
+                });
+                //reporte
+                ButtonReporte.click(function (event) {
+                    $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.9});
+                    $('#div_Reporte').jqxWindow('open');
+                });
+            },
+            columns: [{
+                    text: 'N°', sortable: false, filterable: false, editable: false,
+                    groupable: false, draggable: false, resizable: false, align: 'center',
+                    datafield: '', columntype: 'number', width: '3%', pinned: true,
+                    cellsrenderer: function (row, column, value) {
+                        return "<div style='margin: 6px; text-align: center;'>" + (value + 1) + "</div>";
+                    }
+                },
+                {text: 'EVENTO SECUNDARIO', dataField: 'eventoPrincipalNombre', columngroup: 'EventoPrincipal', width: '77%', align: 'center', cellsAlign: 'left'},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', columngroup: 'Nivel', width: '20%', align: 'center', cellsAlign: 'center'}
+            ],
+            columngroups: [
+                {text: '<strong>LISTADO DE EVENTOS SECUNDARIOS</strong>', name: 'Titulo', align: 'center'},
+                {text: '<strong>EVENTO ANTERIOR : </strong>' + eventoPrincipalNombre, name: 'EventoPrincipal', parentgroup: 'Titulo'},
+                {text: '<strong>NIVEL : </strong>' + nivel + '<strong> de </strong>' + niveles, name: 'Nivel', parentgroup: 'Titulo', height: '80px'}
+            ]
+        });
+        // create context menu
+        var contextMenu = $("#div_ContextMenuEventoSecundario").jqxMenu({width: 200, height: 110, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaEventoSecundario").on('contextmenu', function () {
+            return false;
+        });
+        // handle context menu clicks.
+        $("#div_GrillaEventoSecundario").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaEventoSecundario").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        $("#div_ContextMenuEventoSecundario").on('itemclick', function (event) {
+            var opcion = event.args;
+            if (eventoSecundario !== null || eventoSecundario === '') {
+                if ($.trim($(opcion).text()) === "Editar") {
+                    modeSecundario = 'U';
+                    fn_EditarRegistroSecundario();
+                } else if ($.trim($(opcion).text()) === "Anular") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Desea Anular este registro!',
+                        theme: 'material',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true,
+                        buttons: {
+                            aceptar: {
+                                text: 'Aceptar',
+                                btnClass: 'btn-primary',
+                                keys: ['enter', 'shift'],
+                                action: function () {
+                                    modeSecundario = 'D';
+                                    fn_GrabarDatosSecundario();
+                                }
+                            },
+                            cancelar: function () {
+                            }
+                        }
+                    });
+                } else if ($.trim($(opcion).text()) === "<-- Anterior") {
+                    fn_RegresarSecundario();
+                } else if ($.trim($(opcion).text()) === "Siguiente -->") {
+                    fn_SiguienteSecundario();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No hay Opcion a Mostar',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'orange',
+                        typeAnimated: true
+                    });
+                }
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: 'Debe Seleccionar un Registro',
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'red',
+                    typeAnimated: true
+                });
+            }
+        });
+        //Seleccionar un Registro de la Cabecera
+        $("#div_GrillaEventoSecundario").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaEventoSecundario").jqxGrid('getrowdata', args.rowindex);
+            console.log("evento secundario -> " + nivel )
+            console.log(row)
+            eventoSecundario = row['eventoPrincipal'];
+            eventoPadre = row['eventoPrincipalPrincipal'];
+            $("#txt_EventoSecundario").val(row['eventoPrincipalNombre']);
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 550;
+                var alto = 110;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaEventoSecundario').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarSecundario'),
+                    initContent: function () {
+                        $("#txt_EventoSecundario").jqxInput({placeHolder: 'INGRESE NOMBRE DEL EVENTO SECUNDARIO', width: 480, height: 20});
+                        $('#btn_CancelarSecundario').jqxButton({width: '65px', height: 25});
+                        $('#btn_GuardarSecundario').jqxButton({width: '65px', height: 25});
+                        $('#btn_GuardarSecundario').on('click', function (event) {
+                            $('#frm_EventoSecundario').jqxValidator('validate');
+                        });
+                        $('#frm_EventoSecundario').jqxValidator({
+                            rules: [
+                                {input: '#txt_EventoSecundario', message: 'Ingrese el Nombre del Evento!', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_EventoSecundario').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatosSecundario();
+                            }
+                        });
+                    }
+                });
+//                ancho = 400;
+//                alto = 105;
+//                posicionX = ($(window).width() / 2) - (ancho / 2);
+//                posicionY = ($(window).height() / 2) - (alto / 2);
+//                $('#div_ReporteEventoSecundario').jqxWindow({
+//                    position: {x: posicionX, y: posicionY},
+//                    width: ancho, height: alto, resizable: false,
+//                    cancelButton: $('#btn_CerrarImprimir'),
+//                    initContent: function () {
+//                        $("#div_PROG0001").jqxRadioButton({width: 200, height: 20});
+//                        $('#div_PROG0001').on('checked', function (event) {
+//                            reporte = 'PROG0013';
+//                        });
+//                        $("#div_PROG0002").jqxRadioButton({width: 200, height: 20});
+//                        $('#div_PROG0002').on('checked', function (event) {
+//                            reporte = 'PROG0002';
+//                        });
+//                        $('#btn_CerrarImprimir').jqxButton({width: '65px', height: 25});
+//                        $('#btn_Imprimir').jqxButton({width: '65px', height: 25});
+//                        $('#btn_Imprimir').on('click', function (event) {
+//                            var msg = "";
+//                            switch (reporte) {
+//                                case "PROG0002":
+//                                    break;
+//                                case "PROG0013":
+//                                    break;
+//                                default:
+//                                    msg += "Debe selecciona una opción.<br>";
+//                                    break;
+//                            }
+//                            if (msg === "") {
+//                                var url = 'Reportes?reporte=' + reporte + '&periodo=' + periodo + '&fuenteFinanciamiento=' + fuente + '&tareaPresupuestal=' + tarea + '&codigo=' + codigo;
+//                                window.open(url, '_blank');
+//                            } else {
+//                                $.alert({
+//                                    theme: 'material',
+//                                    title: 'AVISO DEL SISTEMA',
+//                                    content: msg,
+//                                    animation: 'zoom',
+//                                    closeAnimation: 'zoom',
+//                                    type: 'red',
+//                                    typeAnimated: true
+//                                });
+//                            }
+//                        });
+//                    }
+//                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_RefrescarSecundario();
+        });
+        //FUNCION PARA REFRESCAR LA PANTALLA
+        function fn_RefrescarSecundario() {
+            $("#div_GrillaEventoFinal").remove();
+            $("#div_VentanaEventoFinal").remove();
+            $("#div_ContextMenuEventoFinal").remove();
+            $("#div_ReporteEventoFinal").remove();
+            var json2 = {mode: 'GS', periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal, eventoPrincipal: eventoPrincipal, nivel: nivel};
+            console.log(json2);
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: 'eventoPrincipal', type: "string"},
+                    {name: 'eventoPrincipalNombre', type: "string"},
+                    {name: 'eventoPrincipalPrincipal', type: "string"},
+                    {name: 'nivel', type: "string"},
+                    {name: 'estado', type: "string"}
+                ],
+                id: 'codigo',
+                url: "ProgramacionEventoPrincipalDetalle",
+                data: {mode: 'GS', periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal, eventoPrincipal: eventoPrincipal, nivel: nivel}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaEventoSecundario").jqxGrid({source: dataAdapter});
+        }
+        //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+        function fn_EditarRegistroSecundario() {
+            $('#div_VentanaEventoSecundario').jqxWindow({isModal: true, modalOpacity: 0.8});
+            $('#div_VentanaEventoSecundario').jqxWindow('open');
+        }
+        //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+        function fn_GrabarDatosSecundario() {
+            var eventoSecundarioNombre = $("#txt_EventoSecundario").val();
+            var json = {mode: modeSecundario, periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal,
+                        eventoPrincipal: eventoSecundario, eventoPrincipalNombre: eventoSecundarioNombre,
+                        eventoPrincipalComentario: null,
+                        nivel: nivel, niveles: niveles, eventoFinal: '0', eventoPrincipalPrincipal: eventoPrincipal};
+            console.log(json)        
+            $.ajax({
+                type: "GET",
+                url: "IduProgramacionEventoPrincipal",
+                data: {mode: modeSecundario, periodo: periodoGlobal, fuente: fuenteGlobal, tarea: tareaGlobal,
+                        eventoPrincipal: eventoSecundario, eventoPrincipalNombre: eventoSecundarioNombre,
+                        eventoPrincipalComentario: null,
+                        nivel: nivel, niveles: niveles, eventoFinal: '0', eventoPrincipalPrincipal: eventoPrincipal},
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente!!',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        $('#div_VentanaEventoSecundario').jqxWindow('close');
+                                        fn_RefrescarSecundario();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        }
+        function fn_SiguienteSecundario() {
+            if (nivel === niveles) {
+                var $contenidoAjax = $('#div_GrillaSecundaria').html('<img src="images/Fondos/cargando.gif">');
+                $.ajax({
+                    type: "GET",
+                    url: "ProgramacionEventoPrincipal",
+                    data: {mode: 'programacionEventoFinal'},
+                    success: function (data) {
+                        $contenidoAjax.html(data);
+                    }
+                });
+            } else {
+                $("#div_GrillaEventoSecundario").remove();
+                $("#div_VentanaEventoSecundario").remove();
+                $("#div_ContextMenuEventoSecundario").remove();
+                $("#div_ReporteEventoSecundario").remove();
+                nivel++;
+                eventoPrincipal = eventoSecundario;
+                var $contenidoAjax = $('#div_EventoSecundario').html('<img src="images/Fondos/cargando.gif">');
+                $.ajax({
+                    type: "GET",
+                    url: "ProgramacionEventoPrincipal",
+                    data: {mode: 'programacionEventoSecundario'},
+                    success: function (data) {
+                        $contenidoAjax.html(data);
+                    }
+                });
+            }
+        }
+        function fn_RegresarSecundario() {
+            nivel--;
+            if (nivel === 0) {
+                fn_Refrescar();
+            } else {
+                eventoPrincipal = eventoPadre.slice(0, -2);
+                $("#div_GrillaEventoSecundario").remove();
+                $("#div_VentanaEventoSecundario").remove();
+                $("#div_ContextMenuEventoSecundario").remove();
+                $("#div_ReporteEventoSecundario").remove();
+                var $contenidoAjax = $('#div_EventoSecundario').html('<img src="images/Fondos/cargando.gif">');
+                $.ajax({
+                    type: "GET",
+                    url: "ProgramacionEventoPrincipal",
+                    data: {mode: 'programacionEventoSecundario'},
+                    success: function (data) {
+                        $contenidoAjax.html(data);
+                    }
+                });
+            }
+        }
+    });
+</script>
+<div id="div_EventoSecundario">
+    <div id="div_GrillaEventoSecundario"></div>
+    <div id="div_VentanaEventoSecundario" style="display: none">
+        <div>
+            <span style="float: left">REGISTRO DE EVENTO SECUNDARIO</span>
+        </div>
+        <div style="overflow: hidden">
+            <form id="frm_EventoSecundario" name="frm_EventoSecundario" method="post" >
+                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td class="inputlabel">Evento : </td>
+                        <td><input type="text" id="txt_EventoSecundario" name="txt_EventoSecundario" style="text-transform: uppercase;"/></td>
+                    </tr>
+                    <tr>
+                        <td class="Summit" colspan="2">
+                            <div>
+                                <input type="button" id="btn_GuardarSecundario"  value="Guardar" style="margin-right: 20px"/>
+                                <input type="button" id="btn_CancelarSecundario" value="Cancelar" style="margin-right: 20px"/> 
+                            </div>
+                        </td>
+                    </tr>
+                </table>  
+            </form>
+        </div>
+    </div>
+    <div id='div_ContextMenuEventoSecundario' style='display: none; '>
+        <ul>
+            <li style="color: blue; font-weight: bold;">Editar</li>
+            <li style="color: brown; font-weight: bold;">Anular</li>
+            <li type='separator'></li>
+            <li><-- Anterior</li>
+            <li>Siguiente --></li>
+        </ul>
+    </div>
+    <div id="div_ReporteEventoSecundario" style="display: none">
+        <div>
+            <span style="float: left">LISTADO DE REPORTES</span>
+        </div>
+        <div style="overflow: hidden">
+            <div id='div_PROG0001'>Resumen</div>
+            <div id='div_PROG0002'>CNV</div>
+            <div class="Summit">
+                <input type="submit" id="btn_Imprimir" name="btn_Imprimir" value="Ver" style="margin-right: 20px"/>
+                <input type="button" id="btn_CerrarImprimir" name="btn_CerrarImprimir" value="Cerrar" style="margin-right: 20px"/>
+            </div>
+        </div>
+    </div>
+</div>
