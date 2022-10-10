@@ -3,6 +3,7 @@ package com.iafasep.Utiles;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import com.iafasep.DataService.Service.CombosService;
+import com.iafasep.DataService.Service.TextoService;
 ////import mil.sinte.DataService.Service.TextoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,8 +21,9 @@ public class CombosController {
     @Autowired
     private CombosService combosService;
 
-    //  @Autowired
-    //  private TextoService textoService;
+    @Autowired
+    private TextoService textoService;
+
     @RequestMapping(value = "/CombosAjax")
     @ResponseBody
     public String getCombos(String mode, String codigo, String codigo2, Integer codigo3, String codigo4, String codigo5, String codigo6) {
@@ -94,14 +96,13 @@ public class CombosController {
             case "tareaByProgramacion" ->
                 new Gson().toJson(combosService.getTareaByProgramacion(codigo, Utiles.checkNum(codigo2)));
             case "anioByProgramacion" ->
-                new Gson().toJson(combosService.getAnioByProgramacion(codigo));    
+                new Gson().toJson(combosService.getAnioByProgramacion(codigo));
             case "clasificadorProgByPeriodoFuenteTarea" ->
-                new Gson().toJson(combosService.getClasificadorProgByPeriodoFuenteTarea(codigo,Utiles.checkNum(codigo2),codigo3));    
+                new Gson().toJson(combosService.getClasificadorProgByPeriodoFuenteTarea(codigo, Utiles.checkNum(codigo2), codigo3));
             case "unidadMedida" ->
-                new Gson().toJson(combosService.getunidadMedida());    
+                new Gson().toJson(combosService.getunidadMedida());
             case "itemByUnidadMedida" ->
-                new Gson().toJson(combosService.getItemByUnidadMedida());    
-                
+                new Gson().toJson(combosService.getItemByUnidadMedida());
             default ->
                 "ERROR";
         };
@@ -109,15 +110,14 @@ public class CombosController {
 
     @RequestMapping(value = "/TextoAjax")
     @ResponseBody
-    public String getTexto(String mode, String codigo, String codigo2, String codigo3, String codigo4, String codigo5, String codigo6) {
+    public String getTexto(String mode, String codigo, Integer codigo2, String codigo3, String codigo4, String codigo5, String codigo6) {
         return switch (mode) {
+            case "nroDocumento" ->
+                new Gson().toJson(textoService.getNumeroDocumentoTipoDocumento(codigo, codigo2));
+            case "verificaPin" ->
+                new Gson().toJson(textoService.getVerificaPin(Utiles.getUsuario(), Encryptor.md5(codigo)));
             default ->
                 "ERROR";
         };
-        /*     case "precioTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible":
-        return new Gson().toJson(textoService.getPrecioTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(codigo, Utiles.checkNum(codigo2), Utiles.checkNum(codigo3), Utiles.checkNum(codigo4)));
-        case "saldoTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible":
-        return new Gson().toJson(textoService.getSaldoTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(codigo, Utiles.checkNum(codigo2), Utiles.checkNum(codigo3), Utiles.checkNum(codigo4)));
-         */
     }
 }

@@ -27,7 +27,7 @@ function fn_CargarMenu(mode, url) {
     $("#div_VentanaCerrar").remove();
     $("#div_VentanaDetalleAprobacion").remove();
     $("#div_RegistroDetalle").remove();
-    $("#div_ContextMenu").remove();    
+    $("#div_ContextMenu").remove();
     var $contenidoAjax = $('#div_Contenido').html('<div style="text-align: center"><img src="images/Fondos/cargando.gif" th:src="@{images/Fondos/cargando.gif}"/></div>');
     $.ajax({
         type: "GET",
@@ -102,7 +102,7 @@ function fn_cargarTextoAjax(obj, datos) {
         data: datos,
         success: function (data) {
             var dato = JSON.parse(data);
-            $(obj).val(dato.descripcion);
+            $(obj).val(dato);
         }
     });
 }

@@ -1,6 +1,6 @@
 package com.iafasep.DataService.Service;
 
-import com.iafasep.BusinessServices.Beans.BeanCombos;
+import java.sql.Blob;
 
 /**
  *
@@ -8,8 +8,12 @@ import com.iafasep.BusinessServices.Beans.BeanCombos;
  */
 public interface TextoService {
 
-    public BeanCombos getPrecioTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(String periodo, Integer brigada, Integer tipoAsignacion, Integer tipoCombustible);
-    
-    public BeanCombos getSaldoTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(String periodo, Integer brigada, Integer tipoAsignacion, Integer tipoCombustible);
+    public String getNumeroDocumentoTipoDocumento(String periodo, Integer tipoDocumento);
+
+    public Blob getPlantillaTipoDocumento(String periodo, Integer tipoDocumento);
+
+    public Boolean getVerificaPin(String usuario, String pin);
+
+    public Blob getUsuarioSello(String usuario);
 
 }

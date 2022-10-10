@@ -1,8 +1,8 @@
 package com.iafasep.DataService.Service.Impl;
 
-import com.iafasep.BusinessServices.Beans.BeanCombos;
 import com.iafasep.DataService.DAO.TextoDAO;
 import com.iafasep.DataService.Service.TextoService;
+import java.sql.Blob;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +17,23 @@ public class TextoServiceImpl implements TextoService {
     private TextoDAO textoDAO;
 
     @Override
-    public BeanCombos getPrecioTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(String periodo, Integer brigada, Integer tipoAsignacion, Integer tipoCombustible) {
-        return textoDAO.getPrecioTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(periodo, brigada, tipoAsignacion, tipoCombustible);
+    public String getNumeroDocumentoTipoDocumento(String periodo, Integer tipoDocumento) {
+        return textoDAO.getNumeroDocumentoTipoDocumento(periodo, tipoDocumento);
     }
 
     @Override
-    public BeanCombos getSaldoTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(String periodo, Integer brigada, Integer tipoAsignacion, Integer tipoCombustible) {
-        return textoDAO.getSaldoTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(periodo, brigada, tipoAsignacion, tipoCombustible);
+    public Blob getPlantillaTipoDocumento(String periodo, Integer tipoDocumento) {
+        return textoDAO.getPlantillaTipoDocumento(periodo, tipoDocumento);
     }
+
+    @Override
+    public Boolean getVerificaPin(String usuario, String pin) {
+        return textoDAO.getVerificaPin(usuario, pin);
+    }
+
+    @Override
+    public Blob getUsuarioSello(String usuario) {
+        return textoDAO.getUsuarioSello(usuario);
+    }
+
 }

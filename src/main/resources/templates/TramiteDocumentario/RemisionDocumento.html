@@ -1,0 +1,875 @@
+<script>
+    var tipo = "S";
+    var codigo = null;
+    var archivo = null;
+    var codInstitucion = null;
+    var docReferencia = '';
+    var estado = '';
+    var mode = null;
+    var msg = '';
+    $(document).ready(function () {
+        var theme = getTheme();
+        $("#div_Titulo").jqxExpander({theme: theme, width: '100%'});
+        $("#cbo_Periodo").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 150, height: 25});
+        $("#cbo_Mes").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 150, dropDownWidth: 220, height: 25});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $("#cbo_Mes").jqxComboBox('selectIndex', fecha.getMonth());
+        $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Mes').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        //ESTILOS A LAS CELDAS DE LA GRILLA 
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (datafield === "numero") {
+                return "RowBold";
+            }
+            if (datafield === "usuarioResponsable") {
+                return "RowBlue";
+            }
+            if (datafield === "subGrupo") {
+                return "RowPurple";
+            }
+        };
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 60),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            showtoolbar: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 36, height: 34});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON NUEVO
+                ButtonNuevo.click(function (event) {
+                    codigo = 0;
+                    mode = 'I';
+                    $("#txt_NumeroDocumento").val('');
+                    $('#cbo_Referencia').jqxDropDownList({disabled: false});
+                    //fn_cargarComboAjax("#cbo_Referencia", {mode: 'referenciaDoc', periodo: $("#cbo_Periodo").val()});                    
+                    $("#cbo_TipoDocumento").jqxDropDownList('selectItem', 1);
+                    $("#cbo_Clasificacion").jqxDropDownList('selectItem', '01');
+                    $("#cbo_Referencia").jqxDropDownList('selectItem', 0);
+                    $("#txt_Institucion").val('');
+                    $("#txt_NumeroDocumento").val('');
+                    $("#txt_Dirigido").val('');
+                    $("#txt_Asunto").val('');
+                    $("#txt_Cargo").val('');
+                    $("#div_Legajos").val('0');
+                    $("#div_Folios").val('0');
+                    $("#divEnlaceDoc").css("display", "none");
+                    $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.5});
+                    $('#div_VentanaPrincipal').jqxWindow('open');
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xls', 'RemisionDocumento');
+                });
+            },
+            columns: [
+                {text: ' ', sortable: false, filterable: false, editable: false, groupable: false, draggable: false, resizable: false,
+                    datafield: '', columntype: 'number', width: '2%', pinned: true, cellsrenderer: function (row, column, value) {
+                        return "<div style='margin:4px; text-align: center;'>" + (value + 1) + "</div>";
+                    }
+                },
+                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '10%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ASUNTO', dataField: 'asunto', width: '24%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'subGrupo', width: '12%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FEC. DOC', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FIRMADO', dataField: 'firma', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'REFERENCIA', dataField: 'referencia', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ARCHIVO', dataField: 'archivo', width: '12%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL 
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 185, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL      
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if ($.trim($(opcion).text()) === "Editar") {
+                if (estado !== "PENDIENTE") {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'El registro no puede ser editado, se encuentra ' + estado,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                } else {
+                    mode = 'U';
+                    fn_EditarRegistro();
+                }
+            } else if ($.trim($(opcion).text()) === "Anular") {
+                if (estado !== "PENDIENTE") {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'El registro no puede ser editado, se encuentra ' + estado,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                } else {
+                    if (codigo !== null || codigo === '') {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Desea Anular este registro!',
+                            theme: 'material',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true,
+                            buttons: {
+                                aceptar: {
+                                    text: 'Aceptar',
+                                    btnClass: 'btn-primary',
+                                    keys: ['enter', 'shift'],
+                                    action: function () {
+                                        $('#div_Fecha').val('01/01/2017');
+                                        mode = 'D';
+                                        fn_GrabarDatos();
+                                    }
+                                },
+                                cancelar: function () {
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Debe Seleccionar un Registro',
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            } else if ($.trim($(opcion).text()) === "Ver Documento") {
+                if (archivo !== null && archivo !== '') {
+                    document.location.target = "_blank";
+                    document.location.href = "Descarga?opcion=MesaParte&periodo=" + periodo + "&codigo=" + tipo + "-" + codigo + "&documento=" + archivo;
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No existe Archivo a Vizualizar!!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            } else if ($.trim($(opcion).text()) === "Elevar Documento") {
+                fn_cargarComboAjax("#cbo_DerivadoA", {mode: 'areaLaboral'});
+                $('#div_VentanaElevar').jqxWindow({isModal: true, modalOpacity: 0.5});
+                $('#div_VentanaElevar').jqxWindow('open');
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: "No hay Opción a mostrar",
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['codigo'];
+            estado = row['estado'];
+            archivo = row['archivo'];
+            codigoUsuario = row['codigoUsuario'];
+            docReferencia = row['referencia'];
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 750;
+                var alto = 510;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cancelar'),
+                    initContent: function () {
+                        var sourceInstitucion = {
+                            datatype: "json",
+                            datafields: [
+                                {name: 'codigo'},
+                                {name: 'descripcion'}
+                            ],
+                            url: "CombosAjax",
+                            data: {mode: 'instituciones'}
+                        };
+                        var dataAdapterInstitucion = new $.jqx.dataAdapter(sourceInstitucion);
+                        $("#txt_Institucion").jqxInput({width: 450, height: 22, placeHolder: "SELECCIONE LA INSTITUCION", searchMode: 'startswithignorecase', source: dataAdapterInstitucion, minLength: 1, items: 15, displayMember: "descripcion", valueMember: "codigo", dropDownWidth: 650, popupZIndex: 99999});
+                        $('#txt_Institucion').on('select', function (event) {
+                            if (event.args) {
+                                var item = event.args.item;
+                                if (item) {
+                                    codInstitucion = item;
+                                }
+                            }
+                        });
+                        var source = {
+                            dataType: "localdata",
+                            datafields: [
+                                {name: 'label', type: "string"},
+                                {name: 'value', type: "string"}
+                            ],
+                            id: 'codigo'
+                        };
+                        var dataLista = new $.jqx.dataAdapter(source);
+                        $("#div_ListaInstitucion").jqxListBox({source: dataLista, height: 200, width: 490, itemHeight: 22, displayMember: 'descripcion', valueMember: 'codigo',
+                            renderer: function (index, label, value) {
+                                var table = '<table style="min-width: 150px;"><tr><td>' + label + '</td></tr></table>';
+                                return table;
+                            }
+                        });
+                        $("#cbo_TipoDocumento").jqxDropDownList({placeHolder: "Seleccione", animationType: 'fade', width: 180, height: 22, dropDownWidth: 300});
+                        $('#cbo_TipoDocumento').on('change', function () {
+                            if (mode === 'I')
+                                fn_cargarTextoAjax("#txt_NumeroDocumento", {mode: 'nroDocumento', codigo: $("#cbo_Periodo").val(), codigo2: $('#cbo_TipoDocumento').val()});
+                        });
+                        $("#txt_NumeroDocumento").jqxInput({width: 120, height: 22, disabled: true, placeHolder: "0000"});
+                        $("#cbo_Clasificacion").jqxDropDownList({animationType: 'fade', width: 180, height: 22, dropDownWidth: 220});
+                        $("#div_Fecha").jqxDateTimeInput({culture: 'es-PE', animationType: 'fade', width: 150, height: 22});
+                        $("#txt_Asunto").jqxInput({placeHolder: "Ingrese el asunto", width: 630, height: 22});
+                        $("#txt_Dirigido").jqxInput({placeHolder: "Ingrese la Observación", width: 630, height: 22});
+                        $("#txt_Cargo").jqxInput({placeHolder: "Ingrese la Post Firma", width: 630, height: 22});
+                        $("#div_Legajos").jqxNumberInput({width: 50, height: 22, max: 99, digits: 2, decimalDigits: 0});
+                        $("#div_Folios").jqxNumberInput({width: 50, height: 22, max: 99, digits: 2, decimalDigits: 0});
+                        $("#cbo_Referencia").jqxDropDownList({animationType: 'fade', checkboxes: true, width: 630, dropDownWidth: 700, height: 22});
+                        $('#btn_Cancelar').jqxButton({width: 36, height: 34});
+                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Guardar').jqxButton({width: 36, height: 34});
+                        $('#btn_Guardar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_Guardar').on('click', function () {
+                            var msg = "";
+                            msg += fn_validaCombos('#cbo_TipoDocumento', "Seleccione la Tipo de Documento.");
+                            msg += fn_validaCombos('#cbo_Clasificacion', "Seleccione la Clasificacion del Documento.");
+                            if (msg === "") {
+                                $('#frm_RemisionDocumentos').jqxValidator('validate');
+                            } else {
+                                $.alert({
+                                    theme: 'material',
+                                    title: 'AVISO DEL SISTEMA',
+                                    content: msg,
+                                    animation: 'zoom',
+                                    closeAnimation: 'zoom',
+                                    type: 'orange',
+                                    typeAnimated: true
+                                });
+                            }
+                        });
+                        $('#frm_RemisionDocumentos').jqxValidator({
+                            rules: [
+                                {input: '#txt_Institucion', message: 'Ingrese el nombre de la institución', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_NumeroDocumento', message: 'Ingrese el Numero de Documento!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Asunto', message: 'Ingrese el Asunto!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#div_Fecha', message: 'Ingrese la fecha de documento', action: 'keyup, blur', rule: 'required'},
+                                {input: '#div_Fecha', message: 'Ingrese una fecha valida de documento', action: 'valueChanged',
+                                    rule: function (input, commit) {
+                                        var date = $('#div_Fecha').jqxDateTimeInput('value');
+                                        var result = date.getFullYear() >= 2015 && date.getFullYear() <= 2030;
+                                        return result;
+                                    }
+                                },
+                                {input: '#txt_Cargo', message: 'Ingrese la firma!', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_RemisionDocumentos').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatos();
+                            }
+                        });
+                    }
+                });
+                var posicionX, posicionY;
+                var ancho = 460;
+                var alto = 540;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaElevar').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarElevar'),
+                    initContent: function () {
+                        $("#cbo_DerivadoA").jqxDropDownList({animationType: 'fade', width: 300, height: 22, dropDownWidth: 350});
+                        $("#cbo_DerivadoA").on('change', function (event) {
+                            fn_cargarComboAjax("#dbo_Destinatario", {mode: 'usuarioAreaLaboral', codigo: $("#cbo_DerivadoA").val()});
+                        });
+                        $("#dbo_Destinatario").jqxDropDownList({animationType: 'fade', width: 300, height: 22, dropDownWidth: 350});
+                        $('#btn_CancelarElevar').jqxButton({width: 36, height: 34});
+                        $('#btn_CancelarElevar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Elevar').jqxButton({width: 36, height: 34});
+                        $('#btn_Elevar').jqxTooltip({position: 'bottom', content: "Elevar"});
+                        $('#btn_Elevar').on('click', function (event) {
+                            fn_VerificaElevar();
+                        });
+                    }
+                });
+                ancho = 300;
+                alto = 280;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPin').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarPin'),
+                    initContent: function () {
+                        $("#txt_Pin").jqxPasswordInput({placeHolder: "PIN", width: 200, height: 22});
+                        $('#btn_CancelarPin').jqxButton({width: 36, height: 34});
+                        $('#btn_CancelarPin').jqxTooltip({position: 'bottom', content: "Cerrar"});
+                        $('#btn_AceptarPin').jqxButton({width: 36, height: 34});
+                        $('#btn_AceptarPin').jqxTooltip({position: 'bottom', content: "Aceptar"});
+                        $('#btn_AceptarPin').on('click', function (event) {
+                            fn_VerificaPIN();
+                        });
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_CargarBusqueda();
+            fn_cargarComboAjax("#cbo_TipoDocumento", {mode: 'tipoDocumentos'});
+            fn_cargarComboAjax("#cbo_Clasificacion", {mode: 'clasificacionDocumentos'});
+        });
+    });
+    function fn_CargarBusqueda() {
+        var msg = "";
+        msg += fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        msg += fn_validaCombos('#cbo_Mes', "Seleccione el Mes.");
+        if (msg === "") {
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: 'codigo', type: "number"},
+                    {name: 'numero', type: "string"},
+                    {name: 'numeroDocumento', type: "string"},
+                    {name: 'asunto', type: "string"},
+                    {name: 'subGrupo', type: "string"},
+                    {name: 'prioridad', type: "string"},
+                    {name: 'fecha', type: "date", format: 'dd/MM/yyyy'},
+                    {name: 'estado', type: "string"},
+                    {name: 'firma', type: "string"},
+                    {name: 'legajo', type: "number"},
+                    {name: 'folio', type: "string"},
+                    {name: 'referencia', type: "string"},
+                    {name: 'codigoUsuario', type: "string"},
+                    {name: 'archivo', type: "string"}
+                ],
+                id: 'codigo',
+                url: "RemisionDocumentos",
+                data: {mode: 'G', periodo: $('#cbo_Periodo').val(), mes: $('#cbo_Mes').val()}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+            if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    function fn_addDependencia() {
+        // add a new item.
+        var msg = null;
+        if (codInstitucion !== null) {
+            var lista = $("#div_ListaInstitucion").jqxListBox('getItems');
+            for (var i = 0; i < lista.length; i++) {
+                if (codInstitucion.value === lista[i].value)
+                    msg = "La Dependencia " + lista[i].label + " ya esta seleccionada.";
+            }
+            if (msg === null) {
+                $("#div_ListaInstitucion").jqxListBox('addItem', {label: codInstitucion.label, value: codInstitucion.value});
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: msg,
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            }
+            $("#txt_Institucion").val("");
+            codInstitucion = null;
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Seleccione una Institucion",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    function fn_removeDependencia() {
+        var item = $("#div_ListaInstitucion").jqxListBox('getSelectedItem');
+        if (item.label !== null) {
+            $("#div_ListaInstitucion").jqxListBox('removeItem', item.value);
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Seleccione una Registro de la Lista de Dependencias",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+    function fn_EditarRegistro() {
+        //fn_cargarComboAjax("#cbo_Referencia",{mode: 'referenciaDoc',periodo: periodo,unidadOperativa: mode});        
+        $.ajax({
+            type: "GET",
+            url: "RemisionDocumentos",
+            data: {mode: mode, periodo: $("#cbo_Periodo").val(), codigo: codigo},
+            success: function (data) {
+                var dato = JSON.parse(data);
+                $("#txt_NumeroDocumento").val(dato.numeroDocumento);
+                $("#div_Fecha").jqxDateTimeInput('setDate', new Date(dato.fecha));
+                $("#txt_Dirigido").val(dato.dirigido);
+                $("#txt_Asunto").val(dato.asunto);
+                $("#cbo_TipoDocumento").jqxDropDownList('selectItem', dato.tipoDocumento);
+                $("#cbo_Clasificacion").jqxDropDownList('selectItem', dato.clasificacion);
+                $("#txt_Institucion").val(dato.institucion);
+                $("#txt_Cargo").val(dato.cargo);
+                $("#div_Legajos").val(dato.legajos);
+                $("#div_Folios").val(dato.folios);
+                $("#divEnlaceDoc").css("display", "inline");
+                var getUrl = window.location;
+                var uripath = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download";
+                $("#aEnlaceDoc").attr('href', 'ms-word:OFE|u|' + uripath + '/' + dato.word + "|s|" + uripath + "/RemisionDocumentos/");
+                $("#cbo_Referencia").jqxDropDownList('addItem', {label: docReferencia, value: dato.referenca});
+                $("#cbo_Referencia").jqxDropDownList('selectItem', dato.referenca);
+            }
+        });
+        $('#cbo_Referencia').jqxDropDownList({disabled: true});
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.5});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+    }
+    //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+    function fn_GrabarDatos() {
+        var items = $("#cbo_Referencia").jqxDropDownList('getCheckedItems');
+        var referencia = new Array();
+        $.each(items, function (index) {
+            referencia.push(this.value);
+        });
+        var $contenidoAjax = $('#divCreaLoading').css("display", "inline");
+        $.ajax({
+            type: "POST",
+            url: "IduRemisionDocumentos",
+            data: {mode: mode, periodo: $("#cbo_Periodo").val(), codigo: codigo, institucion: '',
+                tipoDocumento: $("#cbo_TipoDocumento").val(), numeroDocumento: $("#txt_NumeroDocumento").val(), clasificacion: $("#cbo_Clasificacion").val(),
+                fecha: $("#div_Fecha").val(), asunto: $("#txt_Asunto").val(), dirigido: $("#txt_Dirigido").val(), cargo: $("#txt_Cargo").val(),
+                legajos: $("#div_Legajos").val(), folios: $("#div_Folios").val(), referencia: referencia.toString()},
+            success: function (data) {
+                $contenidoAjax.css("display", "none");
+                var getUrl = window.location;
+                var uripath = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=TramiteDocumentario&filename=" + $("#cbo_Periodo").val() + "-" + $("#cbo_TipoDocumento").val() + "-" + data + ".rtf";
+                $("#divEnlaceDoc").css("display", "inline");
+                //$("#aEnlaceDoc").attr('href', 'ms-word:OFE|u|' + uripath + '/' + dato.word + "|s|" + uripath + "/RemisionDocumentos/");
+                $("#aEnlaceDoc").attr('href', uripath);
+            },
+            error: function (jqXHR) {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: jqXHR.responseText,
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'red',
+                    typeAnimated: true
+                });
+            }
+        });
+    }
+    function addItemFile(el, identifier) {
+        var files = $('#' + el.getAttribute("id"))[0].files[0];
+        var filename = files.name.toUpperCase();
+        $("#btndelete-" + identifier).css("display", "inline");
+        $("#btnadjuntar-" + identifier).css("display", "none");
+        $("#filename-" + identifier).html(filename);
+        $(el).parent().parent().css("background", "#ffffff");
+        identifier = parseInt(identifier) + 2;
+        var html = "";
+        html += '<div id="fileitem-' + identifier + '" class="fileitem list-group-item list-group-item-action justify-content-between" style="background: #ececec; display: flex; width: 450px;">';
+        html += '   <div id="filename-' + identifier + '" style="display: flex;  position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>';
+        html += '   <label id="btnadjuntar-' + identifier + '" style="display: inline-block; position: absolute; padding: 5px; padding-left: 380px;">';
+        html += '       <img src="images/Botones/adjunto.png" width="30px" height="30px" style="position: relative; margin - top: 2px;" alt="Adjuntar Archivo"/>';
+        html += '       <input  type="file" id="file-' + identifier + '" name="file-' + identifier + '" onchange="addItemFile(this,' + identifier + ')" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word" title="Adjuntar Archivo">';
+        html += '   </label>';
+        html += '   <div id="btndelete-' + identifier + '" onclick="deleteFileItem(' + identifier + ')" style="display: none; padding: 6px;" title="Quitar">';
+        html += '       <img src="images/Botones/deleteBlack.png" width="30px" height="30px" style="position: relative; margin-top: 2px;" alt="Borrar"/>';
+        html += '   </div>';
+        html += '</div>';
+        $("#div-files").prepend(html);
+    }
+    function deleteFileItem(identifier) {
+        $("#fileitem-" + identifier).remove();
+    }
+    //FUNCION VALIDA DATOS PARA ELEVAR
+    function fn_VerificaElevar() {
+        msg = "";
+        msg += fn_validaCombos("#cbo_DerivadoA", "Seleccione el Area a Derivar");
+        msg += fn_validaCombos("#dbo_Destinatario", "Seleccione el Destinatario");
+        if (msg === "") {
+            $("#txt_Pin").val("");
+            $('#div_VentanaPin').jqxWindow({isModal: true, modalOpacity: 0.5});
+            $('#div_VentanaPin').jqxWindow('open');
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA VERIFICAR EL PIN DEL USUARIO
+    function fn_VerificaPIN() {
+        $.ajax({
+            url: 'TextoAjax',
+            type: 'GET',
+            data: {mode: 'verificaPin', codigo: $("#txt_Pin").val()},
+            success: function (data) {
+                if (data === "true" || data === true) {
+                    $('#div_VentanaPin').jqxWindow('close');
+                    fn_ElevarDocumento();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'PIN INVALIDO',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    function fn_ElevarDocumento() {
+        $("#divLoading").removeClass("d-none");
+        $("#btn_elevar").addClass("d-none");
+        var formData = new FormData(document.getElementById("frm_DocumentoElevar"));
+        formData.append("mode", 'I');
+        formData.append("periodo", $("#cbo_Periodo").val());
+        formData.append("codigo", codigo);
+        formData.append("areaLaboral", $("#cbo_DerivadoA").val());
+        formData.append("responsable", $("#dbo_Destinatario").val());
+        $.ajax({
+            url: 'IduElevarDocumento',
+            type: 'POST',
+            data: formData,
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaElevar').jqxWindow('close');
+                                    fn_CargarBusqueda();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+</script>
+<div style="border: none;" id='div_Titulo'>
+    <div class="jqx-hideborder">REMISIÓN DE DOCUMENTOS</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr>
+                        <th>Periodo : </th>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <th>Mes : </th>
+                        <td>
+                            <select id="cbo_Mes" name="cbo_Mes">
+                                <span th:each="mes : ${session.objMeses}">
+                                    <option th:value="${mes.codigo}"><span th:text="${mes.descripcion}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit"/></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaPrincipal" style="display: none">
+    <div>
+        <span style="float: left">REMISION DE DOCUMENTOS</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_RemisionDocumentos" name="frm_RemisionDocumentos" method="post">
+            <table class="form">
+                <tr>
+                    <th>Documento : </th>
+                    <td>
+                        <select id="cbo_TipoDocumento" name="cbo_TipoDocumento">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                    <th>Nro : </th>
+                    <td><input type="text" id="txt_NumeroDocumento" name="txt_NumeroDocumento"/></td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <th>Dependencia : </th>
+                    <td colspan="4"><input type="text" id="txt_Institucion" name="txt_Institucion" style="text-transform: uppercase;" autocomplete="off"/> 
+                        <a href="javascript: fn_addDependencia();"><img src="images/Botones/add.png" width="15px" height="15px"/></a>  
+                        <a href="javascript: fn_removeDependencia();" ><img src="images/Botones/cancel.png" width="15px" height="15px"/></a>
+                    </td>                   
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td colspan="3">
+                        <div data-bind="jqxListBox: {selectedIndex: index}" id="div_ListaInstitucion"></div>
+                    </td>
+                    <td>
+                        <div >
+                            <div id="divCreaLoading" style="display: none; text-align: center; margin:auto; color: blue;">
+                                <img src="images/Botones/cargando.gif" width="120px" height="120px"/>
+                                <div>Procesando...</div>
+                            </div>
+                            <div id="divEnlaceDoc" style="display: none; text-align: center; margin:auto; " >
+                                <div>
+                                    <img src="images/Botones/word.png" width="120px" height="120px"/>
+                                </div>
+                                <br/>
+                                <div>
+                                    <a id="aEnlaceDoc" href="#" target="_blank" style="color: blue"><strong>Documento Generado</strong></a>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Fecha : </th>
+                    <td><div id="div_Fecha"></div></td>
+                    <th>Clasificaci&oacute;n : </th>
+                    <td>
+                        <select id="cbo_Clasificacion" name="cbo_Clasificacion">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <th>Asunto : </th>
+                    <td colspan="4"><input type="text" id="txt_Asunto" name="txt_Asunto" style="text-transform: uppercase;"/></td>                    
+                </tr>
+                <tr>
+                    <th>Dirigido a : </th>
+                    <td colspan="4"><input type="text" id="txt_Dirigido" name="txt_Dirigido" style="text-transform: uppercase;"/></td>                    
+                </tr>
+                <tr>
+                    <th>Cargo : </th>
+                    <td colspan="4"><input type="text" id="txt_Cargo" name="txt_Cargo" style="text-transform: uppercase;"/></td>                    
+                </tr>
+                <tr>
+                    <th>Legajos : </th>
+                    <td><div id="div_Legajos"></div></td>
+                    <th>Folios : </th>
+                    <td><div id="div_Folios"></div></td>
+                    <td>&nbsp;</td>
+                </tr> 
+                <tr>
+                    <th>Referencia : </th>
+                    <td colspan="4">
+                        <select id="cbo_Referencia" name="cbo_Referencia">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <div class="Summit">
+                <div id="btn_Guardar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+                <div id="btn_Cancelar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="div_VentanaElevar" style="display: none">    
+    <div>
+        <span style="float: left">ELEVAR DOCUMENTOS</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_DocumentoElevar" name="frm_DocumentoElevar" enctype="multipart/form-data" action="javascript: fn_VerificaElevar();" method="post">
+            <table class="form">            
+                <tr>
+                    <th>Derivar a : </th>
+                    <td>
+                        <select id="cbo_DerivadoA" name="cbo_DerivadoA">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>            
+                <tr>
+                    <th class="inputlabel">Destinatario : </th>
+                    <td>
+                        <select id="dbo_Destinatario" class="form-select" >
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>            
+                <tr>
+                    <td colspan="2">
+                        <div id="div-files"> 
+                            <div id="fileitem-1" class="fileitem list-group-item list-group-item-action justify-content-between" style="background: #ececec; display: flex; width: 450px;">
+                                <div id="filename-1" style="display: flex; position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>                            
+                                <label id="btnadjuntar-1" style="display: inline-block; position: absolute; padding: 5px; padding-left: 380px;">
+                                    <img src="images/Botones/adjunto.png" width="30px" height="30px" style='position: relative; margin-top: 2px;' alt="Adjuntar Archivo"/>
+                                    <input type="file" id="file-1" class="fileinput" name="file-1" onchange="addItemFile(this, 1);" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word"/>
+                                </label>
+                                <div id="btndelete-1" onclick="deleteFileItem(1)" style="display: none; padding: 6px;" title="Borrar">
+                                    <img src="images/Botones/deleteBlack.png" width="30px" height="30px" style='position: relative; margin-top: 2px;' alt="Borrar"/>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>   
+        </form>
+        <div class="Summit" >
+            <div id="btn_Elevar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            <div id="btn_CancelarElevar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+        </div>
+    </div>
+</div>
+<div id="div_VentanaPin" style="display: none">
+    <div>
+        <span style="float: left">PIN DE SEGURIDAD</span>
+    </div>
+    <div style="overflow: hidden;">
+        <div align="center" style="padding: 10px">
+            <img src="images/Botones/candado.png" alt=""/>
+            <br/>
+            <label class="inputlabel">Ingrese su PIN</label>
+            <br/>
+            <input type="password" name="txt_Pin" id="txt_Pin" autocomplete="off"/>            
+            <br/>
+        </div>
+        <div class="Summit">
+            <div id="btn_AceptarPin" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/check.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            <div id="btn_CancelarPin" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+        </div>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display:none;'>
+    <ul>
+        <li style="font-weight: bold;">Editar</li>
+        <li style="font-weight: bold;">Anular</li> 
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: blue;">Adj Documento</li>
+        <li style="font-weight: bold; color: maroon;">Ver Documento</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: green;">Elevar Documento</li>
+    </ul>
+</div>

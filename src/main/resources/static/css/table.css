@@ -1,0 +1,44 @@
+/*ESTILO NAVY*/
+table.navy {
+    border-collapse: collapse;
+}
+table.navy tbody tr td,
+table.navy tbody tr th {
+    padding: 1px;
+}
+table.navy th {
+    text-align: right;
+    font-weight: bold;
+    font-size: 12px;
+    color: black;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    text-align: center;
+    padding-top: 4px;
+}
+table.navy td {
+    text-align: left;
+}
+/*ESTILO FORM*/
+table.form {
+    margin: auto;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    font-size: 12px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+table.form th {
+    color: #666666;
+    text-align: right;
+    font-weight: bold;
+}
+table.form td {
+    color: black;
+    text-align: left;
+}
+table.form thead tr td,
+table.form thead tr th,
+table.form tfoot tr td,
+table.form tfoot tr th {
+    padding: 3px 10px;
+}

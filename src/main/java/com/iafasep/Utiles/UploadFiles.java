@@ -21,6 +21,15 @@ public class UploadFiles {
         }
     }
 
+    public void TramiteDocumentario(String codigo, MultipartFile file) throws IOException {
+        if (!file.isEmpty()) {
+            byte[] bytes;
+            bytes = file.getBytes();
+            Path path = Paths.get(Utiles.getServerPath() + "TramiteDocumentario\\" + codigo + "-" + file.getOriginalFilename());
+            Files.write(path, bytes);
+        }
+    }
+
     public void CertificacionPresupuestal(String codigo, MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
             byte[] bytes;

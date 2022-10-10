@@ -1,4 +1,4 @@
-package com.iafasep.UserServices.MesaPartes;
+package com.iafasep.UserServices.TramiteDocumentario;
 
 import com.google.gson.Gson;
 import com.iafasep.BusinessServices.Beans.BeanMesaPartesDecreto;

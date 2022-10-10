@@ -1,0 +1,838 @@
+<script>
+    var codigo = null;
+    var archivo = null;
+    var institucion = null;
+    var estado = null;
+    var mode = null;
+    var msg = null;
+    $(document).ready(function () {
+        $("#div_Titulo").jqxExpander({width: '100%'});
+        $("#cbo_Tipo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 200, dropDownWidth: 350, height: 25});
+        $("#cbo_Periodo").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 180, height: 25});
+        $("#cbo_Mes").jqxComboBox({autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 180, height: 25});
+        $("#div_diaBus").jqxNumberInput({width: 50, height: 25, max: 31, digits: 2, decimalDigits: 0});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $("#cbo_Mes").jqxComboBox('selectItem', pad(fecha.getMonth() + 1, 2));
+        $("#div_diaBus").val(fecha.getDate());
+        $('#cbo_Tipo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Mes').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        //ESTILOS A LAS CELDAS DE LA GRILLA 
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (rowdata['estado'] === "ANULADO") {
+                return "RowAnulado";
+            }
+            if (datafield === "numero") {
+                return "RowBold";
+            }
+            if (datafield === "usuarioResponsable") {
+                return "RowBlue";
+            }
+            if (datafield === "institucion") {
+                return "RowPurple";
+            }
+        };
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '100%',
+            height: ($(window).height() - 95),
+            pageable: true,
+            columnsresize: true,
+            enabletooltips: true,
+            altrows: false,
+            editable: false,
+            autoheight: false,
+            autorowheight: false,
+            sortable: true,
+            filterable: true,
+            showtoolbar: true,
+            autoshowfiltericon: true,
+            showfilterrow: true,
+            showstatusbar: true,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonNuevo = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/nuevo.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonReporte = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonNuevo);
+                container.append(ButtonExportar);
+                container.append(ButtonReporte);
+                toolbar.append(container);
+                ButtonNuevo.jqxButton({width: 36, height: 34});
+                ButtonNuevo.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonReporte.jqxButton({width: 36, height: 34});
+                ButtonReporte.jqxTooltip({position: 'bottom', content: "Reporte Diario"});
+                ButtonNuevo.click(function (event) {
+                    mode = 'I';
+                    codigo = 0;
+                    fn_NuevoRegistro();
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xlsx', 'Listado de Mesa de Partes');
+                });
+                ButtonReporte.click(function (event) {
+                    var reporte = "MPA0001";
+                    var url = "Reporte?reporte=" + reporte + "&periodo=" + $("#cbo_Periodo").val() + "&tipo=" + $("#cbo_Tipo").val() + "&codigo=" + pad($("#div_diaBus").val(),2) + '/' + $("#cbo_Mes").val() + '/' + $("#cbo_Periodo").val();
+                    $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                    $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.4});
+                    $('#div_Reporte').jqxWindow('open');
+                });
+            },
+            columns: [
+                {text: 'CÓDIGO', dataField: 'numero', width: '4%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'ASUNTO', dataField: 'asunto', width: '20%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'institucion', filtertype: 'checkedlist', width: '16%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'PRIORIDAD', dataField: 'prioridad', filtertype: 'checkedlist', width: '6%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FEC. DOC', datafield: 'fecha', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsformat: 'd'},
+                {text: 'FIRMA', dataField: 'postFirma', width: '15%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'USUARIO RESP.', dataField: 'usuarioResponsable', filtertype: 'checkedlist', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'LEGAJO', dataField: 'legajos', width: '4%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
+                {text: 'FOLIO', dataField: 'folios', width: '4%', align: 'center', cellsAlign: 'center', cellsFormat: 'f', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL
+        var alto = 115;
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: alto, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $('#div_GrillaPrincipal').on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                if (parseInt(event.args.originalEvent.clientY) > 600) {
+                    scrollTop = scrollTop - alto;
+                }
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if ($.trim($(opcion).text()) === "Editar") {
+                if (estado !== "ACTIVO") {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'El registro no puede ser editado, se encuentra ' + estado,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                } else {
+                    mode = 'U';
+                    fn_EditarRegistro();
+                }
+            } else if ($.trim($(opcion).text()) === "Anular") {
+                if ($("#cbo_Tipo").val() === 'S') {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'El documento no puede ser anulado',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                } else {
+                    if (estado !== "ACTIVO") {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'El registro no puede ser editado, se encuentra ' + estado,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    } else {
+                        if (codigo !== null || codigo === '') {
+                            mode = 'D';
+                            fn_AnularDocumento();
+                        } else {
+                            $.alert({
+                                theme: 'material',
+                                title: 'AVISO DEL SISTEMA',
+                                content: 'Debe Seleccionar un Registro',
+                                animation: 'zoom',
+                                closeAnimation: 'zoom',
+                                type: 'red',
+                                typeAnimated: true
+                            });
+                        }
+                    }
+                }
+            } else if ($.trim($(opcion).text()) === "Ver Documento") {
+                if (archivo !== null && archivo !== '') {
+                    var extencion = fn_getFileExtension(archivo);
+                    if (extencion.toUpperCase() === 'PDF') {
+                        $('#div_ViewerTituloPDF').html(archivo);
+                        var getUrl = window.location;
+                        var url = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=MesaPartes&filename=" + $("#cbo_Periodo").val() + "-" + $("#cbo_Tipo").val() + "-" + codigo + "-" + archivo;
+                        $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                        $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                        $('#div_Reporte').jqxWindow('open');
+                    } else {
+                        document.location.target = "_blank";
+                        document.location.href = "../Descarga?opcion=MesaParte&periodo=" + $('#cbo_Periodo').val() + "&codigo=" + $('#cbo_Tipo').val() + "-" + codigo + "&documento=" + archivo;
+                    }
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No existe Archivo a Vizualizar!!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            } else if ($.trim($(opcion).text()) === "Adjuntar Documento") {
+                if ($('#cbo_Tipo').val() === 'S') {
+                    mode = 'C';
+                    fn_AdjuntarArchivo();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Opción no permitida para el ingreso de documentos',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'orange',
+                        typeAnimated: true
+                    });
+                }
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: "No hay Opción a mostrar",
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['numero'];
+            estado = row['estado'];
+            archivo = row['digital'];
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 650;
+                var alto = 310;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPrincipal').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_Cancelar'),
+                    initContent: function () {
+                        $("#txt_Numero").jqxInput({width: 120, height: 22, disabled: true});
+                        $("#div_FechaDocumento").jqxDateTimeInput({width: 150, height: 22, culture: 'es-PE'});
+                        $("#cbo_Prioridad").jqxDropDownList({width: 200, height: 22, animationType: 'fade'});
+                        $("#cbo_TipoDocumento").jqxDropDownList({width: 200, height: 22, animationType: 'fade'});
+                        $("#txt_NumeroDocumento").jqxInput({width: 150, height: 22, minLength: 1});
+                        $("#cbo_Clasificacion").jqxDropDownList({width: 200, height: 22, animationType: 'fade'});
+                        $("#div_FechaRecepcion").jqxDateTimeInput({width: 150, height: 22, culture: 'es-PE', disabled: true});
+                        $("#txt_Asunto").jqxInput({width: 550, height: 22, placeHolder: "Ingrese el asunto"});
+                        $("#txt_PostFirma").jqxInput({width: 550, height: 22, placeHolder: "Ingrese la Post Firma"});
+                        $("#div_Legajos").jqxNumberInput({width: 50, height: 22, max: 999, digits: 3, decimalDigits: 0});
+                        $("#div_Folios").jqxNumberInput({width: 50, height: 22, max: 999, digits: 3, decimalDigits: 0});
+                        $("#txt_Archivo").jqxInput({width: 550, height: 22});
+                        var sourceInstitucion = {
+                            datatype: "json",
+                            datafields: [
+                                {name: 'codigo'},
+                                {name: 'descripcion'}
+                            ],
+                            url: "CombosAjax",
+                            data: {mode: 'instituciones'}
+                        };
+                        var dataAdapterInstitucion = new $.jqx.dataAdapter(sourceInstitucion);
+                        $("#txt_Institucion").jqxInput({width: 550, height: 22, placeHolder: "SELECCIONE LA INSTITUCION", searchMode: 'startswithignorecase', source: dataAdapterInstitucion, minLength: 1, items: 15, displayMember: "descripcion", valueMember: "codigo", dropDownWidth: 650, popupZIndex: 99999});
+                        $('#txt_Institucion').on('select', function (event) {
+                            if (event.args) {                                
+                                var item = event.args.item;
+                                if (item) {
+                                    institucion = item.value;
+                                }
+                            }
+                        });
+                        $('#btn_Cancelar').jqxButton({width: 36, height: 32});
+                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Guardar').jqxButton({width: 36, height: 32});
+                        $('#btn_Guardar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_Guardar').on('click', function () {
+                            msg = "";
+                            msg += fn_validaCampo(institucion, "Seleccione la Institución.");
+                            msg += fn_validaCombos('#cbo_Prioridad', "Seleccione la Prioridad.");
+                            msg += fn_validaCombos('#cbo_TipoDocumento', "Seleccione el Tipo de Documento.");
+                            msg += fn_validaCombos('#cbo_Clasificacion', "Seleccione la Clasificación.");
+                            if (msg === "") {
+                                $('#frm_MesaPartes').jqxValidator('validate');
+                            } else {
+                                $.alert({
+                                    theme: 'material',
+                                    title: 'Aviso del Sistema',
+                                    content: msg,
+                                    type: 'blue',
+                                    animation: 'zoom',
+                                    closeAnimation: 'zoom',
+                                    typeAnimated: true,
+                                    boxWidth: '50%'
+                                });
+                            }
+                        });
+                        $('#frm_MesaPartes').jqxValidator({
+                            rules: [
+                                {input: '#txt_Institucion', message: 'Ingrese el nombre de la institución', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_NumeroDocumento', message: 'Ingrese el Numero de Documento!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Asunto', message: 'Ingrese el Asunto!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#div_FechaDocumento', message: 'Ingrese la fecha de documento', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_PostFirma', message: 'Ingrese la firma!', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_Archivo', message: 'Seleccione un Archivo!', action: 'keyup, blur', rule: 'required'}
+                            ]
+                        });
+                        $('#frm_MesaPartes').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatos();
+                            }
+                        });
+                    }
+                });
+                //VENTANA DE DETALLE DE ANULACION
+                ancho = 500;
+                alto = 175;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_DetalleAnulacion').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarAnulacion'),
+                    initContent: function () {
+                        $("#txt_ComentarioAnulacion").jqxInput({placeHolder: 'Ingrese detalle de anulación', height: 90, width: 430, maxLength: 500, minLength: 1});
+                        $("#txt_ComentarioAnulacion").val("");
+                        $('#btn_CancelarAnulacion').jqxButton({width: '65px', height: 25});
+                        $('#btn_GuardarAnulacion').jqxButton({width: '65px', height: 25});
+                        $('#btn_GuardarAnulacion').on('click', function (event) {
+                            var msg = "";
+                            if (msg === "") {
+                                $('#frm_AnulacionDocumento').jqxValidator('validate');
+                            }
+                        });
+                        $('#frm_AnulacionDocumento').jqxValidator({
+                            rules: [
+                                {input: '#txt_ComentarioAnulacion', message: 'Ingrese el detalle de la anulación', action: 'keyup, blur', rule: 'required'},
+                                {input: '#txt_ComentarioAnulacion', message: 'Ingrese sustento de la anulación', action: 'keyup', rule: 'length=5,500'}
+                            ]
+                        });
+                        $('#frm_AnulacionDocumento').jqxValidator({
+                            onSuccess: function () {
+                                fn_GrabarDatosAnulacion();
+                            }
+                        });
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_CargarBusqueda();
+            fn_cargarComboAjax("#cbo_Clasificacion", {mode: 'clasificacionDocumentos'});
+            fn_cargarComboAjax("#cbo_TipoDocumento", {mode: 'tipoDocumentos'});
+            fn_cargarComboAjax("#cbo_Prioridad", {mode: 'prioridades'});
+        });
+    });
+    //FUNCION PARA ACTUALIZAR DATOS DE LA GRILLA
+    function fn_CargarBusqueda() {
+        msg = "";
+        msg += fn_validaCombos('#cbo_Tipo', "Seleccione el Tipo.");
+        msg += fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        msg += fn_validaCombos('#cbo_Mes', "Seleccione el Mes.");
+        if (msg === "") {
+            //PARA CARGAR LOS ELEMENTOS DE LA GRILLA
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: 'numero', type: "string"},
+                    {name: 'numeroDocumento', type: "string"},
+                    {name: 'asunto', type: "string"},
+                    {name: 'institucion', type: "string"},
+                    {name: 'prioridad', type: "string"},
+                    {name: 'fecha', type: "date"},
+                    {name: 'estado', type: "string"},
+                    {name: 'postFirma', type: "string"},
+                    {name: 'legajos', type: "number"},
+                    {name: 'folios', type: "string"},
+                    {name: 'usuarioResponsable', type: "string"},
+                    {name: 'referencia', type: "string"},
+                    {name: 'codigoUsuario', type: "string"},
+                    {name: 'digital', type: "string"}
+                ],
+                id: 'codigo',
+                url: "MesaPartes",
+                data: {mode: 'G', tipo: $('#cbo_Tipo').val(), periodo: $('#cbo_Periodo').val(), mes: $('#cbo_Mes').val(), codigo: $("#div_diaBus").val()}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+            if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA CARGAR VENTANA DE NUEVO REGISTRO
+    function fn_NuevoRegistro() {
+        if ($('#cbo_Tipo').val() === 'S') {
+            fn_cargarComboAjax("#cbo_Usuario", {mode: 'usuarioMesaPartes', periodo: $('#cbo_Periodo').val(), codigo: $("#cbo_Area").val()});
+        }
+        $.ajax({
+            type: "GET",
+            url: "MesaPartes",
+            data: {mode: mode, tipo: $('#cbo_Tipo').val(), periodo: $('#cbo_Periodo').val()},
+            success: function (data) {
+                $('#txt_Numero').val(JSON.parse(data));
+            }
+        });
+        institucion = null;
+        $("#cbo_Prioridad").jqxDropDownList('selectItem', '1');
+        $("#cbo_TipoDocumento").jqxDropDownList('selectItem', '1');
+        $("#txt_Asunto").val('');
+        $("#cbo_Clasificacion").jqxDropDownList('selectItem', '1');
+        $("#txt_Institucion").val('');
+        $("#div_FechaRecepcion").val(new Date);
+        $("#txt_NumeroDocumento").val('');
+        $("#txt_PostFirma").val('');
+        $("#div_Legajos").val('0');
+        $("#div_Folios").val('0');
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.5});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+    }
+    //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
+    function fn_EditarRegistro() {
+        $.ajax({
+            type: "GET",
+            url: "MesaPartes",
+            data: {mode: mode, tipo: $('#cbo_Tipo').val(), periodo: $('#cbo_Periodo').val(), codigo: codigo},
+            success: function (data) {
+                var dato = JSON.parse(data);
+                $("#txt_Numero").val(dato.numero);
+                institucion = dato.institucion;
+                $("#txt_Institucion").val(dato.periodo);
+                $("#cbo_Prioridad").jqxDropDownList('selectItem', dato.prioridad);
+                $("#cbo_TipoDocumento").jqxDropDownList('selectItem', dato.tipoDocumento);
+                $("#txt_NumeroDocumento").val(dato.numeroDocumento);
+                $("#cbo_Clasificacion").jqxDropDownList('selectItem', dato.clasificacion);
+                $('#div_FechaDocumento').jqxDateTimeInput('setDate', new Date(dato.fecha));
+                $('#div_FechaRecepcion').jqxDateTimeInput('setDate', new Date(dato.fechaRegistro));
+                $("#txt_Asunto").val(dato.asunto);
+                $("#txt_PostFirma").val(dato.postFirma);
+                $("#div_Legajos").val(dato.legajos);
+                $("#div_Folios").val(dato.folios);
+            }
+        });
+        $('#div_VentanaPrincipal').jqxWindow({isModal: true});
+        $('#div_VentanaPrincipal').jqxWindow('open');
+    }
+    //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
+    function fn_GrabarDatos() {
+        var numero = $("#txt_Numero").val();
+        archivo = $("#txt_Archivo").val();
+        if (archivo !== '') {
+            var formData = new FormData(document.getElementById("frm_MesaPartes"));
+            formData.append("mode", mode);
+            formData.append("periodo", $('#cbo_Periodo').val());
+            formData.append("tipo", $('#cbo_Tipo').val());
+            formData.append("numero", numero);
+            formData.append("institucion", institucion);
+            formData.append("prioridad", $("#cbo_Prioridad").val());
+            formData.append("tipoDocumento", $("#cbo_TipoDocumento").val());
+            formData.append("numeroDocumento", $("#txt_NumeroDocumento").val());
+            formData.append("clasificacion", $("#cbo_Clasificacion").val());
+            formData.append("fechaDocumento", $("#div_FechaDocumento").val());
+            formData.append("asunto", $("#txt_Asunto").val());
+            formData.append("postFirma", $("#txt_PostFirma").val());
+            formData.append("legajos", $("#div_Legajos").val());
+            formData.append("folios", $("#div_Folios").val());
+            formData.append("txt_Archivo", $("#txt_Archivo").val());
+            $.ajax({
+                type: "POST",
+                url: "IduMesaPartes",
+                data: formData,
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        $('#div_VentanaPrincipal').jqxWindow('close');
+                                        fn_CargarBusqueda();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Debe Seleccionar un Archivo a subir\n Proceso cancelado!!!.",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA ABRIR VENTANA DE ANULACION
+    function fn_AnularDocumento() {
+        $("#txt_ComentarioAnulacion").val('');
+        $("#txt_ComentarioAnulacion").jqxInput('focus');
+        $('#div_DetalleAnulacion').jqxWindow({isModal: true});
+        $('#div_DetalleAnulacion').jqxWindow('open');
+    }
+    //FUNCION PARA ADJUNTAR ARCHIVO
+    function fn_AdjuntarArchivo() {
+        $.confirm({
+            title: 'ADJUNTAR DOCUMENTO',
+            type: 'blue',
+            content: '' +
+                    '<form method="post"  name="frm_AdjuntarDocumento" id="frm_AdjuntarDocumento" action="../IduMesaPartes" enctype="multipart/form-data">' +
+                    '<label>Documento : </label>' +
+                    '<input type="file" name="fichero" id="fichero" style="text-transform: uppercase; width= 600px" class="name form-control" multiple/>' +
+                    '</form>',
+            buttons: {
+                formSubmit: {
+                    text: 'Enviar',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        fn_GuardarDocumento();
+                    }
+                },
+                cancel: function () {
+                }
+            },
+            onContentReady: function () {
+                // bind to events
+                var jc = this;
+                this.$content.find('form').on('submit', function (e) {
+                    // if the user submits the form by pressing enter in the field.
+                    e.preventDefault();
+                    jc.$$formSubmit.trigger('click'); // reference the button and click it
+                });
+            }
+        });
+    }
+    //FUNCION PARA GRABAR EL DETALLE DE LA ANULACION DEL DOCUMENTO
+    function fn_GrabarDatosAnulacion() {
+        var comentarioAnulacion = $("#txt_ComentarioAnulacion").val();
+        $.ajax({
+            type: "POST",
+            url: "../IduMesaPartes",
+            data: {mode: mode, periodo: periodo, tipo: tipo, numero: codigo, asunto: comentarioAnulacion},
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente!!',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_DetalleAnulacion').jqxWindow('close');
+                                    fn_Refrescar();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    //FUNCION PARA ADJUNTAR EL DOCUMENTO DE SALIDA
+    function fn_GuardarDocumento() {
+        var fichero = $("#fichero").val();
+        if (fichero !== '') {
+            var formData = new FormData(document.getElementById("frm_AdjuntarDocumento"));
+            formData.append("mode", mode);
+            formData.append("periodo", periodo);
+            formData.append("tipo", tipo);
+            formData.append("numero", codigo);
+            $.ajax({
+                type: "POST",
+                url: "../IduMesaPartes",
+                data: formData,
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        fn_Refrescar();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Debe Seleccionar un Archivo a subir\n Proceso cancelado!!!.",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
+</script>
+<div id='div_Titulo' style="border: none;">
+    <div class="jqx-hideborder">LISTADOS DE REGISTRO DE DOCUMENTOS</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr> 
+                        <td class="Titulo">Tipo : </td>
+                        <td>
+                            <select id="cbo_Tipo" name="cbo_Tipo">
+                                <option value="E">INGRESO DE DOCUMENTO</option>
+                                <option value="S">SALIDA DE DOCUMENTO</option>
+                            </select>
+                        </td>
+                        <td class="Titulo">Periodo : </td>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">Mes : </td>
+                        <td>
+                            <select id="cbo_Mes" name="cbo_Mes">
+                                <span th:each="mes : ${session.objMeses}">
+                                    <option th:value="${mes.codigo}"><span th:text="${mes.descripcion}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <td class="Titulo">D&iacute;a : </td>
+                        <td>
+                            <div id="div_diaBus"></div>
+                        </td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit"/></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaPrincipal" style="display: none;">
+    <div>
+        <span style="float: left">REGISTRO MESA DE PARTES</span>
+    </div>
+    <div style="overflow: hidden;">
+        <form id="frm_MesaPartes" name="frm_MesaPartes" enctype="multipart/form-data" action="javascript: fn_GrabarDatos();" method="post">
+            <table width="100%" border="0">
+                <tr>
+                    <td class="inputlabel">Correlativo : </td>
+                    <td><input type="text" id="txt_Numero" name="txt_Numero"/></td>
+                    <td class="inputlabel">Recepci&oacute;n : </td>
+                    <td><div id="div_FechaRecepcion"></div></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Instituci&oacute;n : </td>
+                    <td colspan="3"><input type="text" id="txt_Institucion" name="txt_Institucion" style="text-transform: uppercase;" autocomplete="off"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Prioridad : </td>
+                    <td>
+                        <select id="cbo_Prioridad" name="cbo_Prioridad">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                    <td class="inputlabel">Clasificaci&oacute;n : </td>
+                    <td>
+                        <select id="cbo_Clasificacion" name="cbo_Clasificacion">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Documento : </td>
+                    <td>
+                        <select id="cbo_TipoDocumento" name="cbo_TipoDocumento">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                    <td class="inputlabel">Nro : </td>
+                    <td><input type="text" id="txt_NumeroDocumento" name="txt_NumeroDocumento" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Fecha : </td>
+                    <td colspan="3"><div id="div_FechaDocumento"></div>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Asunto : </td>
+                    <td colspan="3"><input type="text" id="txt_Asunto" name="txt_Asunto" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Post Firma : </td>
+                    <td colspan="3"><input type="text" id="txt_PostFirma" name="txt_PostFirma" style="text-transform: uppercase;"/></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Legajos : </td>
+                    <td><div id="div_Legajos"></div></td>
+                    <td class="inputlabel">Folios : </td>
+                    <td><div id="div_Folios"></div></td>
+                </tr>
+                <tr>
+                    <td class="inputlabel">Archivo : </td>
+                    <td colspan="3"><input type="file" name="txt_Archivo" id="txt_Archivo" style="text-transform: uppercase;" accept="application/pdf"/></td>
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="4">
+                        <div>
+                            <div id="btn_Guardar" style="display: inline-block; margin-left: 10px;"><img style="position: relative;" src="images/Botones/save.png" width="32" height="32"/><span style='margin-left: 2px; position: relative;'> </span></div>
+                            <div id="btn_Cancelar" style="display: inline-block; margin-left: 10px;"><img style="position: relative;" src="images/Botones/cancel.png" width="32" height="32"/><span style='margin-left: 2px; position: relative;'> </span></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<div id="div_DetalleAnulacion" style="display: none">
+    <div>
+        <span style="float: left">DETALLE ANULACIÓN DEL DOCUMENTO</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_AnulacionDocumento" name="frm_AnulacionDocumento" method="post" >
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="inputlabel">Detalle : </td>
+                    <td><textarea id="txt_ComentarioAnulacion" name="txt_ComentarioAnulacion" style="text-transform: uppercase;"></textarea></td> 
+                </tr>
+                <tr>
+                    <td class="Summit" colspan="2">
+                        <div>
+                            <input type="button" id="btn_GuardarAnulacion"  value="Guardar" style="margin-right: 20px"/>
+                            <input type="button" id="btn_CancelarAnulacion" value="Cancelar" style="margin-right: 20px"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>  
+        </form>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display:none;'>
+    <ul>
+        <li style="font-weight: bold">Editar</li>
+        <li style="font-weight: bold">Anular</li> 
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: maroon">Ver Documento</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: blue">Adjuntar Documento</li>
+    </ul>
+</div>

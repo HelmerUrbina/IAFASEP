@@ -1,6 +1,8 @@
 package com.iafasep.Utiles;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import javax.servlet.ServletOutputStream;
@@ -31,6 +33,8 @@ public class DownloadFile {
         filePath = switch (opcion) {
             case "MesaPartes" ->
                 Utiles.getServerPath() + "MesaPartes\\" + filename;
+            case "TramiteDocumentario" ->
+                Utiles.getServerPath() + "TramiteDocumentario\\" + filename;
             case "CertificadoPresupuestal" ->
                 Utiles.getServerPath() + "Presupuesto\\CertificadoPresupuestal\\" + filename;
             case "CP" ->
@@ -39,12 +43,14 @@ public class DownloadFile {
                 "";
         };
         File file = new File(filePath);
-        System.out.println("File : " + filePath);
         response.setHeader("Content-Length", String.valueOf(file.length()));
         response.setHeader("Content-Disposition", "inline; filename=\"" + file.getName() + "\"");
 
         switch (extension) {
             case ".rtf" -> {
+                response.setContentType("text/html;charset=UTF-8");
+                response.setContentType("application/msword");
+                response.setHeader("Content-disposition", "inline; filename=" + file.getName()); 
             }
             case ".pdf" -> {
                 response.setHeader("Content-Length", String.valueOf(file.length()));

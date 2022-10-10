@@ -1,8 +1,9 @@
 package com.iafasep.DataService.DAO;
 
-import com.iafasep.BusinessServices.Beans.BeanCombos;
+import com.iafasep.BusinessServices.Beans.BeanComun;
+import java.sql.Blob;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -10,23 +11,35 @@ import org.springframework.stereotype.Repository;
  * @author MERCANTIL GROUP SAC
  */
 @Repository
-public interface TextoDAO extends CrudRepository<BeanCombos, String> {
+public interface TextoDAO extends JpaRepository<BeanComun, Integer> {
 
     @Query(nativeQuery = true, value = "SELECT "
-            + "'0'  AS CODIGO, "
-            + "TO_CHAR(NPROGRAMACION_TECHOS_PRECIO,'FM999,999,999,999.009') AS DESCRIPCION "
-            + "FROM IAFAS_PROG_CLASE_III_TECHOS WHERE "
+            + "LPAD(NVL(MAX(NREMISION_DOCUMENTO_NUMERO),0)+1,5,0) AS CODIGO  "
+            + "FROM IAFAS_REMISION_DOCUMENTO WHERE "
             + "CPERIODO_CODIGO=?1 AND "
-            + "NBRIGADA_CODIGO=?2 AND "
-            + "NTIPO_ASIGNACION_CODIGO=?3 AND "
-            + "NTIPO_COMBUSTIBLE_CODIGO=?4 ")
-    BeanCombos getPrecioTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(String periodo, Integer brigada, Integer tipoAsignacion, Integer tipoCombustible);
-    
-    
+            + "NTIPO_DOCUMENTO_CODIGO=?2")
+    String getNumeroDocumentoTipoDocumento(String periodo, Integer tipoDocumento);
+
     @Query(nativeQuery = true, value = "SELECT "
-            + "'0' AS CODIGO, "
-            + "TO_CHAR(PK_SINTE.FUN_SALDO_TECHO_CLASE_III(?1, ?2, ?3, ?4),'FM999,999,999,999.009') AS DESCRIPCION "
-            + "FROM DUAL")
-    BeanCombos getSaldoTechosByPeriodoAndBrigadaAndTipoAsignacionAndTipoCombustible(String periodo, Integer brigada, Integer tipoAsignacion, Integer tipoCombustible);
+            + "BTIPO_DOCUMENTO_PLANTILLA  "
+            + "FROM IAFAS_TIPO_DOCUMENTOS_PERIODO WHERE "
+            + "CPERIODO_CODIGO=?1 AND "
+            + "NTIPO_DOCUMENTO_CODIGO=?2")
+    Blob getPlantillaTipoDocumento(String periodo, Integer tipoDocumento);
+
+    @Query(nativeQuery = true, value = "SELECT "
+            + "CASE WHEN COUNT(*)=1 THEN 'TRUE' ELSE 'FALSE' END AS RESULTADO "
+            + "FROM IAFAS_USUARIOS WHERE "
+            + "VUSUARIO_CODIGO=?1 AND "
+            + "VUSUARIO_PIN=?2 AND "
+            + "CESTADO_CODIGO='AC'")
+    Boolean getVerificaPin(String usuario, String pin);
+
+    @Query(nativeQuery = true, value = "SELECT "
+            + "BUSUARIO_SELLO "
+            + "FROM IAFAS_USUARIOS WHERE "
+            + "VUSUARIO_CODIGO=?1 "
+            + "CESTADO_CODIGO='AC'")
+    Blob getUsuarioSello(String usuario);
 
 }
