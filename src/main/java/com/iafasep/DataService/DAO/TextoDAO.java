@@ -21,6 +21,12 @@ public interface TextoDAO extends JpaRepository<BeanComun, Integer> {
     String getNumeroDocumentoTipoDocumento(String periodo, Integer tipoDocumento);
 
     @Query(nativeQuery = true, value = "SELECT "
+            + "VTIPO_DOCUMENTO_DESCRIPCION  "
+            + "FROM IAFAS_TIPO_DOCUMENTOS WHERE "
+            + "NTIPO_DOCUMENTO_CODIGO=?1")
+    String getTipoDocumento(Integer tipoDocumento);
+
+    @Query(nativeQuery = true, value = "SELECT "
             + "BTIPO_DOCUMENTO_PLANTILLA  "
             + "FROM IAFAS_TIPO_DOCUMENTOS_PERIODO WHERE "
             + "CPERIODO_CODIGO=?1 AND "
@@ -38,7 +44,7 @@ public interface TextoDAO extends JpaRepository<BeanComun, Integer> {
     @Query(nativeQuery = true, value = "SELECT "
             + "BUSUARIO_SELLO "
             + "FROM IAFAS_USUARIOS WHERE "
-            + "VUSUARIO_CODIGO=?1 "
+            + "VUSUARIO_CODIGO=?1 AND "
             + "CESTADO_CODIGO='AC'")
     Blob getUsuarioSello(String usuario);
 

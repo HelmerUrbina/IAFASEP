@@ -60,6 +60,8 @@ public class CombosController {
                 new Gson().toJson(combosService.getUsuarioJefatura());
             case "usuarioAreaLaboral" ->
                 new Gson().toJson(combosService.getUsuarioAreaLaboral(codigo));
+            case "remisionDocumentoInstitucion" ->
+                new Gson().toJson(combosService.getRemisionDocumentosInstitucion(codigo, Utiles.checkNum(codigo2)));
             /*PRESUPUESTO*/
             case "fuenteFinanciamiento" ->
                 new Gson().toJson(combosService.getFuenteFinanciamiento());

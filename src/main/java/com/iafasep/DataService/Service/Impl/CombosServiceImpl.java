@@ -95,6 +95,11 @@ public class CombosServiceImpl implements CombosService {
         return combosDAO.getUsuarioAreaLaboral(areaLaboral);
     }
 
+    @Override
+    public List<BeanCombos> getRemisionDocumentosInstitucion(String periodo, Integer codigo) {
+        return combosDAO.getRemisionDocumentosInstitucion(periodo, codigo);
+    }
+
     /*PRESUPUESTO*/
     @Override
     public List<BeanCombos> getFuenteFinanciamiento() {
@@ -188,7 +193,7 @@ public class CombosServiceImpl implements CombosService {
 
     @Override
     public List<BeanCombos> getClasificadorProgByPeriodoFuenteTarea(String periodo, Integer fuente, Integer tarea) {
-        return combosDAO.getClasificadorProgByPeriodoFuenteTarea(periodo,fuente,tarea);
+        return combosDAO.getClasificadorProgByPeriodoFuenteTarea(periodo, fuente, tarea);
     }
 
     @Override

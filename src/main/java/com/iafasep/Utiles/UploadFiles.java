@@ -21,11 +21,20 @@ public class UploadFiles {
         }
     }
 
+    public void RemisionDocumentario(String codigo, MultipartFile file) throws IOException {
+        if (!file.isEmpty()) {
+            byte[] bytes;
+            bytes = file.getBytes();
+            Path path = Paths.get(Utiles.getServerPath() + "RemisionDocumento\\" + codigo + "-" + file.getOriginalFilename());
+            Files.write(path, bytes);
+        }
+    }
+
     public void TramiteDocumentario(String codigo, MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
             byte[] bytes;
             bytes = file.getBytes();
-            Path path = Paths.get(Utiles.getServerPath() + "TramiteDocumentario\\" + codigo + "-" + file.getOriginalFilename());
+            Path path = Paths.get(Utiles.getServerPath() + "TramiteDocumentario\\Anexos\\" + codigo + "-" + file.getOriginalFilename());
             Files.write(path, bytes);
         }
     }

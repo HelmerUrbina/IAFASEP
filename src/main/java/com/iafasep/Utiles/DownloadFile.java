@@ -27,14 +27,17 @@ public class DownloadFile {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);
-
         String extension = filename.substring(filename.lastIndexOf("."), filename.length());
         extension = extension.toLowerCase();
         filePath = switch (opcion) {
             case "MesaPartes" ->
                 Utiles.getServerPath() + "MesaPartes\\" + filename;
+            case "RemisionDocumento" ->
+                Utiles.getServerPath() + "RemisionDocumento\\" + filename;
             case "TramiteDocumentario" ->
                 Utiles.getServerPath() + "TramiteDocumentario\\" + filename;
+            case "TramiteDocumentarioFirmado" ->
+                Utiles.getServerPath() + "FirmaDigital\\TramiteDocumentario\\" + filename;
             case "CertificadoPresupuestal" ->
                 Utiles.getServerPath() + "Presupuesto\\CertificadoPresupuestal\\" + filename;
             case "CP" ->
@@ -45,12 +48,11 @@ public class DownloadFile {
         File file = new File(filePath);
         response.setHeader("Content-Length", String.valueOf(file.length()));
         response.setHeader("Content-Disposition", "inline; filename=\"" + file.getName() + "\"");
-
         switch (extension) {
             case ".rtf" -> {
                 response.setContentType("text/html;charset=UTF-8");
                 response.setContentType("application/msword");
-                response.setHeader("Content-disposition", "inline; filename=" + file.getName()); 
+                response.setHeader("Content-disposition", "inline; filename=" + file.getName());
             }
             case ".pdf" -> {
                 response.setHeader("Content-Length", String.valueOf(file.length()));

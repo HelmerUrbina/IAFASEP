@@ -1,6 +1,6 @@
 <script>
-    var tipo = "S";
     var codigo = null;
+    var elevacion = null;
     var archivo = null;
     var codInstitucion = null;
     var docReferencia = '';
@@ -23,20 +23,17 @@
         });
         //ESTILOS A LAS CELDAS DE LA GRILLA 
         var cellclass = function (row, datafield, value, rowdata) {
-            if (datafield === "numero") {
+            if (datafield === "numeroDocumento") {
                 return "RowBold";
             }
-            if (datafield === "usuarioResponsable") {
+            if (datafield === "asunto") {
                 return "RowBlue";
-            }
-            if (datafield === "subGrupo") {
-                return "RowPurple";
             }
         };
         //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
         $("#div_GrillaPrincipal").jqxGrid({
-            width: '99.8%',
-            height: ($(window).height() - 60),
+            width: '100%',
+            height: ($(window).height() - 95),
             autoheight: false,
             autorowheight: false,
             altrows: true,
@@ -66,17 +63,17 @@
                     mode = 'I';
                     $("#txt_NumeroDocumento").val('');
                     $('#cbo_Referencia').jqxDropDownList({disabled: false});
-                    //fn_cargarComboAjax("#cbo_Referencia", {mode: 'referenciaDoc', periodo: $("#cbo_Periodo").val()});                    
+                    //fn_cargarComboAjax("#cbo_Referencia", {mode: 'referenciaDoc', periodo: $("#cbo_Periodo").val()});
+                    //$("#div_ListaInstitucion").jqxListBox('clear');
                     $("#cbo_TipoDocumento").jqxDropDownList('selectItem', 1);
-                    $("#cbo_Clasificacion").jqxDropDownList('selectItem', '01');
+                    $("#cbo_Clasificacion").jqxDropDownList('selectItem', 1);
                     $("#cbo_Referencia").jqxDropDownList('selectItem', 0);
                     $("#txt_Institucion").val('');
                     $("#txt_NumeroDocumento").val('');
                     $("#txt_Dirigido").val('');
                     $("#txt_Asunto").val('');
                     $("#txt_Cargo").val('');
-                    $("#div_Legajos").val('0');
-                    $("#div_Folios").val('0');
+                    $("#cbo_TipoDocumento").jqxDropDownList({disabled: false});
                     $("#divEnlaceDoc").css("display", "none");
                     $('#div_VentanaPrincipal').jqxWindow({isModal: true, modalOpacity: 0.5});
                     $('#div_VentanaPrincipal').jqxWindow('open');
@@ -92,18 +89,18 @@
                         return "<div style='margin:4px; text-align: center;'>" + (value + 1) + "</div>";
                     }
                 },
-                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '10%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'ASUNTO', dataField: 'asunto', width: '24%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
-                {text: 'INSTITUCIÓN', dataField: 'subGrupo', width: '12%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'FEC. DOC', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
-                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'FIRMADO', dataField: 'firma', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
-                {text: 'REFERENCIA', dataField: 'referencia', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
-                {text: 'ARCHIVO', dataField: 'archivo', width: '12%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '8%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ASUNTO', dataField: 'asunto', width: '22%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'periodo', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'DIRIGIDO', dataField: 'dirigido', width: '13%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'CARGO', dataField: 'cargo', width: '11%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FEC. DOC', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '6%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'REFERENCIA', dataField: 'referencia', width: '16%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '7%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
             ]
         });
         // DEFINIMOS EL MENU CONTEXTUAL 
-        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 185, autoOpenPopup: false, mode: 'popup'});
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 145, autoOpenPopup: false, mode: 'popup'});
         $("#div_GrillaPrincipal").on('contextmenu', function () {
             return false;
         });
@@ -121,22 +118,10 @@
         $("#div_ContextMenu").on('itemclick', function (event) {
             var opcion = event.args;
             if ($.trim($(opcion).text()) === "Editar") {
-                if (estado !== "PENDIENTE") {
-                    $.alert({
-                        theme: 'material',
-                        title: 'AVISO DEL SISTEMA',
-                        content: 'El registro no puede ser editado, se encuentra ' + estado,
-                        animation: 'zoom',
-                        closeAnimation: 'zoom',
-                        type: 'red',
-                        typeAnimated: true
-                    });
-                } else {
+                if (estado === "PENDIENTE") {
                     mode = 'U';
                     fn_EditarRegistro();
-                }
-            } else if ($.trim($(opcion).text()) === "Anular") {
-                if (estado !== "PENDIENTE") {
+                } else {
                     $.alert({
                         theme: 'material',
                         title: 'AVISO DEL SISTEMA',
@@ -146,7 +131,9 @@
                         type: 'red',
                         typeAnimated: true
                     });
-                } else {
+                }
+            } else if ($.trim($(opcion).text()) === "Anular") {
+                if (estado === "PENDIENTE") {
                     if (codigo !== null || codigo === '') {
                         $.confirm({
                             title: 'AVISO DEL SISTEMA',
@@ -182,11 +169,38 @@
                             typeAnimated: true
                         });
                     }
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'El registro no puede ser editado, se encuentra ' + estado,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
                 }
+            } else if ($.trim($(opcion).text()) === "Adj Documento") {
+                $('#txt_Archivo').val('');
+                $('#div_VentanaAdjuntar').jqxWindow({isModal: true, modalOpacity: 0.5});
+                $('#div_VentanaAdjuntar').jqxWindow('open');
             } else if ($.trim($(opcion).text()) === "Ver Documento") {
                 if (archivo !== null && archivo !== '') {
-                    document.location.target = "_blank";
-                    document.location.href = "Descarga?opcion=MesaParte&periodo=" + periodo + "&codigo=" + tipo + "-" + codigo + "&documento=" + archivo;
+                    var extencion = fn_getFileExtension(archivo);
+                    if (extencion.toUpperCase() === 'PDF') {
+                        $('#div_ViewerTituloPDF').html(archivo);
+                        var getUrl = window.location;
+                        var firma = "";
+                        if (estado === "FIRMADO")
+                            firma = "Firmado";
+                        var url = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=TramiteDocumentario" + firma + "&filename=" + $("#cbo_Periodo").val() + "-" + codigo + "-" + archivo;
+                        $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                        $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                        $('#div_Reporte').jqxWindow('open');
+                    } else {
+                        document.location.target = "_blank";
+                        document.location.href = "Download?opcion=RemisionDocumento&filename=" + $("#cbo_Periodo").val() + "-" + codigo + "-" + archivo;
+                    }
                 } else {
                     $.alert({
                         theme: 'material',
@@ -199,6 +213,7 @@
                     });
                 }
             } else if ($.trim($(opcion).text()) === "Elevar Documento") {
+                elevacion = 0;
                 fn_cargarComboAjax("#cbo_DerivadoA", {mode: 'areaLaboral'});
                 $('#div_VentanaElevar').jqxWindow({isModal: true, modalOpacity: 0.5});
                 $('#div_VentanaElevar').jqxWindow('open');
@@ -221,7 +236,6 @@
             codigo = row['codigo'];
             estado = row['estado'];
             archivo = row['archivo'];
-            codigoUsuario = row['codigoUsuario'];
             docReferencia = row['referencia'];
         });
         //CREA LOS ELEMENTOS DE LAS VENTANAS
@@ -230,7 +244,7 @@
                 //INICIA LOS VALORES DE LA VENTANA
                 var posicionX, posicionY;
                 var ancho = 750;
-                var alto = 510;
+                var alto = 485;
                 posicionX = ($(window).width() / 2) - (ancho / 2);
                 posicionY = ($(window).height() / 2) - (alto / 2);
                 $('#div_VentanaPrincipal').jqxWindow({
@@ -260,8 +274,8 @@
                         var source = {
                             dataType: "localdata",
                             datafields: [
-                                {name: 'label', type: "string"},
-                                {name: 'value', type: "string"}
+                                {name: 'descripcion', type: "string"},
+                                {name: 'codigo', type: "string"}
                             ],
                             id: 'codigo'
                         };
@@ -283,17 +297,20 @@
                         $("#txt_Asunto").jqxInput({placeHolder: "Ingrese el asunto", width: 630, height: 22});
                         $("#txt_Dirigido").jqxInput({placeHolder: "Ingrese la Observación", width: 630, height: 22});
                         $("#txt_Cargo").jqxInput({placeHolder: "Ingrese la Post Firma", width: 630, height: 22});
-                        $("#div_Legajos").jqxNumberInput({width: 50, height: 22, max: 99, digits: 2, decimalDigits: 0});
-                        $("#div_Folios").jqxNumberInput({width: 50, height: 22, max: 99, digits: 2, decimalDigits: 0});
                         $("#cbo_Referencia").jqxDropDownList({animationType: 'fade', checkboxes: true, width: 630, dropDownWidth: 700, height: 22});
                         $('#btn_Cancelar').jqxButton({width: 36, height: 34});
-                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Cancelar').jqxTooltip({position: 'bottom', content: "Cerrar"});
+                        $('#btn_Cancelar').on('click', function () {
+                            fn_CargarBusqueda();
+                        });
                         $('#btn_Guardar').jqxButton({width: 36, height: 34});
                         $('#btn_Guardar').jqxTooltip({position: 'bottom', content: "Guardar"});
                         $('#btn_Guardar').on('click', function () {
                             var msg = "";
                             msg += fn_validaCombos('#cbo_TipoDocumento', "Seleccione la Tipo de Documento.");
                             msg += fn_validaCombos('#cbo_Clasificacion', "Seleccione la Clasificacion del Documento.");
+                            if ($("#div_ListaInstitucion").jqxListBox('getItems').length === 0)
+                                msg += 'Seleccione una Institución';
                             if (msg === "") {
                                 $('#frm_RemisionDocumentos').jqxValidator('validate');
                             } else {
@@ -310,7 +327,6 @@
                         });
                         $('#frm_RemisionDocumentos').jqxValidator({
                             rules: [
-                                {input: '#txt_Institucion', message: 'Ingrese el nombre de la institución', action: 'keyup, blur', rule: 'required'},
                                 {input: '#txt_NumeroDocumento', message: 'Ingrese el Numero de Documento!', action: 'keyup, blur', rule: 'required'},
                                 {input: '#txt_Asunto', message: 'Ingrese el Asunto!', action: 'keyup, blur', rule: 'required'},
                                 {input: '#div_Fecha', message: 'Ingrese la fecha de documento', action: 'keyup, blur', rule: 'required'},
@@ -331,9 +347,28 @@
                         });
                     }
                 });
-                var posicionX, posicionY;
-                var ancho = 460;
-                var alto = 540;
+                //VENTANA ADJUNTAR REMISION DE DOCUMENTO
+                ancho = 500;
+                alto = 120;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaAdjuntar').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarAdjuntar'),
+                    initContent: function () {
+                        $("#txt_Archivo").jqxInput({placeHolder: "Seleccione el Documento", width: 400, height: 22, minLength: 1});
+                        $('#btn_CancelarAdjuntar').jqxButton({width: 36, height: 32});
+                        $('#btn_CancelarAdjuntar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_GuardarAdjuntar').jqxButton({width: 36, height: 32});
+                        $('#btn_GuardarAdjuntar').jqxTooltip({position: 'bottom', content: "Guardar"});
+                        $('#btn_GuardarAdjuntar').on('click', function (event) {
+                            fn_GuardarAdjuntar();
+                        });
+                    }
+                });
+                ancho = 460;
+                alto = 540;
                 posicionX = ($(window).width() / 2) - (ancho / 2);
                 posicionY = ($(window).height() / 2) - (alto / 2);
                 $('#div_VentanaElevar').jqxWindow({
@@ -396,18 +431,14 @@
                 dataType: "json",
                 datafields: [
                     {name: 'codigo', type: "number"},
-                    {name: 'numero', type: "string"},
                     {name: 'numeroDocumento', type: "string"},
+                    {name: 'periodo', type: "string"},
                     {name: 'asunto', type: "string"},
-                    {name: 'subGrupo', type: "string"},
-                    {name: 'prioridad', type: "string"},
+                    {name: 'dirigido', type: "string"},
+                    {name: 'cargo', type: "string"},
                     {name: 'fecha', type: "date", format: 'dd/MM/yyyy'},
                     {name: 'estado', type: "string"},
-                    {name: 'firma', type: "string"},
-                    {name: 'legajo', type: "number"},
-                    {name: 'folio', type: "string"},
                     {name: 'referencia', type: "string"},
-                    {name: 'codigoUsuario', type: "string"},
                     {name: 'archivo', type: "string"}
                 ],
                 id: 'codigo',
@@ -418,7 +449,6 @@
             $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
             if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
                 $('#div_GrillaPrincipal').jqxGrid('clearselection');
-
         } else {
             $.alert({
                 theme: 'material',
@@ -438,7 +468,7 @@
             var lista = $("#div_ListaInstitucion").jqxListBox('getItems');
             for (var i = 0; i < lista.length; i++) {
                 if (codInstitucion.value === lista[i].value)
-                    msg = "La Dependencia " + lista[i].label + " ya esta seleccionada.";
+                    msg = "La Institición " + lista[i].label + " ya esta seleccionada.";
             }
             if (msg === null) {
                 $("#div_ListaInstitucion").jqxListBox('addItem', {label: codInstitucion.label, value: codInstitucion.value});
@@ -485,14 +515,14 @@
     }
     //FUNCION PARA CARGAR VENTANA PARA EDITAR REGISTRO
     function fn_EditarRegistro() {
-        //fn_cargarComboAjax("#cbo_Referencia",{mode: 'referenciaDoc',periodo: periodo,unidadOperativa: mode});        
+        //fn_cargarComboAjax("#cbo_Referencia",{mode: 'referenciaDoc',periodo: periodo,unidadOperativa: mode}); 
         $.ajax({
             type: "GET",
             url: "RemisionDocumentos",
             data: {mode: mode, periodo: $("#cbo_Periodo").val(), codigo: codigo},
             success: function (data) {
                 var dato = JSON.parse(data);
-                $("#txt_NumeroDocumento").val(dato.numeroDocumento);
+                $("#txt_NumeroDocumento").val(pad(dato.numeroDocumento, 5));
                 $("#div_Fecha").jqxDateTimeInput('setDate', new Date(dato.fecha));
                 $("#txt_Dirigido").val(dato.dirigido);
                 $("#txt_Asunto").val(dato.asunto);
@@ -500,14 +530,32 @@
                 $("#cbo_Clasificacion").jqxDropDownList('selectItem', dato.clasificacion);
                 $("#txt_Institucion").val(dato.institucion);
                 $("#txt_Cargo").val(dato.cargo);
-                $("#div_Legajos").val(dato.legajos);
-                $("#div_Folios").val(dato.folios);
                 $("#divEnlaceDoc").css("display", "inline");
                 var getUrl = window.location;
-                var uripath = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download";
-                $("#aEnlaceDoc").attr('href', 'ms-word:OFE|u|' + uripath + '/' + dato.word + "|s|" + uripath + "/RemisionDocumentos/");
+                var uripath = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=RemisionDocumento&filename=" + $("#cbo_Periodo").val() + "-" + codigo + "-" + dato.word;
+                //$("#aEnlaceDoc").attr('href', 'ms-word:ofe|u|' + uripath);
+                $("#aEnlaceDoc").attr('href', uripath);
+                $("#cbo_TipoDocumento").jqxDropDownList({disabled: true});
                 $("#cbo_Referencia").jqxDropDownList('addItem', {label: docReferencia, value: dato.referenca});
                 $("#cbo_Referencia").jqxDropDownList('selectItem', dato.referenca);
+                var source = {
+                    datatype: "json",
+                    datafields: [
+                        {name: 'descripcion', type: "string"},
+                        {name: 'codigo', type: "string"}
+                    ],
+                    id: 'codigo',
+                    url: "CombosAjax",
+                    data: {mode: 'remisionDocumentoInstitucion', codigo: $("#cbo_Periodo").val(), codigo2: codigo},
+                    async: true
+                };
+                var dataLista = new $.jqx.dataAdapter(source);
+                $("#div_ListaInstitucion").jqxListBox({source: dataLista, height: 200, width: 490, itemHeight: 22, displayMember: 'descripcion', valueMember: 'codigo',
+                    renderer: function (index, label, value) {
+                        var table = '<table style="min-width: 150px;"><tr><td>' + label + '</td></tr></table>';
+                        return table;
+                    }
+                });
             }
         });
         $('#cbo_Referencia').jqxDropDownList({disabled: true});
@@ -516,23 +564,30 @@
     }
     //FUNCION PARA GRABAR LOS DATOS DE LA VENTANA PRINCIPAL
     function fn_GrabarDatos() {
-        var items = $("#cbo_Referencia").jqxDropDownList('getCheckedItems');
+        /*obtenemos lista de instituciones*/
+        var items = $("#div_ListaInstitucion").jqxListBox('getItems');
+        var instituciones = new Array();
+        $.each(items, function (items) {
+            instituciones.push(this.value);
+        });
+        items = $("#cbo_Referencia").jqxDropDownList('getCheckedItems');
         var referencia = new Array();
         $.each(items, function (index) {
             referencia.push(this.value);
         });
+        $('#divEnlaceDoc').css("display", "none");
         var $contenidoAjax = $('#divCreaLoading').css("display", "inline");
         $.ajax({
             type: "POST",
             url: "IduRemisionDocumentos",
-            data: {mode: mode, periodo: $("#cbo_Periodo").val(), codigo: codigo, institucion: '',
+            data: {mode: mode, periodo: $("#cbo_Periodo").val(), codigo: codigo, institucion: instituciones.toString(),
                 tipoDocumento: $("#cbo_TipoDocumento").val(), numeroDocumento: $("#txt_NumeroDocumento").val(), clasificacion: $("#cbo_Clasificacion").val(),
                 fecha: $("#div_Fecha").val(), asunto: $("#txt_Asunto").val(), dirigido: $("#txt_Dirigido").val(), cargo: $("#txt_Cargo").val(),
-                legajos: $("#div_Legajos").val(), folios: $("#div_Folios").val(), referencia: referencia.toString()},
+                referencia: referencia.toString()},
             success: function (data) {
                 $contenidoAjax.css("display", "none");
                 var getUrl = window.location;
-                var uripath = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=TramiteDocumentario&filename=" + $("#cbo_Periodo").val() + "-" + $("#cbo_TipoDocumento").val() + "-" + data + ".rtf";
+                var uripath = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=RemisionDocumento&filename=" + $("#cbo_Periodo").val() + "-" + codigo + "-" + data + ".rtf";
                 $("#divEnlaceDoc").css("display", "inline");
                 //$("#aEnlaceDoc").attr('href', 'ms-word:OFE|u|' + uripath + '/' + dato.word + "|s|" + uripath + "/RemisionDocumentos/");
                 $("#aEnlaceDoc").attr('href', uripath);
@@ -550,6 +605,65 @@
             }
         });
     }
+    function fn_GuardarAdjuntar() {
+        var fichero = $("#txt_Archivo").val();
+        if (fichero !== '') {
+            var formData = new FormData(document.getElementById("frm_DocumentoAdjuntar"));
+            formData.append("mode", "C");
+            formData.append("periodo", $("#cbo_Periodo").val());
+            formData.append("codigo", codigo);
+            $.ajax({
+                type: "POST",
+                url: "IduRemisionDocumentosAdjuntar",
+                data: formData,
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    msg = data;
+                    if (msg === "GUARDO") {
+                        $('#div_VentanaAdjuntar').jqxWindow('close');
+                        $.confirm({
+                            title: 'AVISO DEL SISTEMA',
+                            content: 'Datos procesados correctamente',
+                            type: 'green',
+                            typeAnimated: true,
+                            autoClose: 'cerrarAction|1000',
+                            buttons: {
+                                cerrarAction: {
+                                    text: 'Cerrar',
+                                    action: function () {
+                                        fn_CargarBusqueda();
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        $.alert({
+                            theme: 'material',
+                            title: 'AVISO DEL SISTEMA',
+                            content: msg,
+                            animation: 'zoom',
+                            closeAnimation: 'zoom',
+                            type: 'red',
+                            typeAnimated: true
+                        });
+                    }
+                }
+            });
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: "Debe seleccionar el archivo con la documentacion sustentatoria\n PROCESO CANCELADO!!!.",
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'red',
+                typeAnimated: true
+            });
+        }
+    }
     function addItemFile(el, identifier) {
         var files = $('#' + el.getAttribute("id"))[0].files[0];
         var filename = files.name.toUpperCase();
@@ -563,7 +677,7 @@
         html += '   <div id="filename-' + identifier + '" style="display: flex;  position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>';
         html += '   <label id="btnadjuntar-' + identifier + '" style="display: inline-block; position: absolute; padding: 5px; padding-left: 380px;">';
         html += '       <img src="images/Botones/adjunto.png" width="30px" height="30px" style="position: relative; margin - top: 2px;" alt="Adjuntar Archivo"/>';
-        html += '       <input  type="file" id="file-' + identifier + '" name="file-' + identifier + '" onchange="addItemFile(this,' + identifier + ')" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word" title="Adjuntar Archivo">';
+        html += '       <input  type="file" id="file-' + identifier + '" name="files" onchange="addItemFile(this,' + identifier + ')" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word" title="Adjuntar Archivo">';
         html += '   </label>';
         html += '   <div id="btndelete-' + identifier + '" onclick="deleteFileItem(' + identifier + ')" style="display: none; padding: 6px;" title="Quitar">';
         html += '       <img src="images/Botones/deleteBlack.png" width="30px" height="30px" style="position: relative; margin-top: 2px;" alt="Borrar"/>';
@@ -626,8 +740,10 @@
         formData.append("mode", 'I');
         formData.append("periodo", $("#cbo_Periodo").val());
         formData.append("codigo", codigo);
+        formData.append("elevacion", elevacion);
         formData.append("areaLaboral", $("#cbo_DerivadoA").val());
         formData.append("responsable", $("#dbo_Destinatario").val());
+        formData.append("files", formData);
         $.ajax({
             url: 'IduElevarDocumento',
             type: 'POST',
@@ -721,11 +837,11 @@
                     <td>&nbsp;</td>
                 </tr>
                 <tr>
-                    <th>Dependencia : </th>
-                    <td colspan="4"><input type="text" id="txt_Institucion" name="txt_Institucion" style="text-transform: uppercase;" autocomplete="off"/> 
-                        <a href="javascript: fn_addDependencia();"><img src="images/Botones/add.png" width="15px" height="15px"/></a>  
+                    <th>Institución : </th>
+                    <td colspan="4"><input type="text" id="txt_Institucion" name="txt_Institucion" style="text-transform: uppercase;" autocomplete="off"/>
+                        <a href="javascript: fn_addDependencia();"><img src="images/Botones/add.png" width="15px" height="15px"/></a>
                         <a href="javascript: fn_removeDependencia();" ><img src="images/Botones/cancel.png" width="15px" height="15px"/></a>
-                    </td>                   
+                    </td>
                 </tr>
                 <tr>
                     <td>&nbsp;</td>
@@ -733,14 +849,14 @@
                         <div data-bind="jqxListBox: {selectedIndex: index}" id="div_ListaInstitucion"></div>
                     </td>
                     <td>
-                        <div >
+                        <div>
                             <div id="divCreaLoading" style="display: none; text-align: center; margin:auto; color: blue;">
-                                <img src="images/Botones/cargando.gif" width="120px" height="120px"/>
+                                <img src="images/Botones/cargando.gif" width="100px" height="100px"/>
                                 <div>Procesando...</div>
                             </div>
-                            <div id="divEnlaceDoc" style="display: none; text-align: center; margin:auto; " >
+                            <div id="divEnlaceDoc" style="display: none; text-align: center; margin:auto;">
                                 <div>
-                                    <img src="images/Botones/word.png" width="120px" height="120px"/>
+                                    <img src="images/Botones/word.png" width="100px" height="100px"/>
                                 </div>
                                 <br/>
                                 <div>
@@ -763,23 +879,16 @@
                 </tr>
                 <tr>
                     <th>Asunto : </th>
-                    <td colspan="4"><input type="text" id="txt_Asunto" name="txt_Asunto" style="text-transform: uppercase;"/></td>                    
+                    <td colspan="4"><input type="text" id="txt_Asunto" name="txt_Asunto" style="text-transform: uppercase;"/></td>
                 </tr>
                 <tr>
                     <th>Dirigido a : </th>
-                    <td colspan="4"><input type="text" id="txt_Dirigido" name="txt_Dirigido" style="text-transform: uppercase;"/></td>                    
+                    <td colspan="4"><input type="text" id="txt_Dirigido" name="txt_Dirigido" style="text-transform: uppercase;"/></td>
                 </tr>
                 <tr>
                     <th>Cargo : </th>
-                    <td colspan="4"><input type="text" id="txt_Cargo" name="txt_Cargo" style="text-transform: uppercase;"/></td>                    
+                    <td colspan="4"><input type="text" id="txt_Cargo" name="txt_Cargo" style="text-transform: uppercase;"/></td>
                 </tr>
-                <tr>
-                    <th>Legajos : </th>
-                    <td><div id="div_Legajos"></div></td>
-                    <th>Folios : </th>
-                    <td><div id="div_Folios"></div></td>
-                    <td>&nbsp;</td>
-                </tr> 
                 <tr>
                     <th>Referencia : </th>
                     <td colspan="4">
@@ -796,13 +905,34 @@
         </form>
     </div>
 </div>
-<div id="div_VentanaElevar" style="display: none">    
+<div id="div_VentanaAdjuntar" style="display: none">
+    <div>
+        <span style="float: left">ADJUNTAR ARCHIVO DE REMISIÓN DE DOCUMENTO</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_DocumentoAdjuntar" name="frm_DocumentoAdjuntar" enctype="multipart/form-data" action="javascript:fn_GuardarCerrar();" method="post">
+            <table class="form">
+                <tr>
+                    <th>Anexos : </th>
+                    <td>
+                        <input type="file" id="txt_Archivo" name="txt_Archivo" style="text-transform: uppercase;" accept="application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+                    </td> 
+                </tr>
+            </table>
+            <div class="Summit">
+                <div id="btn_GuardarAdjuntar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+                <div id="btn_CancelarAdjuntar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="div_VentanaElevar" style="display: none">
     <div>
         <span style="float: left">ELEVAR DOCUMENTOS</span>
     </div>
     <div style="overflow: hidden">
         <form id="frm_DocumentoElevar" name="frm_DocumentoElevar" enctype="multipart/form-data" action="javascript: fn_VerificaElevar();" method="post">
-            <table class="form">            
+            <table class="form">
                 <tr>
                     <th>Derivar a : </th>
                     <td>
@@ -814,7 +944,7 @@
                 <tr>
                     <th class="inputlabel">Destinatario : </th>
                     <td>
-                        <select id="dbo_Destinatario" class="form-select" >
+                        <select id="dbo_Destinatario" class="form-select">
                             <option value="0">Seleccione</option>
                         </select>
                     </td>
@@ -823,10 +953,10 @@
                     <td colspan="2">
                         <div id="div-files"> 
                             <div id="fileitem-1" class="fileitem list-group-item list-group-item-action justify-content-between" style="background: #ececec; display: flex; width: 450px;">
-                                <div id="filename-1" style="display: flex; position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>                            
+                                <div id="filename-1" style="display: flex; position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>
                                 <label id="btnadjuntar-1" style="display: inline-block; position: absolute; padding: 5px; padding-left: 380px;">
                                     <img src="images/Botones/adjunto.png" width="30px" height="30px" style='position: relative; margin-top: 2px;' alt="Adjuntar Archivo"/>
-                                    <input type="file" id="file-1" class="fileinput" name="file-1" onchange="addItemFile(this, 1);" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word"/>
+                                    <input type="file" id="file-1" class="fileinput" name="files" onchange="addItemFile(this, 1);" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word"/>
                                 </label>
                                 <div id="btndelete-1" onclick="deleteFileItem(1)" style="display: none; padding: 6px;" title="Borrar">
                                     <img src="images/Botones/deleteBlack.png" width="30px" height="30px" style='position: relative; margin-top: 2px;' alt="Borrar"/>
@@ -835,9 +965,9 @@
                         </div>
                     </td>
                 </tr>
-            </table>   
+            </table>
         </form>
-        <div class="Summit" >
+        <div class="Summit">
             <div id="btn_Elevar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
             <div id="btn_CancelarElevar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
         </div>
@@ -853,7 +983,7 @@
             <br/>
             <label class="inputlabel">Ingrese su PIN</label>
             <br/>
-            <input type="password" name="txt_Pin" id="txt_Pin" autocomplete="off"/>            
+            <input type="password" name="txt_Pin" id="txt_Pin" autocomplete="off"/>
             <br/>
         </div>
         <div class="Summit">

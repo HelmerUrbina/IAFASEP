@@ -1,0 +1,638 @@
+<script >
+    var tipo = "S";
+    var codigo = null;
+    var archivo = null;
+    var codInstitucion = null;
+    var docReferencia = '';
+    var estado = '';
+    var mode = null;
+    var msg = '';
+    var documentName_ = null;
+    $(document).ready(function () {
+        var theme = getTheme();
+        $("#div_Titulo").jqxExpander({theme: theme, width: '100%'});
+        $("#cbo_Periodo").jqxComboBox({theme: theme, autoOpen: true, promptText: "Seleccione", width: 120, dropDownWidth: 150, height: 25});
+        $("#cbo_Estado").jqxComboBox({theme: theme, disabled: true, width: 350, height: 25});
+        var fecha = new Date();
+        $("#cbo_Periodo").jqxComboBox('selectItem', fecha.getFullYear());
+        $('#cbo_Periodo').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        $('#cbo_Estado').on('change', function () {
+            fn_CargarBusqueda();
+        });
+        //ESTILOS A LAS CELDAS DE LA GRILLA 
+        var cellclass = function (row, datafield, value, rowdata) {
+            if (datafield === "numero") {
+                return "RowBold";
+            }
+            if (datafield === "usuarioResponsable") {
+                return "RowBlue";
+            }
+            if (datafield === "subGrupo") {
+                return "RowPurple";
+            }
+        };
+        //DEFINIMOS LOS CAMPOS Y DATOS DE LA GRILLA
+        $("#div_GrillaPrincipal").jqxGrid({
+            width: '99.8%',
+            height: ($(window).height() - 95),
+            autoheight: false,
+            autorowheight: false,
+            altrows: true,
+            showtoolbar: true,
+            sortable: true,
+            pageable: true,
+            filterable: true,
+            autoshowfiltericon: true,
+            columnsresize: true,
+            showfilterrow: true,
+            editable: false,
+            toolbarheight: 50,
+            rendertoolbar: function (toolbar) {
+                var container = $("<div style='overflow: hidden; position: relative; margin: 1px;'></div>");
+                var ButtonFirmar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/firmar.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonExportar = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/excel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                var ButtonReporte = $("<div style='float: left; margin-left: 5px;'><img style='position: relative; margin-top: 2px;' src='images/Botones/printer.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>");
+                container.append(ButtonFirmar);
+                container.append(ButtonExportar);
+                container.append(ButtonReporte);
+                toolbar.append(container);
+                ButtonFirmar.jqxButton({width: 36, height: 34});
+                ButtonFirmar.jqxTooltip({position: 'bottom', content: "Firmar Documento"});
+                ButtonExportar.jqxButton({width: 36, height: 34});
+                ButtonExportar.jqxTooltip({position: 'bottom', content: "Exportar Datos"});
+                ButtonReporte.jqxButton({width: 36, height: 34});
+                ButtonReporte.jqxTooltip({position: 'bottom', content: "Nuevo Registro"});
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON FIRMAR
+                ButtonFirmar.click(function (event) {
+                    fn_firmarDocumentos();
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON EXPORTAR
+                ButtonExportar.click(function (event) {
+                    $("#div_GrillaPrincipal").jqxGrid('exportdata', 'xls', 'ElevacionDocumento');
+                });
+                //ASIGNAMOS LAS FUNCIONES PARA EL BOTON NUEVO
+                ButtonReporte.click(function (event) {
+
+                });
+
+            },
+            columns: [
+                {text: ' ', sortable: false, filterable: false, editable: false, groupable: false, draggable: false, resizable: false,
+                    datafield: '', columntype: 'number', width: '2%', pinned: true, cellsrenderer: function (row, column, value) {
+                        return "<div style='margin:4px; text-align: center;'>" + (value + 1) + "</div>";
+                    }
+                },
+                {text: 'NRO DOCUMENTO', dataField: 'numeroDocumento', width: '10%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ASUNTO', dataField: 'asunto', width: '24%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'INSTITUCIÓN', dataField: 'subGrupo', width: '12%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FEC. DOC', dataField: 'fecha', columntype: 'datetimeinput', filtertype: 'date', width: '8%', align: 'center', cellsAlign: 'center', cellsFormat: 'd', cellclassname: cellclass},
+                {text: 'ESTADO', dataField: 'estado', filtertype: 'checkedlist', width: '9%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'FIRMADO', dataField: 'firma', filtertype: 'checkedlist', width: '8%', align: 'center', cellsAlign: 'left', cellclassname: cellclass},
+                {text: 'REFERENCIA', dataField: 'referencia', width: '15%', align: 'center', cellsAlign: 'center', cellclassname: cellclass},
+                {text: 'ARCHIVO', dataField: 'archivo', width: '12%', align: 'center', cellsAlign: 'center', cellclassname: cellclass}
+            ]
+        });
+        // DEFINIMOS EL MENU CONTEXTUAL 
+        var contextMenu = $("#div_ContextMenu").jqxMenu({width: 200, height: 90, autoOpenPopup: false, mode: 'popup'});
+        $("#div_GrillaPrincipal").on('contextmenu', function () {
+            return false;
+        });
+        // HABILITAMOS LA OPCION DE CLICK DEL MENU CONTEXTUAL.
+        $("#div_GrillaPrincipal").on('rowclick', function (event) {
+            if (event.args.rightclick) {
+                $("#div_GrillaPrincipal").jqxGrid('selectrow', event.args.rowindex);
+                var scrollTop = $(window).scrollTop();
+                var scrollLeft = $(window).scrollLeft();
+                contextMenu.jqxMenu('open', parseInt(event.args.originalEvent.clientX) + 5 + scrollLeft, parseInt(event.args.originalEvent.clientY) + 5 + scrollTop);
+                return false;
+            }
+        });
+        //DEFINIMOS LOS EVENTOS SEGUN LA OPCION DEL MENU CONTEXTUAL      
+        $("#div_ContextMenu").on('itemclick', function (event) {
+            var opcion = event.args;
+            if ($.trim($(opcion).text()) === "Editar") {
+                if (estado !== "PENDIENTE") {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'El registro no puede ser editado, se encuentra ' + estado,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                } else {
+                    mode = 'U';
+                    fn_EditarRegistro();
+                }
+            } else if ($.trim($(opcion).text()) === "Ver Documento") {
+                if (archivo !== null && archivo !== '') {
+                    var extencion = fn_getFileExtension(archivo);
+                    if (extencion.toUpperCase() === 'PDF') {
+                        $('#div_ViewerTituloPDF').html(archivo);
+                        var getUrl = window.location;
+                        var firma = "";
+                        if (estado === "FIRMADO")
+                            firma = "Firmado";
+                        var url = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1] + "/Download?opcion=TramiteDocumentario" + firma + "&filename=" + $("#cbo_Periodo").val() + "-" + codigo + "-" + archivo;
+                        $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
+                        $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.5});
+                        $('#div_Reporte').jqxWindow('open');
+                    } else {
+                        document.location.target = "_blank";
+                        document.location.href = "Download?opcion=RemisionDocumento&filename=" + $("#cbo_Periodo").val() + "-" + codigo + "-" + archivo;
+                    }
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'No existe Archivo a Vizualizar!!!',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            } else if ($.trim($(opcion).text()) === "Elevar Documento") {
+                fn_cargarComboAjax("#cbo_DerivadoA", {mode: 'areaLaboralOPRE'});
+                $('#div_VentanaElevar').jqxWindow({isModal: true, modalOpacity: 0.5});
+                $('#div_VentanaElevar').jqxWindow('open');
+            } else {
+                $.alert({
+                    theme: 'material',
+                    title: 'AVISO DEL SISTEMA',
+                    content: "No hay Opción a mostrar",
+                    animation: 'zoom',
+                    closeAnimation: 'zoom',
+                    type: 'orange',
+                    typeAnimated: true
+                });
+            }
+        });
+        //SELECCIONAMOS UN REGISTRO DE LA GRILLA
+        $("#div_GrillaPrincipal").on('rowselect', function (event) {
+            var args = event.args;
+            var row = $("#div_GrillaPrincipal").jqxGrid('getrowdata', args.rowindex);
+            codigo = row['codigo'];
+            estado = row['estado'];
+            archivo = row['archivo'];
+            codigoUsuario = row['codigoUsuario'];
+            docReferencia = row['referencia'];
+        });
+        //CREA LOS ELEMENTOS DE LAS VENTANAS
+        var customButtonsDemo = (function () {
+            function _createElements() {
+                //INICIA LOS VALORES DE LA VENTANA
+                var posicionX, posicionY;
+                var ancho = 460;
+                var alto = 540;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaElevar').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarElevar'),
+                    initContent: function () {
+                        $("#cbo_DerivadoA").jqxDropDownList({animationType: 'fade', width: 300, height: 22, dropDownWidth: 350});
+                        $("#cbo_DerivadoA").on('change', function (event) {
+                            fn_cargarComboAjax("#dbo_Destinatario", {mode: 'usuarioSubDecreto', codigo: $("#cbo_DerivadoA").val()});
+                        });
+                        $("#dbo_Destinatario").jqxDropDownList({animationType: 'fade', width: 300, height: 22, dropDownWidth: 350});
+                        $('#btn_CancelarElevar').jqxButton({width: 36, height: 34});
+                        $('#btn_CancelarElevar').jqxTooltip({position: 'bottom', content: "Cancelar"});
+                        $('#btn_Elevar').jqxButton({width: 36, height: 34});
+                        $('#btn_Elevar').jqxTooltip({position: 'bottom', content: "Elevar"});
+                        $('#btn_Elevar').on('click', function (event) {
+                            fn_VerificaElevar();
+                        });
+                    }
+                });
+                ancho = 300;
+                alto = 280;
+                posicionX = ($(window).width() / 2) - (ancho / 2);
+                posicionY = ($(window).height() / 2) - (alto / 2);
+                $('#div_VentanaPin').jqxWindow({
+                    position: {x: posicionX, y: posicionY},
+                    width: ancho, height: alto, resizable: false,
+                    cancelButton: $('#btn_CancelarPin'),
+                    initContent: function () {
+                        $("#txt_Pin").jqxPasswordInput({placeHolder: "PIN", width: 200, height: 22});
+                        $('#btn_CancelarPin').jqxButton({width: 36, height: 34});
+                        $('#btn_CancelarPin').jqxTooltip({position: 'bottom', content: "Cerrar"});
+                        $('#btn_AceptarPin').jqxButton({width: 36, height: 34});
+                        $('#btn_AceptarPin').jqxTooltip({position: 'bottom', content: "Aceptar"});
+                        $('#btn_AceptarPin').on('click', function (event) {
+                            fn_VerificaPIN();
+                        });
+                    }
+                });
+            }
+            return {init: function () {
+                    _createElements();
+                }
+            };
+        }());
+        $(document).ready(function () {
+            customButtonsDemo.init();
+            fn_CargarBusqueda();
+            //------------------------api de refirma------------            
+            //Listener obligatorio a implementar
+            window.addEventListener('getArguments', function (e) {
+                type = e.detail;
+                if (type === 'W') {
+                    fn_ArgumentosFirmaWeb(); // Llama a sendArguments al terminar
+                }
+            });
+            //Listener obligatorio a implementar
+            window.addEventListener('invokerOk', function (e) {
+                type = e.detail;
+                if (type === 'W') {
+                    OkWeb();
+                }
+            });
+            //Listener obligatorio a implementar
+            window.addEventListener('invokerCancel', function (e) {
+                Cancel();
+            });
+        });
+    });
+    function sendArguments(arg_) {
+        //Event obligatorio a implementar
+        dispatchEventClient('sendArguments', arg_); // Envía los argumentos
+    }
+    //::LÓGICA DEL PROGRAMADOR::
+    function fn_ArgumentosFirmaWeb() {
+        document.getElementById("signedDocument").href = "#";
+        //Obtiene argumentos
+        $.ajax({
+            url: 'ReFirmaInvoker',
+            type: 'POST',
+            data: {
+                type: "W",
+                documentName: $("#docAFirmar").val(),
+                docAFirmar: $("#docAFirmar").val(),
+                opcion: 'TramiteDocumentario',
+                docId: $("#docId").val()},
+            success: function (data) {
+                sendArguments(data);
+            }
+        });
+    }
+    function OkWeb() {
+        alert("Documento firmado desde una URL correctamente.");
+        fn_ActualizarEstadoFirmado();
+    }
+    function Cancel() {
+        alert("El proceso de firma digital fue cancelado.");
+        document.getElementById("signedDocument").href = "#";
+    }
+    function fn_ActualizarEstadoFirmado() {
+        alert($("#docId").val());
+        $.ajax({
+            url: 'IduRemisionDocumentosFirmados',
+            type: 'POST',
+            data: {
+                mode: 'F',
+                periodo: $("#cbo_Periodo").val(),
+                codigo: $("#docId").val()
+            },
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaElevar').jqxWindow('close');
+                                    fn_CargarBusqueda();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    function fn_CargarBusqueda() {
+        var msg = "";
+        msg += fn_validaCombos('#cbo_Periodo', "Seleccione el Periodo.");
+        msg += fn_validaCombos('#cbo_Estado', "Seleccione el Estado.");
+        if (msg === "") {
+            var source = {
+                dataType: "json",
+                datafields: [
+                    {name: 'codigo', type: "number"},
+                    {name: 'numero', type: "string"},
+                    {name: 'numeroDocumento', type: "string"},
+                    {name: 'asunto', type: "string"},
+                    {name: 'subGrupo', type: "string"},
+                    {name: 'prioridad', type: "string"},
+                    {name: 'fecha', type: "date", format: 'dd/MM/yyyy'},
+                    {name: 'estado', type: "string"},
+                    {name: 'firma', type: "string"},
+                    {name: 'legajo', type: "number"},
+                    {name: 'folio', type: "string"},
+                    {name: 'referencia', type: "string"},
+                    {name: 'codigoUsuario', type: "string"},
+                    {name: 'word', type: "string"},
+                    {name: 'archivo', type: "string"}
+                ],
+                id: 'codigo',
+                url: "DocumentosElevados",
+                data: {mode: 'G', periodo: $('#cbo_Periodo').val(), estado: $('#cbo_Estado').val()}
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+            $("#div_GrillaPrincipal").jqxGrid({source: dataAdapter});
+            if ($('#div_GrillaPrincipal').jqxGrid('getselectedrowindex') >= 0)
+                $('#div_GrillaPrincipal').jqxGrid('clearselection');
+
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    function addItemFile(el, identifier) {
+        var files = $('#' + el.getAttribute("id"))[0].files[0];
+        var filename = files.name.toUpperCase();
+        $("#btndelete-" + identifier).css("display", "inline");
+        $("#btnadjuntar-" + identifier).css("display", "none");
+        $("#filename-" + identifier).html(filename);
+        $(el).parent().parent().css("background", "#ffffff");
+        identifier = parseInt(identifier) + 2;
+        var html = "";
+        html += '<div id="fileitem-' + identifier + '" class="fileitem list-group-item list-group-item-action justify-content-between" style="background: #ececec; display: flex; width: 450px;">';
+        html += '   <div id="filename-' + identifier + '" style="display: flex;  position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>';
+        html += '   <label id="btnadjuntar-' + identifier + '" style="display: inline-block; position: absolute; padding: 5px; padding-left: 380px;">';
+        html += '       <img src="images/Botones/adjunto.png" width="30px" height="30px" style="position: relative; margin - top: 2px;" alt="Adjuntar Archivo"/>';
+        html += '       <input  type="file" id="file-' + identifier + '" name="file-' + identifier + '" onchange="addItemFile(this,' + identifier + ')" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word" title="Adjuntar Archivo">';
+        html += '   </label>';
+        html += '   <div id="btndelete-' + identifier + '" onclick="deleteFileItem(' + identifier + ')" style="display: none; padding: 6px;" title="Quitar">';
+        html += '       <img src="images/Botones/deleteBlack.png" width="30px" height="30px" style="position: relative; margin-top: 2px;" alt="Borrar"/>';
+        html += '   </div>';
+        html += '</div>';
+        $("#div-files").prepend(html);
+    }
+    function deleteFileItem(identifier) {
+        $("#fileitem-" + identifier).remove();
+    }
+    //FUNCION VALIDA DATOS PARA ELEVAR
+    function fn_VerificaElevar() {
+        msg = "";
+        msg += fn_validaCombos("#cbo_DerivadoA", "Seleccione el Area a Derivar");
+        msg += fn_validaCombos("#dbo_Destinatario", "Seleccione el Destinatario");
+        if (msg === "") {
+            $("#txt_Pin").val("");
+            $('#div_VentanaPin').jqxWindow({isModal: true, modalOpacity: 0.5});
+            $('#div_VentanaPin').jqxWindow('open');
+        } else {
+            $.alert({
+                theme: 'material',
+                title: 'AVISO DEL SISTEMA',
+                content: msg,
+                animation: 'zoom',
+                closeAnimation: 'zoom',
+                type: 'orange',
+                typeAnimated: true
+            });
+        }
+    }
+    //FUNCION PARA VERIFICAR EL PIN DEL USUARIO
+    function fn_VerificaPIN() {
+        $.ajax({
+            url: 'TextoAjax',
+            type: 'GET',
+            data: {mode: 'verificaPin', codigo: $("#txt_Pin").val()},
+            success: function (data) {
+                if (data === "true" || data === true) {
+                    $('#div_VentanaPin').jqxWindow('close');
+                    fn_ElevarDocumento();
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'PIN INVALIDO',
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    function fn_ElevarDocumento() {
+        $("#divLoading").removeClass("d-none");
+        $("#btn_elevar").addClass("d-none");
+        var formData = new FormData(document.getElementById("frm_DocumentoElevar"));
+        formData.append("mode", 'I');
+        formData.append("periodo", $("#cbo_Periodo").val());
+        formData.append("codigo", codigo);
+        formData.append("areaLaboral", $("#cbo_DerivadoA").val());
+        formData.append("responsable", $("#dbo_Destinatario").val());
+        $.ajax({
+            url: '../IduElevarDocumento',
+            type: 'POST',
+            data: formData,
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                msg = data;
+                if (msg === "GUARDO") {
+                    $.confirm({
+                        title: 'AVISO DEL SISTEMA',
+                        content: 'Datos procesados correctamente',
+                        type: 'green',
+                        typeAnimated: true,
+                        autoClose: 'cerrarAction|1000',
+                        buttons: {
+                            cerrarAction: {
+                                text: 'Cerrar',
+                                action: function () {
+                                    $('#div_VentanaElevar').jqxWindow('close');
+                                    fn_CargarBusqueda();
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    $.alert({
+                        theme: 'material',
+                        title: 'AVISO DEL SISTEMA',
+                        content: msg,
+                        animation: 'zoom',
+                        closeAnimation: 'zoom',
+                        type: 'red',
+                        typeAnimated: true
+                    });
+                }
+            }
+        });
+    }
+    function fn_firmarDocumentos() {
+        $.confirm({
+            title: 'AVISO DEL SISTEMA',
+            content: 'Est\u00E1s seguro de firmar el documento?',
+            theme: 'material',
+            animation: 'zoom',
+            closeAnimation: 'zoom',
+            type: 'blue',
+            typeAnimated: true,
+            buttons: {
+                aceptar: {
+                    text: 'Aceptar',
+                    btnClass: 'btn-primary',
+                    keys: ['enter', 'shift'],
+                    action: function () {
+                        //-----generamos los pdf's---
+                        $("#docId").val(codigo);
+                        var fileNameToSig = $("#cbo_Periodo").val() + "-" + codigo + "-" + archivo;
+                        $("#docAFirmar").val(fileNameToSig);
+                        initInvoker('W');
+                    }
+                },
+                cancelar: function () {
+                    return;
+                }
+            }
+        });
+    }
+</script>
+<div style="border: none;" id='div_Titulo'>
+    <div class="jqx-hideborder">DOCUMENTOS ELEVADOS</div>
+    <div>
+        <div id="div_Cabecera">
+            <table class="navy">
+                <tbody>
+                    <tr>
+                        <th>Periodo : </th>
+                        <td>
+                            <select id="cbo_Periodo" name="cbo_Periodo">
+                                <span th:each="periodo : ${session.objPeriodos}">
+                                    <option th:value="${periodo.codigo}"><span th:text="${periodo.codigo}"> </span></option>
+                                </span>
+                            </select>
+                        </td>
+                        <th>Estado : </th>
+                        <td>
+                            <select id="cbo_Estado" name="cbo_Estado">
+                                <option value="PE"><span th:text="PENDIENTE"> </span></option>
+                                <option value="FI"><span th:text="FIRMADOS"> </span></option>
+                            </select>
+                        </td>
+                        <td><a href="javascript: fn_CargarBusqueda();"><img src="images/Botones/refresh.gif" alt="Buscar Datos" name="imgrefresh" width="34" height="32" border="0" id="imgrefresh"></a></td>
+                        <td><a href="javascript: fn_MenuPrincipal();"><img src="images/Botones/exit42.gif" alt="Salir de Pantalla" name="imgexit" width="34" height="32" border="0" id="imgexit"/></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="div_GrillaPrincipal"></div>
+    </div>
+</div>
+<div id="div_VentanaElevar" style="display: none">    
+    <div>
+        <span style="float: left">ELEVAR DOCUMENTOS</span>
+    </div>
+    <div style="overflow: hidden">
+        <form id="frm_DocumentoElevar" name="frm_DocumentoElevar" enctype="multipart/form-data" action="javascript: fn_VerificaElevar();" method="post">
+            <table class="form">            
+                <tr>
+                    <th>Derivar a : </th>
+                    <td>
+                        <select id="cbo_DerivadoA" name="cbo_DerivadoA">
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>            
+                <tr>
+                    <th class="inputlabel">Destinatario : </th>
+                    <td>
+                        <select id="dbo_Destinatario" class="form-select" >
+                            <option value="0">Seleccione</option>
+                        </select>
+                    </td>
+                </tr>            
+                <tr>
+                    <td colspan="2">
+                        <div id="div-files"> 
+                            <div id="fileitem-1" class="fileitem list-group-item list-group-item-action justify-content-between" style="background: #ececec; display: flex; width: 450px;">
+                                <div id="filename-1" style="display: flex; position: relative; padding: 15px;" class="TituloDetalle">ANEXOS</div>                            
+                                <label id="btnadjuntar-1" style="display: inline-block; position: absolute; padding: 5px; padding-left: 380px;">
+                                    <img src="images/Botones/adjunto.png" width="30px" height="30px" style='position: relative; margin-top: 2px;' alt="Adjuntar Archivo"/>
+                                    <input type="file" id="file-1" class="fileinput" name="file-1" onchange="addItemFile(this, 1);" style="visibility:hidden;" accept="application/pdf,application/vnd.ms-excel,application/vnd.ms-word"/>
+                                </label>
+                                <div id="btndelete-1" onclick="deleteFileItem(1)" style="display: none; padding: 6px;" title="Borrar">
+                                    <img src="images/Botones/deleteBlack.png" width="30px" height="30px" style='position: relative; margin-top: 2px;' alt="Borrar"/>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>   
+        </form>
+        <div class="Summit" >
+            <div id="btn_Elevar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/save.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            <div id="btn_CancelarElevar" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+        </div>
+    </div>
+</div>
+<div id="div_VentanaPin" style="display: none">
+    <div>
+        <span style="float: left">PIN DE SEGURIDAD</span>
+    </div>
+    <div style="overflow: hidden;">
+        <div align="center" style="padding: 10px">
+            <img src="images/Botones/candado.png" alt=""/>
+            <br/>
+            <label class="inputlabel">Ingrese su PIN</label>
+            <br/>
+            <input type="password" name="txt_Pin" id="txt_Pin" autocomplete="off"/>
+            <br/>
+        </div>
+        <div class="Summit">
+            <div id="btn_AceptarPin" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/check.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+            <div id="btn_CancelarPin" style="display: inline-block; margin-left: 10px;"><img style='position: relative; margin-top: 2px;' src='images/Botones/cancel.png' width=32 height=32/><span style='margin-left: 2px; position: relative; top: -3px;'> </span></div>
+        </div>
+    </div>
+</div>
+<div id='div_ContextMenu' style='display:none;'>
+    <ul>
+        <li style="font-weight: bold;">Rechazar</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: maroon;">Ver Documento</li>
+        <li type='separator'></li>
+        <li style="font-weight: bold; color: green;">Elevar Documento</li>
+    </ul>
+</div>
+<div style="display: none">
+    <a id="signedDocument" href="#">Doc Firmado</a>    
+    <input type="text" id="argumentos"/>
+    <input type="text" id="docAFirmar"/>
+    <input type="text" id="docId"/>
+</div>

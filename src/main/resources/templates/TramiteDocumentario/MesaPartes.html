@@ -83,7 +83,7 @@
                 });
                 ButtonReporte.click(function (event) {
                     var reporte = "MPA0001";
-                    var url = "Reporte?reporte=" + reporte + "&periodo=" + $("#cbo_Periodo").val() + "&tipo=" + $("#cbo_Tipo").val() + "&codigo=" + pad($("#div_diaBus").val(),2) + '/' + $("#cbo_Mes").val() + '/' + $("#cbo_Periodo").val();
+                    var url = "Reporte?reporte=" + reporte + "&periodo=" + $("#cbo_Periodo").val() + "&tipo=" + $("#cbo_Tipo").val() + "&codigo=" + pad($("#div_diaBus").val(), 2) + '/' + $("#cbo_Mes").val() + '/' + $("#cbo_Periodo").val();
                     $('#div_ReporteViewer').attr('src', url + "&page=hsn#toolbar=1");
                     $('#div_Reporte').jqxWindow({isModal: true, modalOpacity: 0.4});
                     $('#div_Reporte').jqxWindow('open');
@@ -191,7 +191,7 @@
                         $('#div_Reporte').jqxWindow('open');
                     } else {
                         document.location.target = "_blank";
-                        document.location.href = "../Descarga?opcion=MesaParte&periodo=" + $('#cbo_Periodo').val() + "&codigo=" + $('#cbo_Tipo').val() + "-" + codigo + "&documento=" + archivo;
+                        document.location.href = "Download?opcion=MesaPartes&filename=" + $("#cbo_Periodo").val() + "-" + $("#cbo_Tipo").val() + "-" + codigo + "-" + archivo;
                     }
                 } else {
                     $.alert({
@@ -277,7 +277,7 @@
                         var dataAdapterInstitucion = new $.jqx.dataAdapter(sourceInstitucion);
                         $("#txt_Institucion").jqxInput({width: 550, height: 22, placeHolder: "SELECCIONE LA INSTITUCION", searchMode: 'startswithignorecase', source: dataAdapterInstitucion, minLength: 1, items: 15, displayMember: "descripcion", valueMember: "codigo", dropDownWidth: 650, popupZIndex: 99999});
                         $('#txt_Institucion').on('select', function (event) {
-                            if (event.args) {                                
+                            if (event.args) {
                                 var item = event.args.item;
                                 if (item) {
                                     institucion = item.value;

@@ -29,8 +29,7 @@ public class BeanRemisionDocumento implements Serializable {
     @Column(name = "NREMISION_DOCUMENTO_CODIGO", nullable = false)
     private Integer codigo;
 
-    @Transient
-    private Integer elevacion;
+    
 
     @Column(name = "NTIPO_DOCUMENTO_CODIGO", nullable = false)
     private String tipoDocumento;
@@ -38,8 +37,7 @@ public class BeanRemisionDocumento implements Serializable {
     @Column(name = "NREMISION_DOCUMENTO_NUMERO", nullable = false)
     private String numeroDocumento;
 
-    @Column(name = "NINSTITUCION_CODIGO", nullable = false)
-    private String institucion;
+    
 
     @Column(name = "NCLASIFICACION_DOCUMENTO_CODIG", nullable = false)
     private String clasificacion;
@@ -59,8 +57,17 @@ public class BeanRemisionDocumento implements Serializable {
     @Column(name = "CESTADO_CODIGO", nullable = false)
     private String estado;
 
+    @Column(name = "VREMISION_DOCUMENTO_WORD", nullable = false)
+    private String word;
+    
     @Column(name = "VREMISION_DOCUMENTO_DIGITAL", nullable = false)
     private String archivo;
+    
+    @Transient
+    private Integer elevacion;
+    
+    @Transient
+    private String institucion;
 
     @Transient
     private String areaLaboral;

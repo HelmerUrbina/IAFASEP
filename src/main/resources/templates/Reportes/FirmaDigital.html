@@ -168,7 +168,7 @@
         //Event obligatorio a implementar			
         dispatchEventClient('sendArguments', arg_); // Envía los argumentos																
     }
-function getArguments() {
+    function getArguments() {
         alert("argumenyto");
         var arg = document.getElementById("argumentos").value;
         alert("AGUMENTOS " + arg);
@@ -265,7 +265,7 @@ function getArguments() {
             eliminarZipTemporal();
         }
     }
-    
+
     function fn_firmarDocumentos() {
         var rowindexes = $('#div_GrillaPrincipal').jqxGrid('getselectedrowindexes');
         if (rowindexes.length === 0) {

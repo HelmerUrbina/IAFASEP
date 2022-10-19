@@ -25,10 +25,12 @@ public class RemisionDocumentoController {
 
     @RequestMapping(value = "/RemisionDocumentos")
     @ResponseBody
-    public String getRequestMapping(String mode, String periodo, String mes, String codigo) {
+    public String getRequestMapping(String mode, String periodo, String mes, Integer codigo) {
         return switch (mode) {
             case "G" ->
                 new Gson().toJson(remisionDocumentoService.getListaRemisionDocumento(periodo, mes, Utiles.getUsuario()));
+            case "U" ->
+                new Gson().toJson(remisionDocumentoService.getDocumentosElevados(periodo, codigo));
             default ->
                 "ERROR";
         };
@@ -52,7 +54,7 @@ public class RemisionDocumentoController {
         BeanRemisionDocumento objRemisionDocumento = new BeanRemisionDocumento();
         objRemisionDocumento.setPeriodo(periodo);
         objRemisionDocumento.setCodigo(codigo);
-        objRemisionDocumento.setInstitucion(" ");
+        objRemisionDocumento.setInstitucion(institucion);
         objRemisionDocumento.setTipoDocumento(tipoDocumento);
         objRemisionDocumento.setNumeroDocumento(numeroDocumento);
         objRemisionDocumento.setClasificacion(clasificacion);
@@ -60,6 +62,34 @@ public class RemisionDocumentoController {
         objRemisionDocumento.setAsunto(asunto);
         objRemisionDocumento.setDirigido(dirigido);
         objRemisionDocumento.setCargo(cargo);
+        return "" + remisionDocumentoService.iduRemisionDocumento(objRemisionDocumento, Utiles.getUsuario(), mode);
+    }
+
+    @RequestMapping(value = "/IduRemisionDocumentosAdjuntar")
+    @ResponseBody
+    public String setRemisionDocumentoAdjuntar(
+            @RequestParam("mode") String mode,
+            @RequestParam("periodo") String periodo,
+            @RequestParam("codigo") Integer codigo,
+            @RequestParam("txt_Archivo") MultipartFile file
+    ) {
+        BeanRemisionDocumento objRemisionDocumento = new BeanRemisionDocumento();
+        objRemisionDocumento.setPeriodo(periodo);
+        objRemisionDocumento.setCodigo(codigo);
+        objRemisionDocumento.setArchivo(file.getOriginalFilename());
+        return "" + remisionDocumentoService.iduRemisionDocumentoAdjuntar(objRemisionDocumento, file, Utiles.getUsuario(), mode);
+    }
+    
+    @RequestMapping(value = "/IduRemisionDocumentosFirmados")
+    @ResponseBody
+    public String setRemisionDocumentoFirmado(
+            @RequestParam("mode") String mode,
+            @RequestParam("periodo") String periodo,
+            @RequestParam("codigo") Integer codigo
+    ) {
+        BeanRemisionDocumento objRemisionDocumento = new BeanRemisionDocumento();
+        objRemisionDocumento.setPeriodo(periodo);
+        objRemisionDocumento.setCodigo(codigo);        
         return "" + remisionDocumentoService.iduRemisionDocumento(objRemisionDocumento, Utiles.getUsuario(), mode);
     }
 
@@ -72,7 +102,7 @@ public class RemisionDocumentoController {
             @RequestParam("elevacion") Integer elevacion,
             @RequestParam("areaLaboral") String areaLaboral,
             @RequestParam("responsable") String responsable,
-            @RequestParam("files") MultipartFile[] files
+            @RequestParam(required = false, value = "files") MultipartFile[] files
     ) {
         BeanRemisionDocumento objBeanRemisionDocumento = new BeanRemisionDocumento();
         objBeanRemisionDocumento.setPeriodo(periodo);

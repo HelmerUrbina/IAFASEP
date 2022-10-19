@@ -209,6 +209,7 @@
     }
 
     function ObtieneArgumentosParaFirmaDesdeArchivoLocal() {
+        alert("INGRESO A ARCHIVO");
         document.getElementById("signedDocument").href = "#";
         $.get("ReFirmaController?method=getArguments", {}, function (data, status) {
             documentName_ = data;
